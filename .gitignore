@@ -1,0 +1,8 @@
+*.bc
+*.s
+*.wasm
+*.wast
+*.wast.hpp
+*.abi.hpp
+*.cmake
+*.abi

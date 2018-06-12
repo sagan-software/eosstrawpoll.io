@@ -6,7 +6,7 @@ services:
     build:
       context: .
     image: tgfpio/eos
-    command: /opt/eosio/bin/nodeosd.sh -e
+    command: /start_nodeosd.sh --data-dir /opt/eosio/bin/data-dir -e
     hostname: nodeosd
     ports:
       - 8888:8888
@@ -15,7 +15,12 @@ services:
       - "8888"
     volumes:
       - nodeos-data-volume:/opt/eosio/bin/data-dir
-      - ./config.ini:/opt/eosio/bin/data-dir/config.ini
+      - ./build.sh:/build.sh:ro
+      - ./start_nodeosd.sh:/start_nodeosd.sh:ro
+      - ./config.ini:/opt/eosio/bin/data-dir/config.ini:ro
+      - ../contracts:/src:ro
+      - ../dist/contracts:/dist
+      # - ../include:/opt/eosio/include
 
   keosd:
     image: tgfpio/eos
@@ -24,18 +29,21 @@ services:
     links:
       - nodeosd
     volumes:
-      # - ./start_keosd.sh:/start_keosd.sh
+      - keosd-data-volume:/opt/eosio/bin/data-dir
+      - ./build.sh:/build.sh:ro
+      - ../contracts:/src:ro
+      - ../dist/contracts:/dist
       # - ../contracts:/src/contracts
       # - ../unittests:/src/unittests
-      - ../contracts/CMakeLists.txt:/eos/contracts/CMakeLists.txt
-      - ../unittests/CMakeLists.txt:/eos/unittests/CMakeLists.txt
-      - ../contracts/tgfpio.token:/eos/contracts/tgfpio.token
-      - ../contracts/tgfpio.token:/opt/eosio/contracts/tgfpio.token
-      - ../unittests/tgfpio.token_tests.cpp:/eos/unittests/tgfpio.token_tests.cpp
-      - ../contracts/eosio.nft:/eos/contracts/eosio.nft
-      - ../contracts/eosio.nft:/opt/eosio/contracts/eosio.nft
-      - ../unittests/eosio.nft_tests.cpp:/eos/unittests/eosio.nft_tests.cpp
-      - keosd-data-volume:/opt/eosio/bin/data-dir
+      # - ../contracts/CMakeLists.txt:/eos/contracts/CMakeLists.txt
+      # - ../unittests/CMakeLists.txt:/eos/unittests/CMakeLists.txt
+      # - ../contracts/tgfpio.token:/eos/contracts/tgfpio.token
+      # - ../unittests/tgfpio.token_tests.cpp:/eos/unittests/tgfpio.token_tests.cpp
+      # - ../contracts/tgfpio.body:/eos/contracts/tgfpio.body
+      # - ../unittests/tgfpio.body_tests.cpp:/eos/unittests/tgfpio.body_tests.cpp
+      # - ../contracts/eosio.nft:/eos/contracts/eosio.nft
+      # - ../unittests/eosio.nft_tests.cpp:/eos/unittests/eosio.nft_tests.cpp
+      # - ../include:/opt/eosio/include
 
 volumes:
   nodeos-data-volume:

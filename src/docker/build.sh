@@ -192,7 +192,7 @@ for contract_name in $contract_names; do
     eos_src_dir=$EOS_SRC_DIR/contracts/$contract_name
     eos_build_dir=$EOS_BUILD_DIR/contracts/$contract_name
 
-    rm -Rf $eos_src_dir $eos_build_dir
+    #rm -Rf $eos_src_dir $eos_build_dir
     mkdir -p $eos_src_dir $eos_build_dir
     cp -Rf $SRC_DIR/$contract_name/* $eos_src_dir
     cp -Rf $SRC_DIR/$contract_name/* $eos_build_dir

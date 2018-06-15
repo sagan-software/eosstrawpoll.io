@@ -6,3 +6,8 @@
 *.abi.hpp
 *.cmake
 *.abi
+lib
+node_modules
+.DS_Store
+.merlin
+.bsb.lock

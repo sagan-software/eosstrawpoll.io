@@ -19,8 +19,7 @@ services:
       - ./start_nodeosd.sh:/start_nodeosd.sh:ro
       - ./config.ini:/opt/eosio/bin/data-dir/config.ini:ro
       - ../contracts:/src:ro
-      - ../dist/contracts:/dist
-      # - ../include:/opt/eosio/include
+      - ../../dist/contracts:/dist
 
   keosd:
     image: tgfpio/eos
@@ -32,18 +31,7 @@ services:
       - keosd-data-volume:/opt/eosio/bin/data-dir
       - ./build.sh:/build.sh:ro
       - ../contracts:/src:ro
-      - ../dist/contracts:/dist
-      # - ../contracts:/src/contracts
-      # - ../unittests:/src/unittests
-      # - ../contracts/CMakeLists.txt:/eos/contracts/CMakeLists.txt
-      # - ../unittests/CMakeLists.txt:/eos/unittests/CMakeLists.txt
-      # - ../contracts/tgfpio.token:/eos/contracts/tgfpio.token
-      # - ../unittests/tgfpio.token_tests.cpp:/eos/unittests/tgfpio.token_tests.cpp
-      # - ../contracts/tgfpio.body:/eos/contracts/tgfpio.body
-      # - ../unittests/tgfpio.body_tests.cpp:/eos/unittests/tgfpio.body_tests.cpp
-      # - ../contracts/eosio.nft:/eos/contracts/eosio.nft
-      # - ../unittests/eosio.nft_tests.cpp:/eos/unittests/eosio.nft_tests.cpp
-      # - ../include:/opt/eosio/include
+      - ../../dist/contracts:/dist
 
 volumes:
   nodeos-data-volume:

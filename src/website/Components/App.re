@@ -2,7 +2,11 @@ open Webapi.Dom;
 
 module Styles = AppStyles;
 
-type state = {route: Route.route};
+type state = {
+  eos: option(Eos.t),
+  route: Route.route,
+  identity: option(Scatter.Identity.t),
+};
 
 module AppLink = {
   let component = ReasonReact.statelessComponent("AppLink");
@@ -23,12 +27,7 @@ module PrimaryNav = {
   let make = (~current, _children) => {
     ...component,
     render: _self =>
-      <nav className=(Styles.primaryNav |> TypedGlamor.toString)>
-        <AppLink current route=Route.Market label=Words.Market />
-        <AppLink current route=Route.Governance label=Words.Games />
-        <AppLink current route=Route.Governance label=Words.Governance />
-        <AppLink current route=Route.Stats label=Words.Upload />
-      </nav>,
+      <nav className=(Styles.primaryNav |> TypedGlamor.toString) />,
   };
 };
 
@@ -38,26 +37,74 @@ module SecondaryNav = {
     ...component,
     render: _self =>
       <nav className=(Styles.secondaryNav |> TypedGlamor.toString)>
-        <AppLink current route=Route.Stats label=Words.Stats />
         <AppLink current route=Route.About label=Words.About />
       </nav>,
   };
 };
 
-type action =
-  | ChangeRoute(Route.route);
+let temp = [%bs.raw {| window.Eos = require('eosjs') |}];
 
-let reducer = (action, _state) =>
+Js.log2("BALLS", temp);
+
+type action =
+  | ChangeRoute(Route.route)
+  | LoadedEos(Eos.t)
+  | ChangeIdentity(option(Scatter.Identity.t));
+
+let reducer = (action, state) =>
   switch (action) {
-  | ChangeRoute(route) => ReasonReact.Update({route: route})
+  | ChangeRoute(route) => ReasonReact.Update({...state, route})
+  | LoadedEos(eos) => ReasonReact.Update({...state, eos: Some(eos)})
+  | ChangeIdentity(identity) => ReasonReact.Update({...state, identity})
   };
 
 let component = ReasonReact.reducerComponent("App");
 
+let loadEos = ({ReasonReact.state} as self) => {
+  let eos =
+    Scatter.eos(Env.network, Eos.make, Eos.Config.t(~verbose=false), "http");
+  self.send(LoadedEos(eos));
+  %bs.raw
+  {| window.eos = eos |};
+  eos;
+};
+
+let clickedLogin = ({ReasonReact.state} as self, _event) => {
+  Scatter.getIdentity(~accounts=[|Env.network|], ())
+  |> Js.Promise.then_(identity => {
+       Js.log(identity);
+       self.send(ChangeIdentity(Some(identity)));
+       let eos = loadEos(self);
+       Eos.contract(eos, Env.codeName);
+     })
+  |> Js.Promise.then_(contract =>
+       Twitteos.create(
+         contract,
+         Twitteos.Create.t(~author="alice", ~text="<h1>BALLS</h1>"),
+         Eos.Action.options(~authorization=[|"alice@active"|], ()),
+       )
+     )
+  |> Js.Promise.then_(result => {
+       Js.log2("result", result);
+       Js.Promise.resolve();
+     });
+  ();
+};
+
+let clickedLogout = ({ReasonReact.state} as self, _event) => {
+  Scatter.forgetIdentity()
+  |> Js.Promise.then_(_result => {
+       self.send(ChangeIdentity(None));
+       loadEos(self);
+       Js.Promise.resolve();
+     });
+  ();
+};
+
 let make = _children => {
   ...component,
   reducer,
-  initialState: () => {route: Route.Home},
+  initialState: () => {eos: None, route: Route.Home, identity: None},
   subscriptions: self => [
     Sub(
       () =>
@@ -67,10 +114,20 @@ let make = _children => {
       ReasonReact.Router.unwatchUrl,
     ),
   ],
-  didMount: _self =>
+  didMount: self =>
     Document.addEventListener(
       "scatterLoaded",
-      _event => Js.log("scatter loaded"),
+      event => {
+        Js.log2("scatter loaded", event);
+        Js.log2("network", Env.network);
+        Scatter.suggestNetwork(Env.network)
+        |> Js.Promise.then_(result => {
+             Js.log2("suggest network", result);
+             loadEos(self);
+             Js.Promise.resolve();
+           });
+        ();
+      },
       document,
     ),
   render: self =>
@@ -78,24 +135,40 @@ let make = _children => {
       <header className=(Styles.header |> TypedGlamor.toString)>
         <Link
           className=(Styles.appLogo |> TypedGlamor.toString) route=Route.Home>
-          (ReasonReact.string("TGFP"))
+          (ReasonReact.string("Twitteos"))
         </Link>
         <PrimaryNav current=self.state.route />
         <SecondaryNav current=self.state.route />
         <nav className=(Styles.userNav |> TypedGlamor.toString)>
-          <a className=(Styles.loginLink |> TypedGlamor.toString) href="#">
-            (ReasonReact.string("Login"))
-          </a>
+          (
+            switch (self.state.identity) {
+            | Some(identity) =>
+              let name =
+                (identity |. Scatter.Identity.accounts)[0]
+                |. Scatter.Account.name;
+              <button onClick=(clickedLogout(self))>
+                (ReasonReact.string({j|Logged in as $name|j}))
+              </button>;
+            | None =>
+              <button
+                className=(Styles.loginLink |> TypedGlamor.toString)
+                onClick=(clickedLogin(self))>
+                (ReasonReact.string("Login"))
+              </button>
+            }
+          )
         </nav>
       </header>
       (
-        switch (self.state.route) {
-        | Route.Home => <HomePage />
-        | Route.Market => <MarketPage />
-        | Route.Treasury => <TreasuryPage />
-        | Route.Governance => <GovernancePage />
-        | Route.Stats => <StatsPage />
-        | Route.About => <AboutPage />
+        switch (self.state.eos) {
+        | Some(eos) =>
+          switch (self.state.route) {
+          | Route.Home => <HomePage />
+          | Route.About => <AboutPage />
+          | Route.Profile(accountName) => <ProfilePage accountName eos />
+          | Route.Post(accountName, postId) => <PostPage accountName postId />
+          }
+        | None => ReasonReact.string("loading...")
         }
       )
     </div>,

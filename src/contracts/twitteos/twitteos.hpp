@@ -3,7 +3,9 @@
 #include <eosiolib/action.hpp>
 #include <eosiolib/contract.hpp>
 #include <eosiolib/eosio.hpp>
+#include <eosiolib/multi_index.hpp>
 #include <eosiolib/print.hpp>
+#include <eosiolib/singleton.hpp>
 #include <string>
 
 using eosio::const_mem_fun;
@@ -11,7 +13,8 @@ using eosio::indexed_by;
 using std::string;
 
 typedef uint64_t uuid;
-typedef uint32_t timestamp;
+typedef uint64_t timestamp;
+typedef string ipfs_hash;
 
 // @abi table posts i64
 struct post
@@ -29,16 +32,29 @@ struct post
     EOSLIB_SERIALIZE(post, (id)(text)(created)(parent_id)(parent_author))
 };
 
-// typedef eosio::multi_index<
-//     N(post),
-//     post,
-//     indexed_by<N(created), const_mem_fun<post, timestamp, &post::by_created>>>
-//     post_index;
-
 typedef eosio::multi_index<
     N(posts),
-    post>
+    post,
+    indexed_by<N(created), const_mem_fun<post, timestamp, &post::by_created>>>
     post_index;
+
+// @abi table profile i64
+struct profile_t
+{
+    string display_name = "";
+    string biography = "";
+    string location = "";
+    ipfs_hash profile_photo = "";
+    ipfs_hash header_photo = "";
+    uint64_t num_posts = 0;
+    uint64_t num_following = 0;
+    uint64_t num_followers = 0;
+    uint64_t num_liked = 0;
+    timestamp created;
+    uuid last_post_id;
+};
+
+typedef eosio::singleton<N(profile), profile_t> profile_singleton;
 
 class twitteos : public eosio::contract
 {
@@ -55,6 +71,5 @@ class twitteos : public eosio::contract
     void destroy(const account_name author, const uuid post_id);
 
   private:
-    static const uuid NULL_PARENT_ID = 0;
-    static const account_name NULL_PARENT_AUTHOR = N();
+    profile_t get_or_create_profile(const account_name author);
 };

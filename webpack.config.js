@@ -15,6 +15,7 @@ const config = {
 	output: {
 		path: DIST_DIR,
 		filename: "[name].bundle.js",
+		publicPath: "/",
 	},
 	resolve: {
 		extensions: [".js"],

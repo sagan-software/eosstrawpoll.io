@@ -1,28 +1,22 @@
 type route =
   | Home
-  | Market
-  | Treasury
-  | Governance
-  | Stats
-  | About;
+  | About
+  | Profile(string)
+  | Post(string, string);
 
 let fromUrl = (url: ReasonReact.Router.url) =>
   switch (url.path) {
   | [] => Home
-  | ["market"] => Market
-  | ["treasury"] => Treasury
-  | ["governance"] => Governance
-  | ["stats"] => Stats
   | ["about"] => About
+  | [accountName] => Profile(accountName)
+  | [accountName, postId] => Post(accountName, postId)
   | _ => Home
   };
 
 let toString = route =>
   switch (route) {
   | Home => "/"
-  | Market => "/market"
-  | Treasury => "/treasury"
-  | Governance => "/governance"
-  | Stats => "/stats"
   | About => "/about"
+  | Profile(accountName) => "/" ++ accountName
+  | Post(accountName, postId) => "/" ++ accountName ++ "/" ++ postId
   };

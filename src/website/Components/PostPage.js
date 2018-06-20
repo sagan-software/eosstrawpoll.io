@@ -4,9 +4,9 @@
 var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 
-var component = ReasonReact.statelessComponent("GovernancePage");
+var component = ReasonReact.statelessComponent("PostPage");
 
-function make() {
+function make(accountName, postId, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -18,7 +18,7 @@ function make() {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function () {
-              return React.createElement("div", undefined, "Governance");
+              return React.createElement("div", undefined, React.createElement("h1", undefined, accountName), React.createElement("h2", undefined, postId), "Post");
             }),
           /* initialState */component[/* initialState */10],
           /* retainedProps */component[/* retainedProps */11],

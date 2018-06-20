@@ -47,7 +47,7 @@ create-accounts:
 	$(CLEOS) create account eosio twitteos EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio alice EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio bob EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-#PW5KXc42E2KDFrGw3YRzL2YVfkCBFFnrvtySxhP1Ywg3y5k89RMJt
+#PW5Jxt5YxkCqqAKm36TXqcoLiZVFgLxwP4RxTfbhzdanREkiU9ZHg
 redeploy:
 	$(EOSIOCPP) --outname /dist/twitteos.wast /src/twitteos/twitteos.cpp
 	$(EOSIOCPP) --genabi /dist/twitteos.abi /src/twitteos/twitteos.cpp

@@ -19,6 +19,7 @@
 		"closure-webpack-plugin": "^0.0.24",
 		"concurrently": "^3.5.1",
 		"css-loader": "^0.28.11",
+		"eosjs": "^15.0.0",
 		"file-loader": "^1.1.11",
 		"glamor-reset": "^3.0.0-3",
 		"graphql": "^0.13.2",

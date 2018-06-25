@@ -2,7 +2,11 @@ type t;
 
 module Config = {
   [@bs.deriving abstract]
-  type t = {verbose: bool};
+  type t = {
+    httpEndpoint: string,
+    [@bs.optional]
+    verbose: bool,
+  };
 };
 
 [@bs.module] external make : Config.t => t = "eosjs";

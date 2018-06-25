@@ -1,4 +1,4 @@
-let codeName = "twitteos";
+let codeName = "eosstrawpoll";
 
 let localNetwork =
   Scatter.Network.make(
@@ -9,3 +9,7 @@ let localNetwork =
   );
 
 let network = localNetwork;
+
+let httpEndpoint = "http://127.0.01:8888";
+
+let eosConfig = Eos.Config.t(~httpEndpoint, ());

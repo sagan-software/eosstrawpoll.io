@@ -3,108 +3,62 @@ open Webapi.Dom;
 module Styles = AppStyles;
 
 type state = {
-  eos: option(Eos.t),
+  context: Context.t,
   route: Route.route,
-  identity: option(Scatter.Identity.t),
-};
-
-module AppLink = {
-  let component = ReasonReact.statelessComponent("AppLink");
-  let make = (~current, ~route, ~label, _children) => {
-    ...component,
-    render: _self => {
-      let isSelected = current == route;
-      let className = Styles.appLink(isSelected) |> TypedGlamor.toString;
-      <Link className route>
-        (ReasonReact.string(Words.translate(Words.English, label)))
-      </Link>;
-    },
-  };
-};
-
-module PrimaryNav = {
-  let component = ReasonReact.statelessComponent("PrimaryNav");
-  let make = (~current, _children) => {
-    ...component,
-    render: _self =>
-      <nav className=(Styles.primaryNav |> TypedGlamor.toString) />,
-  };
-};
-
-module SecondaryNav = {
-  let component = ReasonReact.statelessComponent("SecondaryNav");
-  let make = (~current, _children) => {
-    ...component,
-    render: _self =>
-      <nav className=(Styles.secondaryNav |> TypedGlamor.toString)>
-        <AppLink current route=Route.About label=Words.About />
-      </nav>,
-  };
 };
 
 let temp = [%bs.raw {| window.Eos = require('eosjs') |}];
 
-Js.log2("BALLS", temp);
-
 type action =
   | ChangeRoute(Route.route)
-  | LoadedEos(Eos.t)
-  | ChangeIdentity(option(Scatter.Identity.t));
+  | ChangeIdentity(option(Scatter.Identity.t))
+  | ScatterLoaded(Scatter.Instance.t);
 
 let reducer = (action, state) =>
   switch (action) {
   | ChangeRoute(route) => ReasonReact.Update({...state, route})
-  | LoadedEos(eos) => ReasonReact.Update({...state, eos: Some(eos)})
-  | ChangeIdentity(identity) => ReasonReact.Update({...state, identity})
+  | ChangeIdentity(identity) =>
+    ReasonReact.Update({
+      ...state,
+      context: {
+        ...state.context,
+        identity,
+      },
+    })
+  | ScatterLoaded(scatter) =>
+    ReasonReact.Update({
+      ...state,
+      context: {
+        ...state.context,
+        scatter: Some(scatter),
+        identity: Scatter.identity(scatter),
+      },
+    })
   };
 
 let component = ReasonReact.reducerComponent("App");
 
-let loadEos = ({ReasonReact.state} as self) => {
-  let eos =
-    Scatter.eos(Env.network, Eos.make, Eos.Config.t(~verbose=false), "http");
-  self.send(LoadedEos(eos));
-  %bs.raw
-  {| window.eos = eos |};
-  eos;
-};
-
-let clickedLogin = ({ReasonReact.state} as self, _event) => {
-  Scatter.getIdentity(~accounts=[|Env.network|], ())
+let clickedLogin = ({ReasonReact.state} as self, scatter, _event) =>
+  Scatter.getIdentity(scatter, ~accounts=[|Env.network|], ())
   |> Js.Promise.then_(identity => {
        Js.log(identity);
        self.send(ChangeIdentity(Some(identity)));
-       let eos = loadEos(self);
-       Eos.contract(eos, Env.codeName);
-     })
-  |> Js.Promise.then_(contract =>
-       Twitteos.create(
-         contract,
-         Twitteos.Create.t(~author="alice", ~text="<h1>BALLS</h1>"),
-         Eos.Action.options(~authorization=[|"alice@active"|], ()),
-       )
-     )
-  |> Js.Promise.then_(result => {
-       Js.log2("result", result);
        Js.Promise.resolve();
-     });
-  ();
-};
+     })
+  |> ignore;
 
-let clickedLogout = ({ReasonReact.state} as self, _event) => {
-  Scatter.forgetIdentity()
+let clickedLogout = ({ReasonReact.state} as self, scatter, _event) =>
+  Scatter.forgetIdentity(scatter)
   |> Js.Promise.then_(_result => {
        self.send(ChangeIdentity(None));
-       loadEos(self);
        Js.Promise.resolve();
-     });
-  ();
-};
+     })
+  |> ignore;
 
 let make = _children => {
   ...component,
   reducer,
-  initialState: () => {eos: None, route: Route.Home, identity: None},
+  initialState: () => {route: Route.Home, context: Context.empty},
   subscriptions: self => [
     Sub(
       () =>
@@ -115,61 +69,85 @@ let make = _children => {
     ),
   ],
   didMount: self =>
-    Document.addEventListener(
-      "scatterLoaded",
-      event => {
-        Js.log2("scatter loaded", event);
-        Js.log2("network", Env.network);
-        Scatter.suggestNetwork(Env.network)
+    Scatter.onLoad(_event =>
+      switch (Scatter.instance) {
+      | Some(scatter) =>
+        self.send(ScatterLoaded(scatter));
+        Api.Contract.make(scatter)
+        |> Js.Promise.then_(contract => Js.Promise.resolve())
+        /* Api.create(
+             contract,
+             ~creator="alice",
+             ~title="NEATO NEATO NEAT NEAT NEATO",
+             ~options=[|"Choice A", "Choice B"|],
+             (),
+           ), */
         |> Js.Promise.then_(result => {
-             Js.log2("suggest network", result);
-             loadEos(self);
+             Js.log2("Created", result);
              Js.Promise.resolve();
-           });
-        ();
-      },
-      document,
+           })
+        |> ignore;
+      | None => ()
+      }
     ),
-  render: self =>
-    <div className=(Styles.box |> TypedGlamor.toString)>
+  render: self => {
+    let context = self.state.context;
+    <div className=(Styles.container |> TypedGlamor.toString)>
       <header className=(Styles.header |> TypedGlamor.toString)>
         <Link
           className=(Styles.appLogo |> TypedGlamor.toString) route=Route.Home>
-          (ReasonReact.string("Twitteos"))
+          (ReasonReact.string("EOS Straw Poll"))
         </Link>
-        <PrimaryNav current=self.state.route />
-        <SecondaryNav current=self.state.route />
-        <nav className=(Styles.userNav |> TypedGlamor.toString)>
-          (
-            switch (self.state.identity) {
+        (
+          switch (context.scatter) {
+          | Some(scatter) =>
+            /* User has scatter */
+            switch (context.identity) {
             | Some(identity) =>
+              /* User has scatter and is logged in */
               let name =
                 (identity |. Scatter.Identity.accounts)[0]
                 |. Scatter.Account.name;
-              <button onClick=(clickedLogout(self))>
-                (ReasonReact.string({j|Logged in as $name|j}))
-              </button>;
+              <nav className=(Styles.userNav |> TypedGlamor.toString)>
+                <Link route=(Route.Profile(name))>
+                  (ReasonReact.string(name))
+                </Link>
+                <button onClick=(clickedLogout(self, scatter))>
+                  (ReasonReact.string("Logout"))
+                </button>
+              </nav>;
+            /* User has scatter but isn't logged in */
             | None =>
               <button
                 className=(Styles.loginLink |> TypedGlamor.toString)
-                onClick=(clickedLogin(self))>
+                onClick=(clickedLogin(self, scatter))>
                 (ReasonReact.string("Login"))
               </button>
             }
-          )
-        </nav>
-      </header>
-      (
-        switch (self.state.eos) {
-        | Some(eos) =>
-          switch (self.state.route) {
-          | Route.Home => <HomePage />
-          | Route.About => <AboutPage />
-          | Route.Profile(accountName) => <ProfilePage accountName eos />
-          | Route.Post(accountName, postId) => <PostPage accountName postId />
+          | None =>
+            /* User does not have scatter */
+            <a href="https://get-scatter.com/">
+              (ReasonReact.string("Get Scatter"))
+            </a>
           }
-        | None => ReasonReact.string("loading...")
-        }
-      )
-    </div>,
+        )
+      </header>
+      <main className=(Styles.main |> TypedGlamor.toString)>
+        (
+          switch (self.state.route) {
+          | Route.Home => <HomePage context />
+          | Route.About => <AboutPage />
+          | Route.Profile(accountName) => <ProfilePage context accountName />
+          | Route.Poll(accountName, pollId) =>
+            <PollPage context accountName pollId />
+          | Route.PollResults(accountName, pollId) =>
+            <PollResultsPage context accountName pollId />
+          }
+        )
+      </main>
+      <footer className=(Styles.footer |> TypedGlamor.toString)>
+        <Link route=Route.About> (ReasonReact.string("About")) </Link>
+      </footer>
+    </div>;
+  },
 };

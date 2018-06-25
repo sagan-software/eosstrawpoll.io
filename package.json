@@ -32,6 +32,7 @@
 		"postcss-loader": "^2.1.5",
 		"pug": "^2.0.3",
 		"pug-loader": "^2.4.0",
+		"re-formality": "^0.9.0",
 		"react": "^16.4.0",
 		"react-dom": "^16.4.0",
 		"react-instantsearch": "^5.0.3",

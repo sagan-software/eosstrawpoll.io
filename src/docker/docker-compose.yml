@@ -5,7 +5,7 @@ services:
   nodeosd:
     build:
       context: .
-    image: tgfpio/eos
+    image: eosio/eos
     command: /start_nodeosd.sh --data-dir /opt/eosio/bin/data-dir -e
     hostname: nodeosd
     ports:
@@ -22,7 +22,7 @@ services:
       - ../../dist/contracts:/dist
 
   keosd:
-    image: tgfpio/eos
+    image: eosio/eos
     command: /opt/eosio/bin/keosd
     hostname: keosd
     links:

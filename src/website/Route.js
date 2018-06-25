@@ -16,12 +16,21 @@ function fromUrl(url) {
     if (exit === 1) {
       var match$1 = match[1];
       if (match$1) {
-        if (match$1[1]) {
-          return /* Home */0;
+        var match$2 = match$1[1];
+        var pollId = match$1[0];
+        if (match$2) {
+          if (match$2[0] === "results" && !match$2[1]) {
+            return /* PollResults */Block.__(2, [
+                      accountName,
+                      pollId
+                    ]);
+          } else {
+            return /* Home */0;
+          }
         } else {
-          return /* Post */Block.__(1, [
+          return /* Poll */Block.__(1, [
                     accountName,
-                    match$1[0]
+                    pollId
                   ]);
         }
       } else {
@@ -41,10 +50,16 @@ function toString(route) {
     } else {
       return "/about";
     }
-  } else if (route.tag) {
-    return "/" + (route[0] + ("/" + route[1]));
   } else {
-    return "/" + route[0];
+    switch (route.tag | 0) {
+      case 0 : 
+          return "/" + route[0];
+      case 1 : 
+          return "/" + (route[0] + ("/" + route[1]));
+      case 2 : 
+          return "/" + (route[0] + ("/" + (route[1] + "/results")));
+      
+    }
   }
 }
 

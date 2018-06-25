@@ -24,7 +24,8 @@
 		"reason-react",
 		"bs-webapi",
 		"@glennsl/bs-json",
-		"bs-typed-glamor"
+		"bs-typed-glamor",
+		"re-formality"
 	],
 	"refmt": 3
 }

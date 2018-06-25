@@ -2,7 +2,7 @@
 'use strict';
 
 
-var Create = /* module */[];
+var ValidationResult = /* module */[];
 
-exports.Create = Create;
+exports.ValidationResult = ValidationResult;
 /* No side effect */

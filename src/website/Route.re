@@ -2,14 +2,16 @@ type route =
   | Home
   | About
   | Profile(string)
-  | Post(string, string);
+  | Poll(string, string)
+  | PollResults(string, string);
 
 let fromUrl = (url: ReasonReact.Router.url) =>
   switch (url.path) {
   | [] => Home
   | ["about"] => About
   | [accountName] => Profile(accountName)
-  | [accountName, postId] => Post(accountName, postId)
+  | [accountName, pollId] => Poll(accountName, pollId)
+  | [accountName, pollId, "results"] => PollResults(accountName, pollId)
   | _ => Home
   };
 
@@ -18,5 +20,7 @@ let toString = route =>
   | Home => "/"
   | About => "/about"
   | Profile(accountName) => "/" ++ accountName
-  | Post(accountName, postId) => "/" ++ accountName ++ "/" ++ postId
+  | Poll(accountName, pollId) => "/" ++ accountName ++ "/" ++ pollId
+  | PollResults(accountName, pollId) =>
+    "/" ++ accountName ++ "/" ++ pollId ++ "/results"
   };

@@ -44,13 +44,35 @@ clean-docker:
 	docker volume prune
 
 create-accounts:
-	$(CLEOS) create account eosio twitteos EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) wallet import 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+	$(CLEOS) create account eosio eosio.token EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.ram EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.ramfee EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.stake EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.bpay EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.vpay EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.saving EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.names EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosstrawpoll EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio alice EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio bob EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-#PW5Jxt5YxkCqqAKm36TXqcoLiZVFgLxwP4RxTfbhzdanREkiU9ZHg
+	$(CLEOS) create account eosio carol EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+deploy-system-contracts:
+	$(CLEOS) set contract eosio.token /opt/eosio/contracts/eosio.token
+	$(CLEOS) set contract eosio.msig /opt/eosio/contracts/eosio.token
+	$(CLEOS) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token
+	$(CLEOS) set contract eosio /opt/eosio/contracts/eosio.system
+
+#PW5JD5qdvMAkQtNKBwuUhG4wpi9wqHrRJi696XjqTMjpjSJeZVqTt
 redeploy:
-	$(EOSIOCPP) --outname /dist/twitteos.wast /src/twitteos/twitteos.cpp
-	$(EOSIOCPP) --genabi /dist/twitteos.abi /src/twitteos/twitteos.cpp
-	$(CLEOS) set contract twitteos /dist /dist/twitteos.wast /dist/twitteos.abi
-	$(CLEOS) push action twitteos create '["alice","Hello world"]' -p alice@active
-	$(CLEOS) get table twitteos alice posts
+	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
+	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp
+	$(CLEOS) set contract eosstrawpoll /dist /dist/eosstrawpoll.wast /dist/eosstrawpoll.abi
+	$(CLEOS) get table eosstrawpoll alice polls
+
+create-polls:
+	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 1",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
+	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
+	$(CLEOS) push action eosstrawpoll create '["bob","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p bob@active
+	$(CLEOS) push action eosstrawpoll create '["carol","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p carol@active

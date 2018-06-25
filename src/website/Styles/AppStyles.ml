@@ -4,12 +4,31 @@ include GlobalStyles
 
 let sidebarWidth = pct 20.
 
+(* A basic style definition *)
+let container = css ~extend:CommonStyles.html [
+  position absolute;
+  width (pct 100.);
+  height (pct 100.);
+  overflow auto;
+  display flex;
+  flexDirection column;
+]
+
 let header = css [
-    display flex;
-    height (px 50);
-    justifyContent spaceBetween;
-    alignItems center;
-    textAlign center;
+  display flex;
+  height (px 50);
+  justifyContent spaceBetween;
+  alignItems center;
+  textAlign center;
+]
+
+let main = css [
+  flex3 1. 0. auto;
+]
+
+let footer = css [
+  flexShrink 0.;
+  textAlign center;
 ]
 
 let appLogo = css [
@@ -49,14 +68,6 @@ let loginLink = css []
    Reason users can use a separate .ml file alongside each component file, for eaxample if the
    component is in `Foo.re`, you could have a `FooStyles.ml` alongside it and then refer to 
    `FooStyles.myStyle` in the component *)
-
-(* A basic style definition *)
-let box = css ~extend:CommonStyles.html [
-  position absolute;
-  width (pct 100.);
-  height (pct 100.);
-  overflow auto;
-]
 
 (* triangle *)
 let cube = css [

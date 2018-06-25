@@ -2,7 +2,7 @@
 'use strict';
 
 var $$Array = require("bs-platform/lib/js/array.js");
-var Js_option = require("bs-platform/lib/js/js_option.js");
+var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 
 function toString(t) {
   if (t >= 783383531) {
@@ -77,12 +77,38 @@ function toString$3(t) {
 
 var LocationField = /* module */[/* toString */toString$3];
 
-function getIdentity(accounts, personal, $$location, _) {
-  return scatter.getIdentity({
-              accounts: Js_option.getWithDefault(/* array */[], accounts),
-              personal: $$Array.map(toString$2, Js_option.getWithDefault(/* array */[], personal)),
-              location: $$Array.map(toString$3, Js_option.getWithDefault(/* array */[], $$location))
+var Instance = /* module */[];
+
+function suggestNetwork(prim, prim$1) {
+  return prim.suggestNetwork(prim$1);
+}
+
+function eos(prim, prim$1, prim$2, prim$3, prim$4) {
+  return prim.eos(prim$1, prim$2, prim$3, prim$4);
+}
+
+function getIdentity(instance, $staropt$star, $staropt$star$1, $staropt$star$2, _) {
+  var accounts = $staropt$star ? $staropt$star[0] : /* array */[];
+  var personal = $staropt$star$1 ? $staropt$star$1[0] : /* array */[];
+  var $$location = $staropt$star$2 ? $staropt$star$2[0] : /* array */[];
+  return instance.getIdentity({
+              accounts: accounts,
+              personal: $$Array.map(toString$2, personal),
+              location: $$Array.map(toString$3, $$location)
             });
+}
+
+function identity(prim) {
+  return Js_primitive.null_undefined_to_opt(prim.identity);
+}
+
+function forgetIdentity(prim) {
+  return prim.forgetIdentity();
+}
+
+function onLoad(callback) {
+  document.addEventListener("scatterLoaded", callback);
+  return /* () */0;
 }
 
 exports.Protocol = Protocol;
@@ -92,5 +118,11 @@ exports.Account = Account;
 exports.Identity = Identity;
 exports.PersonalField = PersonalField;
 exports.LocationField = LocationField;
+exports.Instance = Instance;
+exports.suggestNetwork = suggestNetwork;
+exports.eos = eos;
 exports.getIdentity = getIdentity;
+exports.identity = identity;
+exports.forgetIdentity = forgetIdentity;
+exports.onLoad = onLoad;
 /* No side effect */

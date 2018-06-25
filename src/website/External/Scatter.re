@@ -1,3 +1,5 @@
+open Webapi.Dom;
+
 module Protocol = {
   [@bs.string]
   type t = [ | `http | `https];
@@ -83,44 +85,55 @@ module LocationField = {
     };
 };
 
-[@bs.val] [@bs.scope "scatter"]
-external suggestNetwork : Network.t => Js.Promise.t(bool) = "";
+module Instance = {
+  type t;
+  [@bs.send]
+  external suggestNetwork : (t, Network.t) => Js.Promise.t(bool) = "";
+  [@bs.send]
+  external eos :
+    (t, Network.t, Eos.Config.t => Eos.t, Eos.Config.t, string) => Eos.t =
+    "";
+  [@bs.send]
+  external getIdentity :
+    (
+      t,
+      {
+        .
+        "accounts": array(Network.t),
+        "personal": array(string),
+        "location": array(string),
+      }
+    ) =>
+    Js.Promise.t(Identity.t) =
+    "";
+  [@bs.get] [@bs.return nullable]
+  external identity : t => option(Identity.t) = "";
+  [@bs.send] external forgetIdentity : t => Js.Promise.t(bool) = "";
+};
 
-[@bs.val] [@bs.scope "scatter"]
-external eos :
-  (Network.t, Eos.Config.t => Eos.t, Eos.Config.t, string) => Eos.t =
-  "";
+type t = Instance.t;
 
-[@bs.val] [@bs.scope "scatter"]
-external getIdentity_ :
-  {
-    .
-    "accounts": Js.Array.t(Network.t),
-    "personal": Js.Array.t(string),
-    "location": Js.Array.t(string),
-  } =>
-  Js.Promise.t(Identity.t) =
-  "getIdentity";
+let suggestNetwork = Instance.suggestNetwork;
+
+let eos = Instance.eos;
 
 let getIdentity =
-    (
-      ~accounts=?,
-      ~personal: option(array(PersonalField.t))=?,
-      ~location: option(array(LocationField.t))=?,
-      (),
-    ) =>
-  getIdentity_({
-    "accounts": accounts |> Js.Option.getWithDefault([||]),
-    "personal":
-      personal
-      |> Js.Option.getWithDefault([||])
-      |> Array.map(PersonalField.toString),
-    "location":
-      location
-      |> Js.Option.getWithDefault([||])
-      |> Array.map(LocationField.toString),
-  });
+    (instance, ~accounts=[||], ~personal=[||], ~location=[||], ()) =>
+  Instance.getIdentity(
+    instance,
+    {
+      "accounts": accounts,
+      "personal": personal |> Array.map(PersonalField.toString),
+      "location": location |> Array.map(LocationField.toString),
+    },
+  );
 
-/* [@bs.val] [@bs.scope "scatter"] external identity : option(Identity.t) = ""; */
-[@bs.val] [@bs.scope "scatter"]
-external forgetIdentity : unit => Js.Promise.t(bool) = "";
+let identity = Instance.identity;
+
+let forgetIdentity = Instance.forgetIdentity;
+
+[@bs.val] [@bs.scope "window"] [@bs.return nullable]
+external instance : option(t) = "scatter";
+
+let onLoad = callback =>
+  Document.addEventListener("scatterLoaded", callback, document);

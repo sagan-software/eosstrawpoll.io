@@ -5,8 +5,12 @@ ARG symbol=SYS
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install openssl vim psmisc python3-pip && rm -rf /var/lib/apt/lists/*
 RUN pip3 install numpy
 
-RUN git clone -b $branch https://github.com/EOSIO/eos.git --recursive \
+RUN git clone -b $branch https://github.com/EOSIO/eos.git \
     && cd eos \
+    # && git checkout 5221920d42e7a957f7d731f7beaa33fb0f5e215b \
+    && git fetch --all --tags --prune \
+    && git checkout tags/v1.0.6 \
+    && git submodule update --init --recursive \
     && echo "$branch:$(git rev-parse HEAD)" > /etc/eosio-version
 
 ENV EOSIO_ROOT=/opt/eosio

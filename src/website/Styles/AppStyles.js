@@ -7,6 +7,26 @@ var GlobalStyles$ReactTemplate = require("./GlobalStyles.js");
 
 var sidebarWidth = TypedGlamor.pct(20);
 
+var container = TypedGlamor.css(/* Some */[CommonStyles$ReactTemplate.html], /* :: */[
+      TypedGlamor.position(TypedGlamor.absolute),
+      /* :: */[
+        TypedGlamor.width(TypedGlamor.pct(100)),
+        /* :: */[
+          TypedGlamor.height(TypedGlamor.pct(100)),
+          /* :: */[
+            TypedGlamor.overflow(TypedGlamor.auto),
+            /* :: */[
+              TypedGlamor.display(TypedGlamor.flex),
+              /* :: */[
+                TypedGlamor.flexDirection(TypedGlamor.column),
+                /* [] */0
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]);
+
 var header = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.display(TypedGlamor.flex),
       /* :: */[
@@ -21,6 +41,19 @@ var header = TypedGlamor.css(/* None */0, /* :: */[
             ]
           ]
         ]
+      ]
+    ]);
+
+var main = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.flex3(1, 0, TypedGlamor.auto),
+      /* [] */0
+    ]);
+
+var footer = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.flexShrink(0),
+      /* :: */[
+        TypedGlamor.textAlign(TypedGlamor.center),
+        /* [] */0
       ]
     ]);
 
@@ -64,20 +97,6 @@ var userNav = TypedGlamor.css(/* None */0, /* :: */[
     ]);
 
 var loginLink = TypedGlamor.css(/* None */0, /* [] */0);
-
-var box = TypedGlamor.css(/* Some */[CommonStyles$ReactTemplate.html], /* :: */[
-      TypedGlamor.position(TypedGlamor.absolute),
-      /* :: */[
-        TypedGlamor.width(TypedGlamor.pct(100)),
-        /* :: */[
-          TypedGlamor.height(TypedGlamor.pct(100)),
-          /* :: */[
-            TypedGlamor.overflow(TypedGlamor.auto),
-            /* [] */0
-          ]
-        ]
-      ]
-    ]);
 
 var cube = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.label("thing"),
@@ -165,14 +184,16 @@ var _reset = GlobalStyles$ReactTemplate._reset;
 
 exports._reset = _reset;
 exports.sidebarWidth = sidebarWidth;
+exports.container = container;
 exports.header = header;
+exports.main = main;
+exports.footer = footer;
 exports.appLogo = appLogo;
 exports.primaryNav = primaryNav;
 exports.secondaryNav = secondaryNav;
 exports.appLink = appLink;
 exports.userNav = userNav;
 exports.loginLink = loginLink;
-exports.box = box;
 exports.cube = cube;
 exports._global = _global;
 /* sidebarWidth Not a pure module */

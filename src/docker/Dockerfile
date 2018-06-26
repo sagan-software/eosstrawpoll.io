@@ -1,32 +1,17 @@
-FROM eosio/builder
-ARG branch=master
-ARG symbol=SYS
+FROM ubuntu:18.04
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install openssl vim psmisc python3-pip && rm -rf /var/lib/apt/lists/*
-RUN pip3 install numpy
+RUN apt-get update \
+    && apt-get install -y git sudo
 
-RUN git clone -b $branch https://github.com/EOSIO/eos.git \
-    && cd eos \
-    # && git checkout 5221920d42e7a957f7d731f7beaa33fb0f5e215b \
-    && git fetch --all --tags --prune \
-    && git checkout tags/v1.0.6 \
-    && git submodule update --init --recursive \
-    && echo "$branch:$(git rev-parse HEAD)" > /etc/eosio-version
+RUN git clone -b release/1.1 https://github.com/EOSIO/eos.git
 
-ENV EOSIO_ROOT=/opt/eosio
+WORKDIR /eos
 
-ADD ./config.ini /config.ini
+RUN git fetch --all --tags --prune \
+    && git merge -m "merge" --commit origin/gh#3030-enable-mongodb
 
-ADD ./build.sh /build.sh
-RUN chmod +x /build.sh
-RUN /build.sh
+RUN git submodule update --init --recursive
 
-ADD ./start_nodeosd.sh /start_nodeosd.sh
-RUN chmod +x /start_nodeosd.sh
+RUN echo 1 | ./eosio_build.sh
 
-ENV LD_LIBRARY_PATH /usr/local/lib
-
-VOLUME /opt/eosio/bin/data-dir
-VOLUME /opt/eosio/include
-
-ENV PATH /opt/eosio/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+RUN cmake --build /eos/build --target install

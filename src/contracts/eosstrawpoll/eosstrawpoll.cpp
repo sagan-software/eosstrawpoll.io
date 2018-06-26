@@ -1,6 +1,6 @@
 
-#include <algorithm>
-#include <cmath>
+// #include <algorithm>
+// #include <cmath>
 #include <eosiolib/action.hpp>
 #include <eosiolib/contract.hpp>
 #include <eosiolib/eosio.hpp>
@@ -17,15 +17,31 @@ using eosio::indexed_by;
 using std::string;
 using std::vector;
 
+template <typename T>
+T clamp(const T &n, const T &lower, const T &upper)
+{
+    return std::max(lower, std::min(n, upper));
+}
+
+template <typename T>
+bool has_duplicates(const vector<T> &items)
+{
+    vector<T> sorted(items);
+    auto end = sorted.end();
+    std::sort(sorted.begin(), end);
+    return std::adjacent_find(sorted.begin(), end) != end;
+}
+
 // @abi action
 void eosstrawpoll::create(
     const account_name creator,
     const string &title,
+    const string &description,
     const vector<string> &options,
     const vector<account_name> &whitelist,
     const vector<account_name> &blacklist,
-    const uint8_t min_num_choices,
-    const uint8_t max_num_choices,
+    const uint16_t min_choices,
+    const uint16_t max_choices,
     const timestamp open_time,
     const timestamp close_time)
 {
@@ -61,42 +77,17 @@ void eosstrawpoll::create(
 
     // create the poll
     polls_index polls(_self, creator);
-    const uint8_t num_options = options.size();
+    const uint16_t num_options = options.size();
     auto poll = polls.emplace(creator, [&](auto &p) {
         p.id = polls.available_primary_key();
-        p.creator = creator;
-        p.title = title;
-        p.options = options;
-        p.min_num_choices = clamp<uint8_t>(min_num_choices, 1, num_options);
-        p.max_num_choices = clamp<uint8_t>(max_num_choices, p.min_num_choices, num_options);
+        p.num_options = options.size();
+        p.min_choices = clamp<uint16_t>(min_choices, 1, num_options);
+        p.max_choices = clamp<uint16_t>(max_choices, p.min_choices, num_options);
         p.whitelist = whitelist;
         p.blacklist = blacklist;
-        p.create_time = now();
         p.open_time = std::max(open_time, now());
         p.close_time = close_time;
     });
-
-    // add poll to recently created table
-    auto recent_poll = recent_polls.emplace(creator, [&](auto &p) {
-        p.from_poll(*poll);
-        p.id = recent_polls.available_primary_key();
-    });
-
-    // prune recently created table
-    auto time_index = recent_polls.get_index<N(created)>();
-    auto num_left = MAX_RECENT_POLLS;
-    for (auto it = time_index.rbegin(); it != time_index.rend();)
-    {
-        if (num_left <= 0)
-        {
-            it = decltype(it){time_index.erase(std::next(it).base())};
-        }
-        else
-        {
-            num_left -= 1;
-            ++it;
-        }
-    }
 
     eosio::print("successfully created poll (creator=", creator, ", poll_id=", poll->id, ")");
 }
@@ -142,45 +133,6 @@ void eosstrawpoll::destroy(
     // erase poll
     polls.erase(poll);
 
-    // erase poll from recent polls table
-    for (auto it = recent_polls.begin(); it != recent_polls.end();)
-    {
-        if (it->poll_creator == creator && it->poll_id == poll_id)
-        {
-            it = recent_polls.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    // erase poll from popular polls table
-    for (auto it = popular_polls.begin(); it != popular_polls.end();)
-    {
-        if (it->poll_creator == creator && it->poll_id == poll_id)
-        {
-            it = popular_polls.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    // erase votes from recent votes table
-    for (auto it = recent_votes.begin(); it != recent_votes.end();)
-    {
-        if (it->poll_creator == creator && it->poll_id == poll_id)
-        {
-            it = recent_votes.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
     eosio::print("successfully destroyed poll (creator=", creator, ", poll_id=", poll_id, ")");
 }
 
@@ -189,7 +141,7 @@ void eosstrawpoll::vote(
     const account_name creator,
     const uuid poll_id,
     const account_name voter,
-    const vector<uint8_t> &choices)
+    const vector<uint16_t> &choices)
 {
     require_auth(voter);
 
@@ -206,14 +158,14 @@ void eosstrawpoll::vote(
 
     // check number choices can be selected
     const auto num_choices = choices.size();
-    eosio_assert(num_choices >= poll->min_num_choices, "too few choices");
-    eosio_assert(num_choices <= poll->max_num_choices, "too many choices");
+    eosio_assert(num_choices >= poll->min_choices, "too few choices");
+    eosio_assert(num_choices <= poll->max_choices, "too many choices");
 
     // check for duplicates
     eosio_assert(!has_duplicates(choices), "duplicate choices are not allowed");
 
     // check if choices are valid
-    const auto max_choice = poll->options.size() - 1;
+    const auto max_choice = poll->num_options - 1;
     for (auto &choice : choices)
     {
         char error_msg[99];
@@ -232,149 +184,6 @@ void eosstrawpoll::vote(
     eosio_assert(
         bl.empty() || std::find(bl.begin(), bl.end(), voter) == bl.end(),
         "voter is blacklisted");
-
-    // create vote
-    vote_t v;
-    v.voter = voter;
-    v.choices = choices;
-    v.time = now();
-    v.holdings = calculate_holdings(voter);
-
-    // cast vote
-    polls.modify(poll, voter, [&](auto &p) {
-        // check if voter has voted already
-        for (size_t i = 0; i < p.votes.size(); i++)
-        {
-            const vote_t current_vote = p.votes[i];
-            if (current_vote.voter == voter)
-            {
-                p.votes[i] = v;
-                return;
-            }
-        }
-
-        // new voter, add to end of vector
-        p.votes.push_back(v);
-    });
-
-    // check for vote reference in recent votes table
-    {
-        vector<string> choice_strs{};
-        for (auto &i : choices)
-        {
-            choice_strs.push_back(poll->options[i]);
-        }
-
-        bool updated_vote_ref = false;
-        for (auto &item : recent_votes)
-        {
-            if (item.poll_id == poll_id && item.poll_creator == creator && item.voter == voter)
-            {
-                recent_votes.modify(item, voter, [&](auto &v) {
-                    v.choices = choice_strs;
-                });
-                updated_vote_ref = true;
-            }
-        }
-
-        // add vote reference to recent votes table
-        if (!updated_vote_ref)
-        {
-            recent_votes.emplace(voter, [&](auto &v) {
-                v.id = recent_votes.available_primary_key();
-                v.poll_id = poll_id;
-                v.poll_creator = creator;
-                v.poll_title = poll->title;
-                v.voter = voter;
-                v.choices = choice_strs;
-                v.time = now();
-            });
-        }
-
-        // prune recent votes table
-        auto time_index = recent_votes.get_index<N(time)>();
-        auto num_left = MAX_RECENT_VOTES;
-        for (auto it = time_index.rbegin(); it != time_index.rend();)
-        {
-            if (num_left <= 0)
-            {
-                it = decltype(it){time_index.erase(std::next(it).base())};
-            }
-            else
-            {
-                num_left -= 1;
-                ++it;
-            }
-        }
-    };
-
-    // check popular poll's table
-    double lowest_popularity = 999999999;
-    bool updated_poll = false;
-    auto num_left = MAX_POPULAR_POLLS;
-    for (auto poll_ref = popular_polls.begin(); poll_ref != popular_polls.end();)
-    {
-        updated_poll =
-            updated_poll ||
-            (poll_ref->poll_id == poll_id &&
-             poll_ref->poll_creator == creator);
-
-        // get the poll object from the creator's polls table
-        polls_index creator_polls(_self, poll_ref->poll_creator);
-        auto creator_poll = creator_polls.find(poll_ref->poll_id);
-
-        // check if the poll exists
-        if (creator_poll != creator_polls.end())
-        {
-            // update the poll reference
-            popular_polls.modify(poll_ref, voter, [&](auto &p) {
-                p.num_votes = creator_poll->votes.size();
-                p.popularity = creator_poll->calculate_popularity();
-            });
-
-            // save the lowest popularity for later
-            if (poll_ref->popularity < lowest_popularity)
-            {
-                lowest_popularity = poll_ref->popularity;
-            }
-            num_left -= 1;
-            ++poll_ref;
-        }
-        else
-        {
-            // no poll found in the creator's polls table so erase the reference
-            poll_ref = popular_polls.erase(poll_ref);
-        }
-    }
-
-    // check if we should put this poll in the popular poll's table
-    const double poll_popularity = poll->calculate_popularity();
-    const bool should_emplace =
-        !updated_poll &&
-        (num_left > 0 || poll_popularity > lowest_popularity);
-    if (should_emplace)
-    {
-        popular_polls.emplace(voter, [&](auto &p) {
-            p.from_poll(*poll);
-            p.id = popular_polls.available_primary_key();
-        });
-    }
-
-    // prune popular table
-    auto popularity_index = popular_polls.get_index<N(popularity)>();
-    num_left = MAX_POPULAR_POLLS;
-    for (auto it = popularity_index.rbegin(); it != popularity_index.rend();)
-    {
-        if (num_left <= 0)
-        {
-            it = decltype(it){popularity_index.erase(std::next(it).base())};
-        }
-        else
-        {
-            num_left -= 1;
-            ++it;
-        }
-    }
 
     eosio::print("successfully cast vote on poll (id=", poll_id, ", poll_ref_id=", "", ")");
 }

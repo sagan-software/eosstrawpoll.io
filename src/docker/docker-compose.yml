@@ -2,11 +2,51 @@ version: "3"
 
 services:
 
+  mongo-master:
+    image: mongo
+    hostname: mongo-master
+    restart: always
+    command: --smallfiles --replSet rs
+    ports:
+      - 27017:27017
+
+  mongo-slave1:
+    image: mongo
+    hostname: mongo-slave1
+    restart: always
+    command: --smallfiles --replSet rs
+    ports:
+      - 27018:27017
+
+  mongo-slave2:
+    image: mongo
+    hostname: mongo-slave2
+    restart: always
+    command: --smallfiles --replSet rs
+    ports:
+      - 27019:27017
+
+  mongo-setup:
+    image: mongo
+    volumes:
+      - ./start_mongo.sh:/start_mongo.sh
+    entrypoint: [ "bash", "/start_mongo.sh" ]
+
   nodeosd:
     build:
       context: .
     image: eosio/eos
-    command: /start_nodeosd.sh --data-dir /opt/eosio/bin/data-dir -e
+    links:
+      - mongo-master
+      - mongo-slave1
+      - mongo-slave2
+      - mongo-setup
+    depends_on:
+      - mongo-master
+      - mongo-slave1
+      - mongo-slave2
+      - mongo-setup
+    command: /start_nodeosd.sh
     hostname: nodeosd
     ports:
       - 8888:8888
@@ -14,24 +54,35 @@ services:
     expose:
       - "8888"
     volumes:
-      - nodeos-data-volume:/opt/eosio/bin/data-dir
+      - nodeos-data-volume:/mnt/dev/data
       - ./build.sh:/build.sh:ro
       - ./start_nodeosd.sh:/start_nodeosd.sh:ro
-      - ./config.ini:/opt/eosio/bin/data-dir/config.ini:ro
+      - ./config.ini:/mnt/dev/config/config.ini:ro
       - ../contracts:/src:ro
       - ../../dist/contracts:/dist
 
   keosd:
     image: eosio/eos
-    command: /opt/eosio/bin/keosd
+    command: /eos/build/programs/keosd/keosd
     hostname: keosd
     links:
       - nodeosd
     volumes:
-      - keosd-data-volume:/opt/eosio/bin/data-dir
+      - keosd-data-volume:/mnt/dev/data
       - ./build.sh:/build.sh:ro
       - ../contracts:/src:ro
       - ../../dist/contracts:/dist
+
+  web-server:
+    image: node
+    command: /start_api.sh
+    links:
+      - nodeosd
+    volumes:
+      - ./start_api.sh:/start_api.sh:ro
+      - ../../dist:/dist:ro
+    ports:
+      - 3001:3000
 
 volumes:
   nodeos-data-volume:

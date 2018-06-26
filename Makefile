@@ -37,7 +37,8 @@ start-docker:
 start-website:
 	`npm bin`/concurrently --raw \
 		'`npm bin`/bsb -make-world -w' \
-		'`npm bin`/webpack-dev-server --hot --inline --host 0.0.0.0 --progress'
+		'TARGET=web `npm bin`/webpack-dev-server --hot --inline --progress' \
+		'TARGET=node `npm bin`/webpack -w'
 	
 clean-docker:
 	$(DOCKER_COMPOSE) down
@@ -64,7 +65,7 @@ deploy-system-contracts:
 	$(CLEOS) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token
 	$(CLEOS) set contract eosio /opt/eosio/contracts/eosio.system
 
-#PW5JD5qdvMAkQtNKBwuUhG4wpi9wqHrRJi696XjqTMjpjSJeZVqTt
+#PW5JiPNHCmCjJxg4LivrgfgYCC7z2ksg29NSEuPQZGpUTL3qsvCSh
 redeploy:
 	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
 	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp
@@ -72,7 +73,10 @@ redeploy:
 	$(CLEOS) get table eosstrawpoll alice polls
 
 create-polls:
-	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 1",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
-	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
-	$(CLEOS) push action eosstrawpoll create '["bob","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p bob@active
-	$(CLEOS) push action eosstrawpoll create '["carol","Nice poll title 2",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p carol@active
+	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 1","Description A",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
+	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 2","Description B",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
+	$(CLEOS) push action eosstrawpoll create '["bob","Nice poll title 2","Description C",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p bob@active
+	$(CLEOS) push action eosstrawpoll create '["carol","Nice poll title 2","Description D",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p carol@active
+
+create-votes:
+	$(CLEOS) push action eosstrawpoll vote '["alice",0,"bob",[1]]' -p bob@active

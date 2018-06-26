@@ -23,31 +23,18 @@ using mvo = fc::mutable_variant_object;
 typedef uint64_t uuid;
 typedef uint32_t timestamp;
 
-struct vote_t
-{
-    account_name voter;
-    timestamp time;
-    asset holdings;
-    vector<uint8_t> choices;
-};
-FC_REFLECT(vote_t, (voter)(time)(holdings)(choices));
-
 struct poll_t
 {
     uuid id;
-    account_name creator;
-    string title;
-    vector<string> options;
-    vector<vote_t> votes;
-    uint8_t min_num_choices;
-    uint8_t max_num_choices;
+    uint16_t num_options;
+    uint16_t min_choices;
+    uint16_t max_choices;
     vector<account_name> whitelist;
     vector<account_name> blacklist;
-    timestamp create_time;
     timestamp open_time;
     timestamp close_time;
 };
-FC_REFLECT(poll_t, (id)(creator)(title)(options)(votes)(min_num_choices)(max_num_choices)(whitelist)(blacklist)(create_time)(open_time)(close_time));
+FC_REFLECT(poll_t, (id)(num_options)(min_choices)(max_choices)(whitelist)(blacklist)(open_time)(close_time));
 
 class eosstrawpoll_tester : public tester
 {
@@ -89,18 +76,19 @@ class eosstrawpoll_tester : public tester
     auto create_poll(
         const account_name creator,
         const string &title,
+        const string &description,
         const vector<string> &options,
         const vector<account_name> &whitelist,
         const vector<account_name> &blacklist,
-        const uint8_t min_num_choices,
-        const uint8_t max_num_choices,
+        const uint16_t min_choices,
+        const uint16_t max_choices,
         const timestamp open_time,
         const timestamp close_time)
     {
         return push_action(
             creator,
             N(create),
-            mvo()("creator", creator)("title", title)("options", options)("whitelist", whitelist)("blacklist", blacklist)("min_num_choices", min_num_choices)("max_num_choices", max_num_choices)("open_time", open_time)("close_time", close_time));
+            mvo()("creator", creator)("title", title)("description", description)("options", options)("whitelist", whitelist)("blacklist", blacklist)("min_choices", min_choices)("max_choices", max_choices)("open_time", open_time)("close_time", close_time));
     }
 
     auto close_poll(
@@ -127,7 +115,7 @@ class eosstrawpoll_tester : public tester
         const account_name creator,
         const uuid poll_id,
         const account_name voter,
-        const vector<uint8_t> &choices)
+        const vector<uint16_t> &choices)
     {
         return push_action(
             voter,
@@ -171,22 +159,24 @@ class eosstrawpoll_tester : public tester
     uuid require_create_poll(
         const account_name creator,
         const string &title,
+        const string &description,
         const vector<string> &options,
         const vector<account_name> &whitelist,
         const vector<account_name> &blacklist,
-        const uint8_t min_num_choices,
-        const uint8_t max_num_choices,
+        const uint16_t min_choices,
+        const uint16_t max_choices,
         const timestamp open_time,
         const timestamp close_time)
     {
         const action_result result = create_poll(
             creator,
             title,
+            description,
             options,
             whitelist,
             blacklist,
-            min_num_choices,
-            max_num_choices,
+            min_choices,
+            max_choices,
             open_time,
             close_time);
         require_success(result);
@@ -223,30 +213,29 @@ try
     const vector<string> options{"Option A", "Option B", "Option C"};
     const vector<account_name> blacklist{N(name1), N(name2)};
     const vector<account_name> whitelist{N(name3), N(name4)};
-    const uint8_t min_num_choices = 1;
-    const uint8_t max_num_choices = 3;
+    const uint16_t min_choices = 1;
+    const uint16_t max_choices = 3;
     const timestamp open_time = 0;
     const timestamp close_time = 0;
 
     const uuid id = require_create_poll(
         creator,
         title,
+        "",
         options,
         whitelist,
         blacklist,
-        min_num_choices,
-        max_num_choices,
+        min_choices,
+        max_choices,
         open_time,
         close_time);
 
     const poll_t p = get_poll(creator, id);
     BOOST_REQUIRE_EQUAL(p.id, id);
-    BOOST_REQUIRE_EQUAL(p.title, title);
-    BOOST_REQUIRE_MESSAGE(p.options == options, "options are different");
     BOOST_REQUIRE_MESSAGE(p.blacklist == blacklist, "blacklist is different");
     BOOST_REQUIRE_MESSAGE(p.whitelist == whitelist, "whitelist is different");
-    BOOST_REQUIRE_EQUAL(p.min_num_choices, min_num_choices);
-    BOOST_REQUIRE_EQUAL(p.max_num_choices, max_num_choices);
+    BOOST_REQUIRE_EQUAL(p.min_choices, min_choices);
+    BOOST_REQUIRE_EQUAL(p.max_choices, max_choices);
     BOOST_REQUIRE_EQUAL(p.open_time, now());
     BOOST_REQUIRE_EQUAL(p.close_time, close_time);
 }
@@ -258,6 +247,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B", "Option C"},
         vector<account_name>{N(name1), N(name2)},
         vector<account_name>{N(name3), N(name4)},
@@ -276,6 +266,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B", "Option C"},
         vector<account_name>{N(name1), N(name2)},
         vector<account_name>{N(name3), N(name4)},
@@ -297,6 +288,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B", "Option C"},
         vector<account_name>{},
         vector<account_name>{},
@@ -305,42 +297,20 @@ try
         0,
         0);
 
-    poll_t p;
-    vote_t v;
-
-    p = get_poll(N(alice), id);
-    BOOST_REQUIRE_EQUAL(p.votes.size(), 0);
-
-    require_success(cast_vote(N(alice), id, N(bob), vector<uint8_t>{1}));
-    p = get_poll(N(alice), id);
-    BOOST_REQUIRE_EQUAL(p.votes.size(), 1);
-    v = p.votes[0];
-    BOOST_REQUIRE_EQUAL(v.voter, N(bob));
-    BOOST_REQUIRE_MESSAGE(v.choices == vector<uint8_t>{1}, "unexpected choices");
-
-    require_success(cast_vote(N(alice), id, N(carol), vector<uint8_t>{2}));
-    p = get_poll(N(alice), id);
-    BOOST_REQUIRE_EQUAL(p.votes.size(), 2);
-    v = p.votes[1];
-    BOOST_REQUIRE_EQUAL(v.voter, N(carol));
-    BOOST_REQUIRE_MESSAGE(v.choices == vector<uint8_t>{2}, "unexpected choices");
-
-    require_success(cast_vote(N(alice), id, N(bob), vector<uint8_t>{0}));
-    p = get_poll(N(alice), id);
-    BOOST_REQUIRE_EQUAL(p.votes.size(), 2);
-    v = p.votes[0];
-    BOOST_REQUIRE_EQUAL(v.voter, N(bob));
-    BOOST_REQUIRE_MESSAGE(v.choices == vector<uint8_t>{0}, "unexpected choices");
+    require_success(cast_vote(N(alice), id, N(bob), vector<uint16_t>{1}));
+    require_success(cast_vote(N(alice), id, N(carol), vector<uint16_t>{2}));
+    require_success(cast_vote(N(alice), id, N(bob), vector<uint16_t>{0}));
 }
 FC_LOG_AND_RETHROW()
 
-BOOST_FIXTURE_TEST_CASE(num_choices_are_clamped, eosstrawpoll_tester)
+BOOST_FIXTURE_TEST_CASE(choices_are_clamped, eosstrawpoll_tester)
 try
 {
     {
         const uuid id = require_create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"Option A", "Option B", "Option C"},
             vector<account_name>{},
             vector<account_name>{},
@@ -349,28 +319,14 @@ try
             0,
             0);
         const poll_t p = get_poll(N(alice), id);
-        BOOST_REQUIRE_EQUAL(p.min_num_choices, 1);
-        BOOST_REQUIRE_EQUAL(p.max_num_choices, 1);
+        BOOST_REQUIRE_EQUAL(p.min_choices, 1);
+        BOOST_REQUIRE_EQUAL(p.max_choices, 1);
     };
     {
         const uuid id = require_create_poll(
             N(alice),
             "Test poll",
-            vector<string>{"Option A", "Option B", "Option C"},
-            vector<account_name>{},
-            vector<account_name>{},
-            5,
-            4,
-            0,
-            0);
-        const poll_t p = get_poll(N(alice), id);
-        BOOST_REQUIRE_EQUAL(p.min_num_choices, 3);
-        BOOST_REQUIRE_EQUAL(p.max_num_choices, 3);
-    };
-    {
-        const uuid id = require_create_poll(
-            N(alice),
-            "Test poll",
+            "",
             vector<string>{"Option A", "Option B", "Option C"},
             vector<account_name>{},
             vector<account_name>{},
@@ -379,13 +335,30 @@ try
             0,
             0);
         const poll_t p = get_poll(N(alice), id);
-        BOOST_REQUIRE_EQUAL(p.min_num_choices, 3);
-        BOOST_REQUIRE_EQUAL(p.max_num_choices, 3);
+        BOOST_REQUIRE_EQUAL(p.min_choices, 3);
+        BOOST_REQUIRE_EQUAL(p.max_choices, 3);
     };
     {
         const uuid id = require_create_poll(
             N(alice),
             "Test poll",
+            "",
+            vector<string>{"Option A", "Option B", "Option C"},
+            vector<account_name>{},
+            vector<account_name>{},
+            5,
+            4,
+            0,
+            0);
+        const poll_t p = get_poll(N(alice), id);
+        BOOST_REQUIRE_EQUAL(p.min_choices, 3);
+        BOOST_REQUIRE_EQUAL(p.max_choices, 3);
+    };
+    {
+        const uuid id = require_create_poll(
+            N(alice),
+            "Test poll",
+            "",
             vector<string>{"Option A", "Option B", "Option C"},
             vector<account_name>{},
             vector<account_name>{},
@@ -394,8 +367,8 @@ try
             0,
             0);
         const poll_t p = get_poll(N(alice), id);
-        BOOST_REQUIRE_EQUAL(p.min_num_choices, 2);
-        BOOST_REQUIRE_EQUAL(p.max_num_choices, 2);
+        BOOST_REQUIRE_EQUAL(p.min_choices, 2);
+        BOOST_REQUIRE_EQUAL(p.max_choices, 2);
     };
 }
 FC_LOG_AND_RETHROW()
@@ -408,6 +381,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{},
             vector<account_name>{},
             vector<account_name>{},
@@ -421,6 +395,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"Option A"},
             vector<account_name>{},
             vector<account_name>{},
@@ -439,6 +414,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"A", "B", ""},
             vector<account_name>{},
             vector<account_name>{},
@@ -457,6 +433,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"A", "B", "B"},
             vector<account_name>{},
             vector<account_name>{},
@@ -475,6 +452,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"Option A", "Option B"},
             vector<account_name>{},
             vector<account_name>{},
@@ -487,6 +465,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"Option A", "Option B"},
             vector<account_name>{},
             vector<account_name>{},
@@ -505,6 +484,7 @@ try
         create_poll(
             N(alice),
             "Test poll",
+            "",
             vector<string>{"Option A", "Option B"},
             vector<account_name>{},
             vector<account_name>{},
@@ -524,7 +504,7 @@ try
             N(janice),
             1,
             N(bob),
-            vector<uint8_t>{}));
+            vector<uint16_t>{}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("poll doesn't exist"),
@@ -532,7 +512,7 @@ try
             N(alice),
             9999,
             N(bob),
-            vector<uint8_t>{}));
+            vector<uint16_t>{}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -542,6 +522,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -556,7 +537,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     produce_block(fc::seconds(9));
 
@@ -566,7 +547,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     produce_block(fc::seconds(1));
 
@@ -575,11 +556,12 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     const uuid id2 = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -593,7 +575,7 @@ try
             N(alice),
             id2,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -603,6 +585,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -616,7 +599,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     const poll_t p = get_poll(N(alice), id);
     require_success(close_poll(N(alice), id));
@@ -627,11 +610,12 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     const uuid id2 = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -645,7 +629,7 @@ try
             N(alice),
             id2,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     produce_block(fc::seconds(5));
 
@@ -654,7 +638,7 @@ try
             N(alice),
             id2,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     produce_block(fc::seconds(5));
 
@@ -664,7 +648,7 @@ try
             N(alice),
             id2,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -674,6 +658,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -688,7 +673,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{}));
+            vector<uint16_t>{}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("too few choices"),
@@ -696,14 +681,14 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     require_success(
         cast_vote(
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1}));
+            vector<uint16_t>{0, 1}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -713,6 +698,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -727,7 +713,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1, 2, 3}));
+            vector<uint16_t>{0, 1, 2, 3}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("too many choices"),
@@ -735,14 +721,14 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1, 2}));
+            vector<uint16_t>{0, 1, 2}));
 
     require_success(
         cast_vote(
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1}));
+            vector<uint16_t>{0, 1}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -752,6 +738,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B", "Option C"},
         vector<account_name>{},
         vector<account_name>{},
@@ -766,7 +753,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{1, 1, 0}));
+            vector<uint16_t>{1, 1, 0}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("duplicate choices are not allowed"),
@@ -774,7 +761,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{1, 0, 1}));
+            vector<uint16_t>{1, 0, 1}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("duplicate choices are not allowed"),
@@ -782,14 +769,14 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1, 0}));
+            vector<uint16_t>{0, 1, 0}));
 
     require_success(
         cast_vote(
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 1, 2}));
+            vector<uint16_t>{0, 1, 2}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -799,6 +786,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{},
@@ -813,7 +801,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{2, 3}));
+            vector<uint16_t>{2, 3}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("received invalid choice 3, must be within 0-1"),
@@ -821,7 +809,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0, 3}));
+            vector<uint16_t>{0, 3}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -831,6 +819,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{N(carol)},
         vector<account_name>{},
@@ -845,14 +834,14 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     require_success(
         cast_vote(
             N(alice),
             id,
             N(carol),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 }
 FC_LOG_AND_RETHROW()
 
@@ -862,6 +851,7 @@ try
     const uuid id = require_create_poll(
         N(alice),
         "Test poll",
+        "",
         vector<string>{"Option A", "Option B"},
         vector<account_name>{},
         vector<account_name>{N(bob), N(carol)},
@@ -876,7 +866,7 @@ try
             N(alice),
             id,
             N(bob),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     BOOST_REQUIRE_EQUAL(
         wasm_assert_msg("voter is blacklisted"),
@@ -884,14 +874,14 @@ try
             N(alice),
             id,
             N(carol),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 
     require_success(
         cast_vote(
             N(alice),
             id,
             N(alice),
-            vector<uint8_t>{0}));
+            vector<uint16_t>{0}));
 }
 FC_LOG_AND_RETHROW()
 

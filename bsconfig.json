@@ -8,10 +8,16 @@
 	"reason": {
 		"react-jsx": 2
 	},
-	"sources": {
-		"dir": "src/website",
-		"subdirs": true
-	},
+	"sources": [
+		{
+			"dir": "src/web-client",
+			"subdirs": true
+		},
+		{
+			"dir": "src/web-server",
+			"subdirs": true
+		}
+	],
 	"package-specs": [
 		{
 			"module": "commonjs",
@@ -25,7 +31,8 @@
 		"bs-webapi",
 		"@glennsl/bs-json",
 		"bs-typed-glamor",
-		"re-formality"
+		"re-formality",
+		"bs-express"
 	],
 	"refmt": 3
 }

@@ -1,30 +1,30 @@
 #!/bin/sh
 
-cd /opt/eosio/bin
+echo "Waiting for MongoDB.."
+until mongo --host mongo-master:27017 --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' &>/dev/null; do
+  printf '.'
+  sleep 1
+done
+
+sleep 20
+
+cd /eos/build
 
 #/build.sh
 
-if [ -f '/opt/eosio/bin/data-dir/config.ini' ]; then
+if [ -f '/mnt/dev/config/config.ini' ]; then
     echo
   else
-    cp /config.ini /opt/eosio/bin/data-dir
+    cp /config.ini /mnt/dev/config
 fi
 
-while :; do
-    case $1 in
-        --config-dir=?*)
-            CONFIG_DIR=${1#*=}
-            ;;
-        *)
-            break
-    esac
-    shift
-done
+exec nodeos \
+    --data-dir /mnt/dev/data \
+    --config-dir /mnt/dev/config \
+    --replay-blockchain \
+    --delete-all-blocks \
+    --enable-stale-production \
+    --mongodb-wipe \
+    "$@"
 
-if [ ! "$CONFIG_DIR" ]; then
-    CONFIG_DIR="--config-dir=/opt/eosio/bin/data-dir"
-else
-    CONFIG_DIR=""
-fi
-
-exec /opt/eosio/bin/nodeos $CONFIG_DIR "$@"
+#nodeos -e -p eosio --plugin eosio::wallet_api_plugin --plugin eosio::wallet_plugin --plugin eosio::producer_plugin --plugin eosio::history_plugin --plugin eosio::chain_api_plugin --plugin eosio::history_api_plugin --plugin eosio::http_plugin -d /mnt/dev/data --config-dir /mnt/dev/config --http-server-address=0.0.0.0:8888 --access-control-allow-origin=* --contracts-console

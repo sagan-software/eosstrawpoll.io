@@ -1,7 +1,6 @@
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const WriteFilePlugin = require("write-file-webpack-plugin");
 const path = require("path");
 
 const IS_PROD = process.env.NODE_ENV === "production";
@@ -12,29 +11,17 @@ const webConfig = {
 	target: "web",
 	mode: IS_PROD ? "production" : "development",
 	devtool: IS_PROD ? undefined : "inline-source-map",
-	entry: "./src/web-client/Index.js",
+	entry: "./src/website/WebClient.js",
 	output: {
-		path: path.resolve(__dirname, "dist/web-client"),
-		filename: "[name].bundle.js",
+		path: path.resolve(__dirname, "dist/website"),
+		filename: "client.js",
 		publicPath: "/",
-	},
-	resolve: {
-		extensions: [".js"],
 	},
 	performance: {
 		hints: IS_PROD ? "error" : false,
 	},
-	module: {
-		rules: [
-			{
-				test: /\.pug$/,
-				use: ["pug-loader"],
-				exclude: /node_modules/,
-			},
-		],
-	},
 	devServer: {
-		// contentBase: path.resolve(__dirname, "dist/web-client"),
+		// contentBase: path.resolve(__dirname, "dist/website"),
 		contentBase: false,
 		compress: true,
 		port: 9001,
@@ -52,28 +39,20 @@ const webConfig = {
 		},
 	},
 	plugins: [
-		new CleanWebpackPlugin(["dist/web-client"], {
+		new CleanWebpackPlugin(["dist/website/client.js"], {
 			verbose: true,
 		}),
-		// new HtmlWebpackPlugin({
-		// 	template: "src/web-client/Index.pug",
-		// 	filename: "index.html",
-		// }),
 		new MiniCssExtractPlugin(),
-		new WriteFilePlugin(),
 	],
 };
 
 const nodeConfig = {
 	target: "node",
 	mode: IS_PROD ? "production" : "development",
-	entry: "./src/web-server/WebServer.js",
+	entry: "./src/website/WebServer.js",
 	output: {
-		path: path.resolve(__dirname, "dist/web-server"),
-		filename: "[name].bundle.js",
-	},
-	resolve: {
-		extensions: [".js"],
+		path: path.resolve(__dirname, "dist/website"),
+		filename: "server.js",
 	},
 	plugins: [
 		// new CleanWebpackPlugin(["dist/web-server"], {

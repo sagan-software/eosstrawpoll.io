@@ -73,14 +73,14 @@ services:
       - ../contracts:/src:ro
       - ../../dist/contracts:/dist
 
-  web-server:
+  website:
     image: node
     command: /start_api.sh
     links:
       - nodeosd
     volumes:
       - ./start_api.sh:/start_api.sh:ro
-      - ../../dist:/dist:ro
+      - ../../dist/website:/dist:ro
     ports:
       - 3001:3000
 

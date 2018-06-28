@@ -45,8 +45,9 @@ clean-docker:
 	docker volume prune
 
 create-accounts:
-	$(CLEOS) wallet import 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
+	$(CLEOS) wallet import 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3 || exit 0
 	$(CLEOS) create account eosio eosio.token EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+	$(CLEOS) create account eosio eosio.msig EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio eosio.ram EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio eosio.ramfee EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 	$(CLEOS) create account eosio eosio.stake EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
@@ -60,12 +61,12 @@ create-accounts:
 	$(CLEOS) create account eosio carol EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
 deploy-system-contracts:
-	$(CLEOS) set contract eosio.token /opt/eosio/contracts/eosio.token
-	$(CLEOS) set contract eosio.msig /opt/eosio/contracts/eosio.token
+	$(CLEOS) set contract eosio.token /eos/build/contracts/eosio.token || exit 0
+	$(CLEOS) set contract eosio.msig /eos/build/contracts/eosio.token || exit 0
 	$(CLEOS) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token
-	$(CLEOS) set contract eosio /opt/eosio/contracts/eosio.system
+	$(CLEOS) set contract eosio /eos/build/contracts/eosio.system || exit 0
 
-#PW5JiPNHCmCjJxg4LivrgfgYCC7z2ksg29NSEuPQZGpUTL3qsvCSh
+#PW5JVMECmBvYyedmQgMa149MxnHTTdBY1cDW7WxD1R2DzdsUQcVoW
 redeploy:
 	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
 	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp

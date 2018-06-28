@@ -185,20 +185,38 @@ void eosstrawpoll::vote(
         bl.empty() || std::find(bl.begin(), bl.end(), voter) == bl.end(),
         "voter is blacklisted");
 
-    eosio::print("successfully cast vote on poll (id=", poll_id, ", poll_ref_id=", "", ")");
+    eosio::print("successfully voted on poll (id=", poll_id, ")");
 }
 
-asset eosstrawpoll::calculate_holdings(const account_name account)
+// @abi action
+void eosstrawpoll::comment(
+    const account_name creator,
+    const uuid poll_id,
+    const account_name commenter,
+    const string &content)
 {
-    // get unstaked balance from table: eosio.token account accounts
+    require_auth(commenter);
 
-    // get staked balance and RAM from table: eosio account userres
+    // check if poll exists
+    polls_index polls(_self, creator);
+    auto poll = polls.find(poll_id);
+    eosio_assert(poll != polls.end(), "poll doesn't exist");
 
-    // get exchange rate of RAM for system token from table: eosio eosio rammarket
-
-    // sum up unstaked balance, staked balance, and RAM value
-
-    return asset();
+    eosio::print("successfully commented on poll (id=", poll_id, ")");
 }
 
-EOSIO_ABI(eosstrawpoll, (create)(close)(destroy)(vote))
+// @abi action
+void eosstrawpoll::update(
+    const account_name creator,
+    const uuid poll_id,
+    const string &new_description)
+{
+    require_auth(creator);
+    polls_index polls(_self, creator);
+    auto poll = polls.find(poll_id);
+    eosio_assert(poll != polls.end(), "poll doesn't exist");
+
+    eosio::print("successfully updated poll (id=", poll_id, ")");
+}
+
+EOSIO_ABI(eosstrawpoll, (create)(close)(destroy)(vote)(comment)(update))

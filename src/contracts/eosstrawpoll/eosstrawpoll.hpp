@@ -99,8 +99,11 @@ class eosstrawpoll : public eosio::contract
     void comment(
         const account_name creator,
         const uuid poll_id,
+        const account_name commenter,
         const string &content);
 
-  private:
-    asset calculate_holdings(const account_name account);
+    void update(
+        const account_name creator,
+        const uuid poll_id,
+        const string &new_description);
 };

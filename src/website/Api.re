@@ -24,15 +24,18 @@ module Contract = {
       t,
       {
         .
-        "creator": string,
+        "poll_creator": string,
+        "poll_id": string,
         "title": string,
+        "description": string,
         "options": Js.Array.t(string),
         "whitelist": Js.Array.t(string),
         "blacklist": Js.Array.t(string),
-        "min_num_choices": int,
-        "max_num_choices": int,
+        "min_choices": int,
+        "max_choices": int,
         "open_time": int,
         "close_time": int,
+        "app_label": string,
       },
       Eos.Action.options
     ) =>
@@ -44,21 +47,9 @@ module Contract = {
       t,
       {
         .
-        "creator": string,
+        "poll_creator": string,
         "poll_id": int,
-      },
-      Eos.Action.options
-    ) =>
-    Js.Promise.t(unit) =
-    "";
-  [@bs.send]
-  external destroy :
-    (
-      t,
-      {
-        .
-        "creator": string,
-        "poll_id": int,
+        "app_label": string,
       },
       Eos.Action.options
     ) =>
@@ -70,10 +61,27 @@ module Contract = {
       t,
       {
         .
-        "creator": string,
-        "poll_id": int,
+        "poll_creator": string,
+        "poll_id": string,
         "voter": string,
         "choices": Js.Array.t(int),
+        "app_label": string,
+      },
+      Eos.Action.options
+    ) =>
+    Js.Promise.t(unit) =
+    "";
+  [@bs.send]
+  external comment :
+    (
+      t,
+      {
+        .
+        "poll_creator": string,
+        "poll_id": string,
+        "commenter": string,
+        "content": string,
+        "app_label": string,
       },
       Eos.Action.options
     ) =>
@@ -84,13 +92,15 @@ module Contract = {
 let create =
     (
       contract,
-      ~creator,
+      ~pollCreator,
+      ~pollId,
       ~title,
+      ~description="",
       ~options,
       ~whitelist=[||],
       ~blacklist=[||],
-      ~minNumChoices=0,
-      ~maxNumChoices=0,
+      ~minChoices=0,
+      ~maxChoices=0,
       ~openTime=0,
       ~closeTime=0,
       (),
@@ -98,41 +108,42 @@ let create =
   Contract.create(
     contract,
     {
-      "creator": creator,
+      "poll_creator": pollCreator,
+      "poll_id": pollId,
       "title": title,
+      "description": description,
       "options": options,
       "whitelist": whitelist,
       "blacklist": blacklist,
-      "min_num_choices": minNumChoices,
-      "max_num_choices": maxNumChoices,
+      "min_choices": minChoices,
+      "max_choices": maxChoices,
       "open_time": openTime,
       "close_time": closeTime,
+      "app_label": WebClientEnv.appLabel,
     },
-    Eos.Action.options(~authorization=[|{j|$creator@active|j}|], ()),
+    Eos.Action.options(~authorization=[|{j|$pollCreator@active|j}|], ()),
   );
 
-let close = (contract, ~creator, ~pollId) =>
+let close = (contract, ~pollCreator, ~pollId) =>
   Contract.close(
     contract,
-    {"creator": creator, "poll_id": pollId},
-    Eos.Action.options(~authorization=[|{j|$creator@active|j}|], ()),
+    {
+      "poll_creator": pollCreator,
+      "poll_id": pollId,
+      "app_label": WebClientEnv.appLabel,
+    },
+    Eos.Action.options(~authorization=[|{j|$pollCreator@active|j}|], ()),
   );
 
-let destroy = (contract, ~creator, ~pollId) =>
-  Contract.close(
-    contract,
-    {"creator": creator, "poll_id": pollId},
-    Eos.Action.options(~authorization=[|{j|$creator@active|j}|], ()),
-  );
-
-let vote = (contract, ~creator, ~pollId, ~voter, ~choices) =>
+let vote = (contract, ~pollCreator, ~pollId, ~voter, ~choices) =>
   Contract.vote(
     contract,
     {
-      "creator": creator,
+      "poll_creator": pollCreator,
       "poll_id": pollId,
       "voter": voter,
       "choices": choices,
+      "app_label": WebClientEnv.appLabel,
     },
     Eos.Action.options(~authorization=[|{j|$voter@active|j}|], ()),
   );
@@ -193,7 +204,7 @@ module Poll = {
   let decode = json =>
     Json.Decode.{
       id: json |> field("id", int),
-      creator: json |> field("creator", string),
+      creator: json |> field("poll_creator", string),
       title: json |> field("title", string),
       options: json |> field("options", array(string)),
       votes: json |> field("votes", array(Vote.decode)),

@@ -8,7 +8,8 @@ function decode(j) {
   var partial_arg = Eos$ReactTemplate.AccountName[/* decode */0];
   var partial_arg$1 = Eos$ReactTemplate.AccountName[/* decode */0];
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j),
           /* title */Json_decode.field("title", Json_decode.string, j),
           /* description */Json_decode.field("description", Json_decode.string, j),
           /* options */Json_decode.field("options", (function (param) {
@@ -31,8 +32,8 @@ var Create = /* module */[/* decode */decode];
 
 function decode$1(j) {
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
-          /* pollId */Json_decode.field("poll_id", Json_decode.$$int, j)
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j)
         ];
 }
 
@@ -40,8 +41,8 @@ var Close = /* module */[/* decode */decode$1];
 
 function decode$2(j) {
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
-          /* pollId */Json_decode.field("poll_id", Json_decode.$$int, j)
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j)
         ];
 }
 
@@ -49,8 +50,8 @@ var Destroy = /* module */[/* decode */decode$2];
 
 function decode$3(j) {
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
-          /* pollId */Json_decode.field("poll_id", Json_decode.$$int, j),
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j),
           /* voter */Json_decode.field("voter", Eos$ReactTemplate.AccountName[/* decode */0], j),
           /* choices */Json_decode.field("choices", (function (param) {
                   return Json_decode.array(Json_decode.$$int, param);
@@ -62,8 +63,8 @@ var Vote = /* module */[/* decode */decode$3];
 
 function decode$4(j) {
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
-          /* pollId */Json_decode.field("poll_id", Json_decode.$$int, j),
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j),
           /* commenter */Json_decode.field("voter", Eos$ReactTemplate.AccountName[/* decode */0], j),
           /* content */Json_decode.field("choices", Json_decode.string, j)
         ];
@@ -73,8 +74,8 @@ var Comment = /* module */[/* decode */decode$4];
 
 function decode$5(j) {
   return /* record */[
-          /* creator */Json_decode.field("creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
-          /* pollId */Json_decode.field("poll_id", Json_decode.$$int, j),
+          /* pollCreator */Json_decode.field("poll_creator", Eos$ReactTemplate.AccountName[/* decode */0], j),
+          /* pollId */Json_decode.field("poll_id", Json_decode.string, j),
           /* newDescription */Json_decode.field("choices", Json_decode.string, j)
         ];
 }

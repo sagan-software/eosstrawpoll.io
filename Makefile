@@ -2,6 +2,7 @@ DOCKER_COMPOSE := docker-compose --file src/docker/docker-compose.yml
 DOCKER_EXEC := $(DOCKER_COMPOSE) exec keosd
 CLEOS := $(DOCKER_EXEC) cleos -u http://nodeosd:8888 --wallet-url http://localhost:8888
 EOSIOCPP := $(DOCKER_EXEC) eosiocpp
+PUBKEY := EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
 .PHONY: build build-contracts build-website
 build: build-contracts build-website
@@ -35,7 +36,7 @@ start-docker:
 	$(DOCKER_COMPOSE) up
 
 start-website:
-	`npm bin`/concurrently --raw \
+	`npm bin`/concurrently --raw --kill-others \
 		'`npm bin`/bsb -make-world -w' \
 		'TARGET=web `npm bin`/webpack-dev-server --hot --inline --progress' \
 		'TARGET=node `npm bin`/webpack -w'
@@ -44,40 +45,42 @@ clean-docker:
 	$(DOCKER_COMPOSE) down
 	docker volume prune
 
-create-accounts:
-	$(CLEOS) wallet import 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3 || exit 0
-	$(CLEOS) create account eosio eosio.token EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.msig EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.ram EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.ramfee EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.stake EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.bpay EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.vpay EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.saving EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosio.names EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio eosstrawpoll EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio alice EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio bob EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-	$(CLEOS) create account eosio carol EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
-
-deploy-system-contracts:
+setup-chain:
+	$(CLEOS) wallet import $(PUBKEY) || exit 0
+	$(CLEOS) create account eosio eosio.token $(PUBKEY) $(PUBKEY) || exit 0
+	$(CLEOS) create account eosio eosio.msig $(PUBKEY) $(PUBKEY) || exit 0
+	$(CLEOS) create account eosio eosio.ram $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.ramfee $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.stake $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.bpay $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.vpay $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.saving $(PUBKEY) $(PUBKEY)
+	$(CLEOS) create account eosio eosio.names $(PUBKEY) $(PUBKEY)
 	$(CLEOS) set contract eosio.token /eos/build/contracts/eosio.token || exit 0
 	$(CLEOS) set contract eosio.msig /eos/build/contracts/eosio.token || exit 0
 	$(CLEOS) push action eosio.token create '[ "eosio", "10000000000.0000 SYS" ]' -p eosio.token
+	$(CLEOS) push action eosio.token issue '[ "eosio", "10000000000.0000 SYS", "memo" ]' -p eosio
 	$(CLEOS) set contract eosio /eos/build/contracts/eosio.system || exit 0
+	$(CLEOS) push action eosio setpriv '["eosio.msig", 1]' -p eosio@active
+	$(CLEOS) system newaccount eosio --transfer eosstrawpoll $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 2000
+	$(CLEOS) system newaccount eosio --transfer alice $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
+	$(CLEOS) system newaccount eosio --transfer bob $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
+	$(CLEOS) system newaccount eosio --transfer carol $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
 
-#PW5JVMECmBvYyedmQgMa149MxnHTTdBY1cDW7WxD1R2DzdsUQcVoW
+#PW5JzF4wenHHG3rus4FYymhP6G4Q6kXe3wrP6gPsTFyp1oCUf6TJ3
 redeploy:
 	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
 	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp
 	$(CLEOS) set contract eosstrawpoll /dist /dist/eosstrawpoll.wast /dist/eosstrawpoll.abi
 	$(CLEOS) get table eosstrawpoll alice polls
 
-create-polls:
-	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 1","Description A",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
-	$(CLEOS) push action eosstrawpoll create '["alice","Nice poll title 2","Description B",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p alice@active
-	$(CLEOS) push action eosstrawpoll create '["bob","Nice poll title 2","Description C",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p bob@active
-	$(CLEOS) push action eosstrawpoll create '["carol","Nice poll title 2","Description D",["Option A","Option B","Option C"],[],[],0,0,0,0]' -p carol@active
-
-create-votes:
-	$(CLEOS) push action eosstrawpoll vote '["alice",0,"bob",[1]]' -p bob@active
+create-data:
+	$(CLEOS) push action eosstrawpoll close '["alice", "fuckballs", "cleos"]' -p alice@active || exit 0
+	$(CLEOS) push action eosstrawpoll create '["alice", "fuckballs", "BALLS","Description A",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p alice@active
+	$(CLEOS) push action eosstrawpoll close '["alice", "balls", "cleos"]' -p alice@active || exit 0
+	$(CLEOS) push action eosstrawpoll create '["alice","balls", "Neato","Description B",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p alice@active
+	$(CLEOS) push action eosstrawpoll close '["bob", "hello", "cleos"]' -p bob@active || exit 0
+	$(CLEOS) push action eosstrawpoll create '["bob","hello", "Nice poll title 2","Description C",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p bob@active
+	$(CLEOS) push action eosstrawpoll close '["carol", "asdf", "cleos"]' -p carol@active || exit 0
+	$(CLEOS) push action eosstrawpoll create '["carol","asdf", "Nice poll title 2","Description D",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p carol@active
+	$(CLEOS) push action eosstrawpoll vote '["alice","fuckballs","bob",[1],"cleos"]' -p bob@active

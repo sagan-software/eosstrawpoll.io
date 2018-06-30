@@ -17,47 +17,171 @@
  website_1       |         open_time: 0,                                                                   website_1       |         close_time: 0 } },
  website_1       |   ns: { db: 'EOS', coll: 'actions' },
  */
+let blockByTrxId = (mongo, trxId) =>
+  mongo
+  |> Db.Eos.Blocks.collection
+  |. Mongo.Collection.find({"block.transactions.trx.id": trxId})
+  |. Mongo.Cursor.limit(1)
+  |. Mongo.Cursor.next;
+
 /* connect to mongo */
 /* listen for changes */
 /* on 'create' action, add the new poll to the 'polls' mongo collection */
-let onCreate = (client, fields: Contract.Create.t) =>
-  client
-  |. Mongo.Client.db(WebServerEnv.mongoAppDb)
-  |. Mongo.Database.collection("polls")
-  |. Mongo.Collection.save(
-       Data.Poll.encode({
-         creator: fields.creator,
-         title: fields.title,
-         description: fields.description,
-         options: fields.options,
-         whitelist: fields.whitelist,
-         blacklist: fields.whitelist,
-         minChoices: fields.minChoices,
-         maxChoices: fields.maxChoices,
-         openTime: fields.openTime,
-         closeTime: fields.closeTime,
-         createTime: 0,
-         votes: [||],
-         comments: [||],
-       }),
-     )
-  |> ignore;
+let onCreateAction = (mongo, trxId, block, fields) =>
+  mongo
+  |. Db.Polls.save({
+       "id":
+         fields##poll_creator
+         ++ "_"
+         ++ fields##poll_id
+         ++ "_"
+         ++ string_of_int(block##block_num),
+       "pollId": fields##poll_id,
+       "pollCreator": fields##poll_creator,
+       "version": 1,
+       "title": fields##title,
+       "description": fields##description,
+       "options": fields##options,
+       "whitelist": fields##whitelist,
+       "blacklist": fields##blacklist,
+       "openTime": fields##open_time,
+       "closeTime": fields##close_time,
+       "blockId": block##block_id,
+       "blockNum": block##block_num,
+       "blockTime": block##block##timestamp,
+       "trxId": trxId,
+       "appLabel": fields##app_label,
+     });
 
-let onChange = (client, change) => {
+/* let onCloseAction = (mongo, block, fields) =>
+   mongo
+   |> Db.Polls.find({"creator": fields##creator, "id": fields##poll_id})
+   |. Mongo.Cursor.next
+   |> Js.Promise.then_(pollOpt =>
+        switch (pollOpt) {
+        | Some(poll) => Js.Promise.resolve(poll)
+        | None => Js.Promise.reject(Not_found)
+        }
+      )
+      |> Js.Promise.then_(poll =>
+      mongo
+      |> Db.Polls.collection
+      |>
+      ); */
+let onVoteAction = (mongo, trxId, block, fields) =>
+  mongo
+  |. Db.Votes.save({
+       "id":
+         fields##poll_creator
+         ++ "_"
+         ++ fields##poll_id
+         ++ "_"
+         ++ fields##voter
+         ++ "_"
+         ++ string_of_int(block##block_num),
+       "pollId": fields##poll_id,
+       "pollCreator": fields##poll_creator,
+       "pollVersion": 1,
+       "voter": fields##voter,
+       "choices": fields##choices,
+       "blockId": block##block_id,
+       "blockNum": block##block_num,
+       "blockTime": block##block##timestamp,
+       "trxId": trxId,
+       "appLabel": fields##app_label,
+     });
+
+let onCommentAction = (mongo, trxId, block, fields) =>
+  mongo
+  |. Db.Comments.save({
+       "id":
+         fields##poll_creator
+         ++ "_"
+         ++ fields##poll_id
+         ++ "_"
+         ++ fields##commenter
+         ++ "_"
+         ++ string_of_int(block##block_num),
+       "pollId": fields##poll_id,
+       "pollCreator": fields##poll_creator,
+       "pollVersion": 1,
+       "commenter": fields##commenter,
+       "content": fields##content,
+       "blockId": block##block_id,
+       "blockNum": block##block_num,
+       "blockTime": block##block##timestamp,
+       "trxId": trxId,
+       "appLabel": fields##app_label,
+     });
+
+/* let onSettingsAction = (mongo, fields) =>
+   mongo
+   |. Db.Settings.save({
+         "pollId": fields##poll_id,
+         "pollCreator": fields##poll_creator,
+         "pollVersion": 1,
+         "commenter": fields##commenter,
+         "content": fields##content,
+         "blockId": block##block_id,
+         "blockNum": block##block_num,
+         "blockTime": block##block##timestamp,
+         "trxId": trxId,
+         "appLabel": fields##app_label,
+       }); */
+let onActionsChange = (client, change) => {
   let fullDocument = change |. Mongo.ChangeEvent.fullDocument;
   let name = fullDocument |. Eos.Mongo.Action.name;
   let data = fullDocument |. Eos.Mongo.Action.data;
+  let trxId = fullDocument |. Eos.Mongo.Action.trxId;
+  Js.log3("New action", name, fullDocument);
   /* switch (data) {
      | Contract.Action.Create(fields) => Js.log2("Create", fields)
      | Contract.Action.Vote(fields) => Js.log2("Vote", fields)
      | _ => Js.log2("something else", data)
      }; */
-  switch (name) {
-  | "create" =>
-    Js.log2("Create", data |> Contract.Create.decode |> onCreate(client))
-  | "vote" => Js.log2("Vote", data |. Contract.Vote.decode)
-  | _ => Js.log2("something else", name)
-  };
+  Js.Global.setTimeout(
+    () =>
+      blockByTrxId(client, trxId)
+      |> Js.Promise.then_(block => {
+           let b =
+             block
+             |> Js.Nullable.toOption
+             |> Js.Option.getWithDefault({
+                  "block_num": (-1),
+                  "block_id": "",
+                  "block": {
+                    "timestamp": "",
+                  },
+                });
+           Js.log3("!!!!!! BLOaaCK", trxId, b);
+           switch (name) {
+           | "create" => data |> onCreateAction(client, trxId, b) |> ignore
+           /* | "close" => data |> onCloseAction(client, trxId, b) |> ignore */
+           | "vote" => data |> onVoteAction(client, trxId, b) |> ignore
+           | _ => Js.log2("unknown action:", name)
+           };
+           Js.Promise.resolve();
+         })
+      |> Js.Promise.catch(e => {
+           Js.log2("Error getting block ", e);
+           Js.Promise.resolve();
+         })
+      |> ignore,
+    750,
+  )
+  |> ignore;
+};
+
+let onBlocksChange = (mongo, change) => {
+  let block = change |. Mongo.ChangeEvent.fullDocument;
+  Js.log2("block change", block##block_num);
+  mongo
+  |. Db.Blocks.save({
+       "id": block##block_id,
+       "num": block##block_num,
+       "time": block##block##timestamp,
+     })
+  |> ignore;
 };
 
 /* on 'vote' action, add the vote to the 'votes' mongo collection */
@@ -67,24 +191,30 @@ let onChange = (client, change) => {
           - mark the poll's votes as deleted in the 'votes' mongo collection
    */
 /* on 'close' action, mark the poll as closed in the 'polls' mongo collection */
-let listen = () =>
-  WebServerEnv.mongoUri
-  |> Mongo.Client.make
-  |> Js.Promise.then_(client => {
-       Js.log("Connected to MongoDB!!!!!!!!!");
-       client
-       |. Mongo.Client.db(WebServerEnv.mongoEosDb)
-       |. Mongo.Database.collection("actions")
-       |. Mongo.Collection.watch([|
-            Mongo.pipeline(
-              ~match=
-                Js.Dict.fromList([
-                  ("fullDocument.account", WebServerEnv.contractAccount),
-                ]),
-              (),
-            ),
-          |])
-       |. Mongo.ChangeStream.on(`change(onChange(client)))
-       |> Js.Promise.resolve;
-     });
-/* on 'comment' action, add the comment to the 'comments' mongo collection */
+let listenToActions = mongo =>
+  mongo
+  |> Db.Eos.Actions.collection
+  |. Mongo.Collection.watch([|
+       {
+         "$match": {
+           "operationType": "insert",
+           "fullDocument.account": WebServerEnv.contractAccount,
+         },
+       },
+     |])
+  |. Mongo.ChangeStream.on(`change(onActionsChange(mongo)))
+  |> Js.Promise.resolve;
+
+let listenToBlocks = mongo =>
+  mongo
+  |> Db.Eos.Blocks.collection
+  |. Mongo.Collection.watch([|{
+                                "$match": {
+                                  "operationType": "insert",
+                                },
+                              }|])
+  |. Mongo.ChangeStream.on(`change(onBlocksChange(mongo)))
+  |> Js.Promise.resolve;
+
+let listen = mongo =>
+  Js.Promise.all2((listenToActions(mongo), listenToBlocks(mongo)));

@@ -17,6 +17,8 @@ var siteUrl = Env$ReactTemplate.siteUrl;
 
 var staticBaseUrl = Env$ReactTemplate.staticBaseUrl;
 
+var appLabel = Env$ReactTemplate.appLabel;
+
 var mongoUri = "mongodb://mongo-master:27017,mongo-slave1:27017,mongo-slave2:27017?replicaSet=rs";
 
 var mongoAppDb = "eosstrawpoll";
@@ -34,6 +36,7 @@ exports.network = network;
 exports.eosConfig = eosConfig;
 exports.siteUrl = siteUrl;
 exports.staticBaseUrl = staticBaseUrl;
+exports.appLabel = appLabel;
 exports.mongoUri = mongoUri;
 exports.mongoAppDb = mongoAppDb;
 exports.mongoEosDb = mongoEosDb;

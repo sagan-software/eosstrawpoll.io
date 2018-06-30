@@ -17,26 +17,21 @@ using std::set;
 using std::string;
 using std::vector;
 
-typedef uint64_t uuid;
+typedef account_name uuid;
 typedef uint32_t timestamp;
+typedef account_name reaction_name;
 
-// @abi table config i64
-struct config_t
-{
-    uuid id;
-    uint16_t max_title_length = 100;
-    uint32_t max_description_length = 2000;
-    uint16_t max_options_size = 100;
-    uint16_t max_option_length = 280;
-    uint16_t max_whitelist_size = 300;
-    uint16_t max_blacklist_size = 300;
-    uint16_t min_poll_age = 60 * 5; // 5 minutes
-    vector<account_name> banlist;
-
-    EOSLIB_SERIALIZE(config_t, (id)(max_title_length)(max_options_size)(max_option_length)(max_whitelist_size)(max_blacklist_size)(min_poll_age)(banlist))
-};
-
-typedef eosio::singleton<N(config), config_t> config_index;
+constexpr uint8_t MIN_ID_LENGTH = 1;
+constexpr uint8_t MAX_ID_LENGTH = 12;
+constexpr uint16_t MAX_TITLE_LENGTH = 100;
+constexpr uint32_t MAX_DESCRIPTION_LENGTH = 2000;
+constexpr uint16_t MAX_OPTIONS_SIZE = 100;
+constexpr uint16_t MAX_OPTION_LENGTH = 280;
+constexpr uint16_t MAX_ACCOUNT_LIST_SIZE = 500;
+constexpr uint16_t MIN_POLL_AGE_SECONDS = 60;
+constexpr uint8_t MAX_APP_LABEL_LENGTH = 50;
+constexpr uint32_t MAX_JSON_LENGTH = 2500;
+constexpr uint16_t MAX_COMMENT_LENGTH = 1000;
 
 // @abi table polls i64
 struct poll_t
@@ -71,7 +66,8 @@ class eosstrawpoll : public eosio::contract
     }
 
     void create(
-        const account_name creator,
+        const account_name poll_creator,
+        const uuid poll_id,
         const string &title,
         const string &description,
         const vector<string> &options,
@@ -80,30 +76,39 @@ class eosstrawpoll : public eosio::contract
         const uint16_t min_choices,
         const uint16_t max_choices,
         const timestamp open_time,
-        const timestamp close_time);
+        const timestamp close_time,
+        const string &app_label);
 
     void close(
-        const account_name creator,
-        const uuid poll_id);
-
-    void destroy(
-        const account_name creator,
-        const uuid poll_id);
+        const account_name poll_creator,
+        const uuid poll_id,
+        const string &app_label);
 
     void vote(
-        const account_name creator,
+        const account_name poll_creator,
         const uuid poll_id,
         const account_name voter,
-        const vector<uint16_t> &choices);
+        const vector<uint16_t> &choices,
+        const string &app_label);
 
     void comment(
-        const account_name creator,
+        const account_name poll_creator,
         const uuid poll_id,
         const account_name commenter,
-        const string &content);
+        const string &content,
+        const string &app_label);
 
-    void update(
-        const account_name creator,
+    void react(
+        const account_name poll_creator,
         const uuid poll_id,
-        const string &new_description);
+        const account_name reacter,
+        const reaction_name reaction,
+        const string &app_label);
+
+    void settings(
+        const account_name account,
+        const string &json_metadata,
+        const vector<account_name> default_whitelist,
+        const vector<account_name> default_blacklist,
+        const string &app_label);
 };

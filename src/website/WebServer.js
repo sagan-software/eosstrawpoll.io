@@ -5,13 +5,15 @@ var Http = require("http");
 var Js_exn = require("bs-platform/lib/js/js_exn.js");
 var Express = require("bs-express/src/Express.js");
 var Graphql = require("graphql");
+var Mongodb = require("mongodb");
 var Process = require("process");
-var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
+var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var ReactApollo = require("react-apollo");
 var ReactHelmet = require("react-helmet");
 var Server = require("glamor/server");
+var Db$ReactTemplate = require("./Data/Db.js");
 var App$ReactTemplate = require("./Components/App.js");
 var ApolloInMemoryCache = require("reason-apollo/src/ApolloInMemoryCache.bs.js");
 var Route$ReactTemplate = require("./Route.js");
@@ -24,18 +26,212 @@ var SubscriptionsTransportWs = require("subscriptions-transport-ws");
 var DataProcessor$ReactTemplate = require("./Data/DataProcessor.js");
 var ApolloSchemaLink$ReactTemplate = require("./External/ApolloSchemaLink.js");
 
-DataProcessor$ReactTemplate.listen(/* () */0);
+var typeDefs = "\n  scalar Date\n  scalar DateTime\n  scalar Time\n\n\n  type Vote {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    pollVersion: Int!\n    poll: Poll!\n    voter: String!\n    voterHoldings: String!\n    choices: [Int!]!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    appLabel: String!\n  }\n\n  type Comment {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    pollVersion: Int!\n    pollTitle: String!\n    poll: Poll!\n    commenter: String!\n    content: String!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    appLabel: String!\n  }\n\n  type Poll {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    version: Int!\n    title: String!\n    description: String!\n    options: [String!]!\n    whitelist: [String!]!\n    blacklist: [String!]!\n    openTime: String!\n    closeTime: String\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    appLabel: String!\n  }\n\n  type Block {\n    id: String!\n    num: Int!\n    time: String!\n    numPolls: Int!\n    numVotes: Int!\n    numComments: Int!\n    polls: [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n  }\n\n  type Settings {\n    account: String!\n    theme: String!\n    defaultWhitelist: [String!]!\n    defaultBlacklist: [String!]!\n    appLabel: String!\n  }\n\n  type Account {\n    name: String!\n    holdings: String!\n    polls: [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    settings: Settings\n  }\n\n  type Query {\n    polls: [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    blocks: [Block!]!\n    block(num: Int!): Block\n    poll(creator: String!, id: String!): Poll\n    account(name: String!): Account\n  }\n\n  type Subscription {\n    blocks: Block!\n    polls: Poll!\n    pollsFromAccount(account: String!): Poll!\n    votes: Vote!\n    votesOnPoll(creator: String!, id: String!): Vote!\n    votesFromAccount(account: String!): Vote!\n    comments: Comment!\n    commentsOnPoll(creator: String!, id: String!): Comment!\n    commentsFromAccount(account: String!): Comment!\n  }\n\n  schema {\n    query: Query\n    subscription: Subscription\n  }\n\n";
 
-var typeDefs = "\n  type Query {\n    echo(message: String!): String!\n  }\n\n  type Subscription {\n    everySecond: Float!\n  }\n\n  schema {\n    query: Query\n    subscription: Subscription\n  }\n";
+function findAll(_, collection) {
+  return collection.find().toArray();
+}
+
+function findAllResolver(collection, _, _$1) {
+  return collection.find().toArray();
+}
+
+function findMany(_, query, collection) {
+  return collection.find(query).toArray();
+}
+
+function findOne(query, collection) {
+  return collection.find(query).next();
+}
+
+function findPoll(creator, id, mongo) {
+  var collection = Db$ReactTemplate.Polls[/* collection */3](mongo);
+  return collection.find({
+                pollCreator: creator,
+                pollId: id
+              }).next();
+}
 
 var pubsub = new GraphqlSubscriptions.PubSub();
 
-setInterval((function () {
-        pubsub.publish("everySecond", {
-              everySecond: Date.now()
+function sub(iterator) {
+  return {
+          subscribe: (function () {
+              return iterator;
+            })
+        };
+}
+
+function subWithFilter(test, iterator) {
+  return {
+          subscribe: (function () {
+              return GraphQl$ReactTemplate.PubSub[/* withFilter */0](test, iterator);
+            })
+        };
+}
+
+function makeSchema(mongo) {
+  var partial_arg = Db$ReactTemplate.Votes[/* collection */3](mongo);
+  var partial_arg$1 = Db$ReactTemplate.Comments[/* collection */3](mongo);
+  var partial_arg$2 = Db$ReactTemplate.Blocks[/* collection */3](mongo);
+  var iterator = Db$ReactTemplate.Blocks[/* iterator */7](pubsub);
+  var iterator$1 = Db$ReactTemplate.Polls[/* iterator */7](pubsub);
+  var iterator$2 = Db$ReactTemplate.Votes[/* iterator */7](pubsub);
+  var iterator$3 = Db$ReactTemplate.Comments[/* iterator */7](pubsub);
+  return GraphQl$ReactTemplate.Schema[/* make */0](typeDefs, {
+              Query: {
+                polls: (function () {
+                    return Db$ReactTemplate.Polls[/* findAll */4](mongo).sort("blockNum", -1).limit(20).toArray();
+                  }),
+                votes: (function (_, _$1) {
+                    return partial_arg.find().toArray();
+                  }),
+                comments: (function (_, _$1) {
+                    return partial_arg$1.find().toArray();
+                  }),
+                blocks: (function (_, _$1) {
+                    return partial_arg$2.find().toArray();
+                  }),
+                block: (function (_, args) {
+                    var collection = Db$ReactTemplate.Blocks[/* collection */3](mongo);
+                    var query = {
+                      num: args.num
+                    };
+                    return collection.find(query).next();
+                  }),
+                poll: (function (_, args) {
+                    return findPoll(args.creator, args.id, mongo);
+                  }),
+                account: (function (_, args) {
+                    return {
+                            name: args.name
+                          };
+                  })
+              },
+              Poll: {
+                votes: (function (poll, _) {
+                    var collection = Db$ReactTemplate.Votes[/* collection */3](mongo);
+                    var query = {
+                      pollCreator: poll.creator,
+                      pollId: poll.id
+                    };
+                    return collection.find(query).toArray();
+                  }),
+                comments: (function (poll, _) {
+                    var collection = Db$ReactTemplate.Comments[/* collection */3](mongo);
+                    var query = {
+                      pollCreator: poll.creator,
+                      pollId: poll.id
+                    };
+                    return collection.find(query).toArray();
+                  })
+              },
+              Vote: {
+                poll: (function (vote) {
+                    return findPoll(vote.pollCreator, vote.pollId, mongo);
+                  })
+              },
+              Comment: {
+                poll: (function (comment) {
+                    return findPoll(comment.pollCreator, comment.pollId, mongo);
+                  })
+              },
+              Block: {
+                polls: (function (block, _) {
+                    var collection = Db$ReactTemplate.Polls[/* collection */3](mongo);
+                    var query = {
+                      blockNum: block.num
+                    };
+                    return collection.find(query).toArray();
+                  }),
+                votes: (function (block, _) {
+                    var collection = Db$ReactTemplate.Votes[/* collection */3](mongo);
+                    var query = {
+                      blockNum: block.num
+                    };
+                    return collection.find(query).toArray();
+                  }),
+                comments: (function (block, _) {
+                    var collection = Db$ReactTemplate.Comments[/* collection */3](mongo);
+                    var query = {
+                      blockNum: block.num
+                    };
+                    return collection.find(query).toArray();
+                  })
+              },
+              Account: {
+                holdings: (function () {
+                    return "";
+                  }),
+                polls: (function (account, _) {
+                    var collection = Db$ReactTemplate.Polls[/* collection */3](mongo);
+                    var query = {
+                      creator: account.name
+                    };
+                    return collection.find(query).toArray();
+                  }),
+                votes: (function (account, _) {
+                    var collection = Db$ReactTemplate.Votes[/* collection */3](mongo);
+                    var query = {
+                      voter: account.name
+                    };
+                    return collection.find(query).toArray();
+                  }),
+                comments: (function (account, _) {
+                    var collection = Db$ReactTemplate.Comments[/* collection */3](mongo);
+                    var query = {
+                      commenter: account.name
+                    };
+                    return collection.find(query).toArray();
+                  })
+              },
+              Subscription: {
+                blocks: {
+                  subscribe: (function () {
+                      return iterator;
+                    })
+                },
+                polls: {
+                  subscribe: (function () {
+                      return iterator$1;
+                    })
+                },
+                pollsFromAccount: subWithFilter((function (args, poll) {
+                        return Caml_obj.caml_equal(poll.creator, args.account);
+                      }), Db$ReactTemplate.Polls[/* iterator */7](pubsub)),
+                votes: {
+                  subscribe: (function () {
+                      return iterator$2;
+                    })
+                },
+                votesOnPoll: subWithFilter((function (vote, args) {
+                        if (Caml_obj.caml_equal(vote.pollCreator, args.creator)) {
+                          return Caml_obj.caml_equal(vote.pollId, args.id);
+                        } else {
+                          return false;
+                        }
+                      }), Db$ReactTemplate.Votes[/* iterator */7](pubsub)),
+                votesFromAccount: subWithFilter((function (vote, args) {
+                        return Caml_obj.caml_equal(vote.voter, args.account);
+                      }), Db$ReactTemplate.Votes[/* iterator */7](pubsub)),
+                comments: {
+                  subscribe: (function () {
+                      return iterator$3;
+                    })
+                },
+                commentsOnPoll: subWithFilter((function (comment, args) {
+                        if (Caml_obj.caml_equal(comment.pollCreator, args.creator)) {
+                          return Caml_obj.caml_equal(comment.pollId, args.id);
+                        } else {
+                          return false;
+                        }
+                      }), Db$ReactTemplate.Comments[/* iterator */7](pubsub)),
+                commentsFromAccount: subWithFilter((function (comment, args) {
+                        return Caml_obj.caml_equal(comment.commenter, args.account);
+                      }), Db$ReactTemplate.Comments[/* iterator */7](pubsub))
+              }
             });
-        return /* () */0;
-      }), 1000);
+}
 
 var Http$1 = /* module */[];
 
@@ -52,26 +248,13 @@ function make(schema, server, path) {
 
 var SubscriptionServer = /* module */[/* make */make];
 
-var schema = GraphQl$ReactTemplate.Schema[/* make */0](typeDefs, {
-      Query: {
-        echo: (function (_, args, _$1, _$2) {
-            return Json_decode.field("message", Json_decode.string, args);
-          })
-      },
-      Subscription: {
-        everySecond: {
-          subscribe: (function (_, _$1, _$2, _$3) {
-              return pubsub.asyncIterator("everySecond");
-            })
-        }
-      }
-    });
-
 var inMemoryCache = ApolloInMemoryCache.createInMemoryCache(/* None */0, /* None */0, /* () */0);
 
-var apolloClient = ReasonApollo.createApolloClient(ApolloSchemaLink$ReactTemplate.make(schema), inMemoryCache, /* Some */[true], /* None */0, /* None */0, /* None */0, /* () */0);
+function makeApolloClient(schema) {
+  return ReasonApollo.createApolloClient(ApolloSchemaLink$ReactTemplate.make(schema), inMemoryCache, /* Some */[true], /* None */0, /* None */0, /* None */0, /* () */0);
+}
 
-function make$1(content, helmet, _) {
+function make$1(content, helmet, apolloClient, _) {
   var bodyAttributes = Helmet$ReactTemplate.toString(helmet.bodyAttributes);
   var htmlAttributes = Helmet$ReactTemplate.toString(helmet.htmlAttributes);
   var style = Helmet$ReactTemplate.toString(helmet.style);
@@ -90,67 +273,78 @@ function make$1(content, helmet, _) {
 
 var Template = /* module */[/* make */make$1];
 
-var app = Express.App[/* make */15](/* () */0);
-
-function renderHTML(_, req, res) {
-  var path = Express.Request[/* path */16](req);
-  var route = Route$ReactTemplate.fromString(path);
-  console.log("PATH!!!", path, route);
-  return ReactApollo.renderToStringWithData(ReasonReact.element(/* None */0, /* None */0, App$ReactTemplate.make(apolloClient, /* Some */[route], /* array */[]))).then((function (content) {
-                var helmet = ReactHelmet.Helmet.renderStatic();
-                var template = make$1(content, helmet, /* () */0);
-                return Promise.resolve(Express.Response[/* sendString */2](template, res));
-              }));
+function startExpress(mongo) {
+  var app = Express.App[/* make */15](/* () */0);
+  var schema = makeSchema(mongo);
+  var apolloClient = makeApolloClient(schema);
+  var renderHTML = function (_, req, res) {
+    var path = Express.Request[/* path */16](req);
+    var route = Route$ReactTemplate.fromString(path);
+    console.log("PATH!!!", path, route);
+    return ReactApollo.renderToStringWithData(ReasonReact.element(/* None */0, /* None */0, App$ReactTemplate.make(apolloClient, /* Some */[route], /* array */[]))).then((function (content) {
+                  var helmet = ReactHelmet.Helmet.renderStatic();
+                  var template = make$1(content, helmet, apolloClient, /* () */0);
+                  return Promise.resolve(Express.Response[/* sendString */2](template, res));
+                }));
+  };
+  Express.App[/* useOnPathWithMany */3](app, "/graphql", /* array */[
+        Express.Middleware[/* json */0](/* None */0, /* None */0, /* None */0, /* () */0),
+        ApolloServer$ReactTemplate.Express[/* graphql */0](schema)
+      ]);
+  Express.App[/* useOnPathWithMany */3](app, "/graphiql", /* array */[
+        Express.Middleware[/* json */0](/* None */0, /* None */0, /* None */0, /* () */0),
+        ApolloServer$ReactTemplate.Express[/* graphiql */1]("/graphql", "ws://localhost:3001/subscriptions")
+      ]);
+  Express.App[/* useOnPath */2](app, "/", Express.PromiseMiddleware[/* from */0](renderHTML));
+  var server = Http.createServer(app);
+  server.listen(WebServerEnv$ReactTemplate.port, (function (e) {
+          var exit = 0;
+          var val;
+          try {
+            val = e;
+            exit = 1;
+          }
+          catch (raw_exn){
+            var exn = Js_exn.internalToOCamlException(raw_exn);
+            if (exn[0] === Js_exn.$$Error) {
+              console.log(exn[1]);
+              Process.exit(1);
+              return /* () */0;
+            } else {
+              throw exn;
+            }
+          }
+          if (exit === 1) {
+            console.log("Connected to MongoDB!!!!!!!!!");
+            make(schema, server, "/subscriptions");
+            console.log("listening at localhost:" + String(WebServerEnv$ReactTemplate.port));
+            return /* () */0;
+          }
+          
+        }));
+  return /* () */0;
 }
 
-Express.App[/* useOnPathWithMany */3](app, "/graphql", /* array */[
-      Express.Middleware[/* json */0](/* None */0, /* None */0, /* None */0, /* () */0),
-      ApolloServer$ReactTemplate.Express[/* graphql */0](schema)
-    ]);
-
-Express.App[/* useOnPathWithMany */3](app, "/graphiql", /* array */[
-      Express.Middleware[/* json */0](/* None */0, /* None */0, /* None */0, /* () */0),
-      ApolloServer$ReactTemplate.Express[/* graphiql */1]("/graphql", "ws://localhost:3001/subscriptions")
-    ]);
-
-Express.App[/* useOnPath */2](app, "/", Express.PromiseMiddleware[/* from */0](renderHTML));
-
-var server = Http.createServer(app);
-
-server.listen(WebServerEnv$ReactTemplate.port, (function (e) {
-        var exit = 0;
-        var val;
-        try {
-          val = e;
-          exit = 1;
-        }
-        catch (raw_exn){
-          var exn = Js_exn.internalToOCamlException(raw_exn);
-          if (exn[0] === Js_exn.$$Error) {
-            console.log(exn[1]);
-            Process.exit(1);
-            return /* () */0;
-          } else {
-            throw exn;
-          }
-        }
-        if (exit === 1) {
-          make(schema, server, "/subscriptions");
-          console.log("listening at localhost:" + String(WebServerEnv$ReactTemplate.port));
-          return /* () */0;
-        }
-        
+Mongodb.MongoClient.connect(WebServerEnv$ReactTemplate.mongoUri).then((function (mongo) {
+        DataProcessor$ReactTemplate.listen(mongo);
+        startExpress(mongo);
+        return Promise.resolve(/* () */0);
       }));
 
 exports.typeDefs = typeDefs;
+exports.findAll = findAll;
+exports.findAllResolver = findAllResolver;
+exports.findMany = findMany;
+exports.findOne = findOne;
+exports.findPoll = findPoll;
 exports.pubsub = pubsub;
+exports.sub = sub;
+exports.subWithFilter = subWithFilter;
+exports.makeSchema = makeSchema;
 exports.Http = Http$1;
 exports.SubscriptionServer = SubscriptionServer;
-exports.schema = schema;
 exports.inMemoryCache = inMemoryCache;
-exports.apolloClient = apolloClient;
+exports.makeApolloClient = makeApolloClient;
 exports.Template = Template;
-exports.app = app;
-exports.renderHTML = renderHTML;
-exports.server = server;
-/*  Not a pure module */
+exports.startExpress = startExpress;
+/* pubsub Not a pure module */

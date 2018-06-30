@@ -19,3 +19,5 @@ let eosConfig = Eos.Config.t(~httpEndpoint, ());
 let siteUrl = "http://localhost:9001";
 
 let staticBaseUrl = siteUrl;
+
+let appLabel = "eosstrawpoll.com";

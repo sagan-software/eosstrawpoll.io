@@ -111,19 +111,13 @@ type state = {
   options: array(string),
   optionErrors: array(string),
   showAdvanced: bool,
-  recentPolls: Api.Data.t(array(Api.PollRef.t)),
-  popularPolls: Api.Data.t(array(Api.PollRef.t)),
-  recentVotes: Api.Data.t(array(Api.VoteRef.t)),
 };
 
 type action =
   | SetInputs(inputs)
   | SetOption(int, string)
   | RemoveOption(int)
-  | ToggleAdvanced
-  | ChangeRecentPolls(Api.Data.t(array(Api.PollRef.t)))
-  | ChangePopularPolls(Api.Data.t(array(Api.PollRef.t)))
-  | ChangeRecentVotes(Api.Data.t(array(Api.VoteRef.t)));
+  | ToggleAdvanced;
 
 let reducer = (action, state) =>
   switch (action) {
@@ -134,12 +128,6 @@ let reducer = (action, state) =>
   | RemoveOption(i) => ReasonReact.Update(state)
   | ToggleAdvanced =>
     ReasonReact.Update({...state, showAdvanced: ! state.showAdvanced})
-  | ChangeRecentPolls(recentPolls) =>
-    ReasonReact.Update({...state, recentPolls})
-  | ChangePopularPolls(popularPolls) =>
-    ReasonReact.Update({...state, popularPolls})
-  | ChangeRecentVotes(recentVotes) =>
-    ReasonReact.Update({...state, recentVotes})
   };
 
 let onInputChange = ({ReasonReact.state} as self, name, event) => {
@@ -153,24 +141,34 @@ let component = ReasonReact.reducerComponent("HomePage");
 
 let eos = Util.loadEosReadOnly();
 
-module GetEcho = [%graphql
+module GetPolls = [%graphql
   {|
-  query getEcho($message: String!) {
-    echo(message: $message)
+  query polls {
+    polls {
+      id
+      pollId
+      pollCreator
+      title
+      whitelist
+      blacklist
+      openTime
+      closeTime
+      options
+      blockTime
+    }
   }
 |}
 ];
 
-module GetEchoQuery = ReasonApollo.CreateQuery(GetEcho);
+module GetPollsQuery = ReasonApollo.CreateQuery(GetPolls);
 
-module EverySecond = [%graphql {|
-  subscription {
-    everySecond
-  }
-|}];
+/* module EverySecond = [%graphql {|
+     subscription {
+       everySecond
+     }
+   |}];
 
-module EverySecondSubscription = ReasonApollo.CreateSubscription(EverySecond);
-
+   module EverySecondSubscription = ReasonApollo.CreateSubscription(EverySecond); */
 /* let setInput = ({ReasonReact.state} as self, name, event) => {
      let obj = ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event));
      let value = obj##value;
@@ -198,25 +196,8 @@ let make = (~context: Context.t, _children) => {
     options: [|"", ""|],
     optionErrors: [||],
     showAdvanced: false,
-    recentPolls: Api.Data.NotAsked,
-    popularPolls: Api.Data.NotAsked,
-    recentVotes: Api.Data.NotAsked,
   },
-  didMount: self =>
-    Js.Promise.all3((
-      Api.pollRefs(eos, Env.codeName, ~table="recentpolls", ()),
-      Api.pollRefs(eos, Env.codeName, ~table="popularpolls", ()),
-      Api.voteRefs(eos, Env.codeName, ~table="recentvotes", ()),
-    ))
-    |> Js.Promise.then_(((recentPolls, popularPolls, recentVotes)) => {
-         self.send(ChangeRecentPolls(Api.Data.fromResult(recentPolls)));
-         self.send(ChangePopularPolls(Api.Data.fromResult(popularPolls)));
-         self.send(ChangeRecentVotes(Api.Data.fromResult(recentVotes)));
-         Js.Promise.resolve();
-       })
-    |> ignore,
-  render: self => {
-    let echoQuery = GetEcho.make(~message="Bawlz", ());
+  render: self =>
     <main className=(Styles.main |> TypedGlamor.toString)>
       <Helmet>
         <title> (ReasonReact.string("Home page")) </title>
@@ -225,38 +206,25 @@ let make = (~context: Context.t, _children) => {
       </Helmet>
       <form className=(Styles.form |> TypedGlamor.toString)>
         <h1> (ReasonReact.string("Create a poll")) </h1>
-        <GetEchoQuery variables=echoQuery##variables>
-          ...(
-               ({result}) =>
-                 switch (result) {
-                 | Loading => ReasonReact.string("Loading echo result")
-                 | Error(error) => ReasonReact.string(error##message)
-                 | Data(response) => ReasonReact.string(response##echo)
-                 }
-             )
-        </GetEchoQuery>
-        <EverySecondSubscription>
-          ...(
-               ({result}) =>
-                 switch (result) {
-                 | Error(_e) =>
-                   Js.log(_e);
-                   "Something went wrong" |> ReasonReact.string;
-                 | Loading => "Loading" |> ReasonReact.string
-                 | Data(response) =>
-                   response##everySecond
-                   |> string_of_float
-                   |> ReasonReact.string
-                 /* switch (response##everySecond) {
-                    | Some(everySecond) => everySecond |> ReasonReact.string
-                    | None => "Persons not found" |> ReasonReact.string
-                    } */
-                 }
-             )
-        </EverySecondSubscription>
+        /* <EverySecondSubscription>
+             ...(
+                  ({result}) =>
+                    switch (result) {
+                    | Error(_e) =>
+                      Js.log(_e);
+                      "Something went wrong" |> ReasonReact.string;
+                    | Loading => "Loading" |> ReasonReact.string
+                    | Data(response) =>
+                      response##everySecond
+                      |> string_of_float
+                      |> ReasonReact.string
+
+                    }
+                )
+           </EverySecondSubscription> */
         <label>
           <input
-            placeholder="Type your question here"
+            placeholder="Type your question hereee"
             required=true
             value=(getInputValue(self.state.inputs, `title))
             onChange=(onInputChange(self, `title))
@@ -349,94 +317,46 @@ let make = (~context: Context.t, _children) => {
       <aside className=(Styles.sidebar |> TypedGlamor.toString)>
         <div className=(Styles.poll |> TypedGlamor.toString)>
           <h2 className=(Styles.pollTitle |> TypedGlamor.toString)>
-            (ReasonReact.string("Popular Polls"))
+            (ReasonReact.string("New Polls"))
           </h2>
-          (
-            switch (self.state.popularPolls) {
-            | Api.Data.NotAsked => ReasonReact.string("")
-            | Api.Data.Loading => ReasonReact.string("Loading...")
-            | Api.Data.Success(polls) =>
-              <ul>
-                (
-                  Array.map(polls, p =>
-                    <li key={j|$p.creator_$p.id|j}>
-                      <Link
-                        route=(
-                          Route.Poll(p.pollCreator, string_of_int(p.pollId))
-                        )>
-                        (ReasonReact.string(p.title))
-                      </Link>
-                    </li>
-                  )
-                  |> ReasonReact.array
-                )
-              </ul>
-            | Api.Data.Failure(_message) =>
-              ReasonReact.string("Failed to load")
-            }
-          )
-        </div>
-        <div>
-          <h2 className=(Styles.pollTitle |> TypedGlamor.toString)>
-            (ReasonReact.string("Recent Polls"))
-          </h2>
-          (
-            switch (self.state.recentPolls) {
-            | Api.Data.NotAsked => ReasonReact.string("")
-            | Api.Data.Loading => ReasonReact.string("Loading...")
-            | Api.Data.Success(polls) =>
-              <ul>
-                (
-                  Array.map(polls, p =>
-                    <li key={j|$p.creator_$p.id|j}>
-                      <Link
-                        route=(
-                          Route.Poll(p.pollCreator, string_of_int(p.pollId))
-                        )>
-                        (ReasonReact.string(p.title))
-                      </Link>
-                    </li>
-                  )
-                  |> ReasonReact.array
-                )
-              </ul>
-            | Api.Data.Failure(_message) =>
-              ReasonReact.string("Failed to load")
-            }
-          )
-        </div>
-        <div>
-          <h2 className=(Styles.pollTitle |> TypedGlamor.toString)>
-            (ReasonReact.string("Recent Votes"))
-          </h2>
-          (
-            switch (self.state.recentVotes) {
-            | Api.Data.NotAsked => ReasonReact.string("")
-            | Api.Data.Loading => ReasonReact.string("Loading...")
-            | Api.Data.Success(votes) =>
-              <ul>
-                (
-                  Array.map(votes, v =>
-                    <li key={j|$v.pollCreator_$v.pollId_$v.voter|j}>
-                      (ReasonReact.string(v.voter))
-                      (ReasonReact.string(" voted on "))
-                      <Link
-                        route=(
-                          Route.Poll(v.pollCreator, string_of_int(v.pollId))
-                        )>
-                        (ReasonReact.string(v.pollTitle))
-                      </Link>
-                    </li>
-                  )
-                  |> ReasonReact.array
-                )
-              </ul>
-            | Api.Data.Failure(_message) =>
-              ReasonReact.string("Failed to load")
-            }
-          )
+          <GetPollsQuery>
+            ...(
+                 ({result}) =>
+                   switch (result) {
+                   | Loading => ReasonReact.string("Loading...")
+                   | Error(error) => ReasonReact.string(error##message)
+                   | Data(response) =>
+                     <ul>
+                       (
+                         response##polls
+                         |> Js.Array.mapi((p, i) => {
+                              let date =
+                                p##blockTime ++ "Z" |> Js.Date.fromString;
+                              <li key=p##id>
+                                <h3>
+                                  <Link
+                                    route=(
+                                      Route.Poll(p##pollCreator, p##pollId)
+                                    )>
+                                    (ReasonReact.string(p##title))
+                                  </Link>
+                                </h3>
+                                <p>
+                                  <DateFormat date />
+                                  (ReasonReact.string(" by "))
+                                  <Link route=(Route.Profile(p##pollCreator))>
+                                    (ReasonReact.string(p##pollCreator))
+                                  </Link>
+                                </p>
+                              </li>;
+                            })
+                         |> ReasonReact.array
+                       )
+                     </ul>
+                   }
+               )
+          </GetPollsQuery>
         </div>
       </aside>
-    </main>;
-  },
+    </main>,
 };

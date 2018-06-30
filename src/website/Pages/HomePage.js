@@ -5,21 +5,18 @@ var Belt = require("bs-platform/lib/js/belt.js");
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
-var Js_dict = require("bs-platform/lib/js/js_dict.js");
 var Js_json = require("bs-platform/lib/js/js_json.js");
 var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
-var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
-var Api$ReactTemplate = require("../Api.js");
-var Env$ReactTemplate = require("../Env/Env.js");
 var Link$ReactTemplate = require("../Components/Link.js");
 var Util$ReactTemplate = require("../Util.js");
 var Helmet$ReactTemplate = require("../External/Helmet.js");
+var DateFormat$ReactTemplate = require("../Components/DateFormat.js");
 var HomePageStyles$ReactTemplate = require("../Styles/HomePageStyles.js");
 
 function nameToString(name) {
@@ -225,10 +222,7 @@ function reducer(action, state) {
                 /* inputErrors */state[/* inputErrors */1],
                 /* options */state[/* options */2],
                 /* optionErrors */state[/* optionErrors */3],
-                /* showAdvanced */!state[/* showAdvanced */4],
-                /* recentPolls */state[/* recentPolls */5],
-                /* popularPolls */state[/* popularPolls */6],
-                /* recentVotes */state[/* recentVotes */7]
+                /* showAdvanced */!state[/* showAdvanced */4]
               ]]);
   } else {
     switch (action.tag | 0) {
@@ -238,49 +232,13 @@ function reducer(action, state) {
                       /* inputErrors */state[/* inputErrors */1],
                       /* options */state[/* options */2],
                       /* optionErrors */state[/* optionErrors */3],
-                      /* showAdvanced */state[/* showAdvanced */4],
-                      /* recentPolls */state[/* recentPolls */5],
-                      /* popularPolls */state[/* popularPolls */6],
-                      /* recentVotes */state[/* recentVotes */7]
+                      /* showAdvanced */state[/* showAdvanced */4]
                     ]]);
       case 1 : 
           Belt_Array.set(state[/* options */2], action[0], action[1]);
           return /* Update */Block.__(0, [state]);
       case 2 : 
           return /* Update */Block.__(0, [state]);
-      case 3 : 
-          return /* Update */Block.__(0, [/* record */[
-                      /* inputs */state[/* inputs */0],
-                      /* inputErrors */state[/* inputErrors */1],
-                      /* options */state[/* options */2],
-                      /* optionErrors */state[/* optionErrors */3],
-                      /* showAdvanced */state[/* showAdvanced */4],
-                      /* recentPolls */action[0],
-                      /* popularPolls */state[/* popularPolls */6],
-                      /* recentVotes */state[/* recentVotes */7]
-                    ]]);
-      case 4 : 
-          return /* Update */Block.__(0, [/* record */[
-                      /* inputs */state[/* inputs */0],
-                      /* inputErrors */state[/* inputErrors */1],
-                      /* options */state[/* options */2],
-                      /* optionErrors */state[/* optionErrors */3],
-                      /* showAdvanced */state[/* showAdvanced */4],
-                      /* recentPolls */state[/* recentPolls */5],
-                      /* popularPolls */action[0],
-                      /* recentVotes */state[/* recentVotes */7]
-                    ]]);
-      case 5 : 
-          return /* Update */Block.__(0, [/* record */[
-                      /* inputs */state[/* inputs */0],
-                      /* inputErrors */state[/* inputErrors */1],
-                      /* options */state[/* options */2],
-                      /* optionErrors */state[/* optionErrors */3],
-                      /* showAdvanced */state[/* showAdvanced */4],
-                      /* recentPolls */state[/* recentPolls */5],
-                      /* popularPolls */state[/* popularPolls */6],
-                      /* recentVotes */action[0]
-                    ]]);
       
     }
   }
@@ -297,33 +255,272 @@ var component = ReasonReact.reducerComponent("HomePage");
 
 var eos = Util$ReactTemplate.loadEosReadOnly(/* () */0);
 
-var Graphql_error = Caml_exceptions.create("HomePage-ReactTemplate.GetEcho.Graphql_error");
+var Graphql_error = Caml_exceptions.create("HomePage-ReactTemplate.GetPolls.Graphql_error");
 
-var ppx_printed_query = "query getEcho($message: String!)  {\necho(message: $message)  \n}";
+var ppx_printed_query = "query polls  {\npolls  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \noptions  \nblockTime  \n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
   if (match) {
-    var match$1 = match[0]["echo"];
+    var match$1 = match[0]["polls"];
     var tmp;
     if (match$1 !== undefined) {
-      var match$2 = Js_json.decodeString(match$1);
+      var match$2 = Js_json.decodeArray(match$1);
       if (match$2) {
-        tmp = match$2[0];
+        tmp = match$2[0].map((function (value) {
+                var match = Js_json.decodeObject(value);
+                if (match) {
+                  var value$1 = match[0];
+                  var match$1 = value$1["id"];
+                  var tmp;
+                  if (match$1 !== undefined) {
+                    var match$2 = Js_json.decodeString(match$1);
+                    if (match$2) {
+                      tmp = match$2[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$1)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field id on type Poll is missing"
+                        ];
+                  }
+                  var match$3 = value$1["pollId"];
+                  var tmp$1;
+                  if (match$3 !== undefined) {
+                    var match$4 = Js_json.decodeString(match$3);
+                    if (match$4) {
+                      tmp$1 = match$4[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$3)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollId on type Poll is missing"
+                        ];
+                  }
+                  var match$5 = value$1["pollCreator"];
+                  var tmp$2;
+                  if (match$5 !== undefined) {
+                    var match$6 = Js_json.decodeString(match$5);
+                    if (match$6) {
+                      tmp$2 = match$6[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$5)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollCreator on type Poll is missing"
+                        ];
+                  }
+                  var match$7 = value$1["title"];
+                  var tmp$3;
+                  if (match$7 !== undefined) {
+                    var match$8 = Js_json.decodeString(match$7);
+                    if (match$8) {
+                      tmp$3 = match$8[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$7)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field title on type Poll is missing"
+                        ];
+                  }
+                  var match$9 = value$1["whitelist"];
+                  var tmp$4;
+                  if (match$9 !== undefined) {
+                    var match$10 = Js_json.decodeArray(match$9);
+                    if (match$10) {
+                      tmp$4 = match$10[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$9)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field whitelist on type Poll is missing"
+                        ];
+                  }
+                  var match$11 = value$1["blacklist"];
+                  var tmp$5;
+                  if (match$11 !== undefined) {
+                    var match$12 = Js_json.decodeArray(match$11);
+                    if (match$12) {
+                      tmp$5 = match$12[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$11)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blacklist on type Poll is missing"
+                        ];
+                  }
+                  var match$13 = value$1["openTime"];
+                  var tmp$6;
+                  if (match$13 !== undefined) {
+                    var match$14 = Js_json.decodeString(match$13);
+                    if (match$14) {
+                      tmp$6 = match$14[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$13)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field openTime on type Poll is missing"
+                        ];
+                  }
+                  var match$15 = value$1["closeTime"];
+                  var tmp$7;
+                  if (match$15 !== undefined) {
+                    var match$16 = Js_json.decodeNull(match$15);
+                    if (match$16) {
+                      tmp$7 = /* None */0;
+                    } else {
+                      var match$17 = Js_json.decodeString(match$15);
+                      var tmp$8;
+                      if (match$17) {
+                        tmp$8 = match$17[0];
+                      } else {
+                        throw [
+                              Graphql_error,
+                              "Expected string, got " + JSON.stringify(match$15)
+                            ];
+                      }
+                      tmp$7 = /* Some */[tmp$8];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field closeTime on type Poll is missing"
+                        ];
+                  }
+                  var match$18 = value$1["options"];
+                  var tmp$9;
+                  if (match$18 !== undefined) {
+                    var match$19 = Js_json.decodeArray(match$18);
+                    if (match$19) {
+                      tmp$9 = match$19[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$18)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field options on type Poll is missing"
+                        ];
+                  }
+                  var match$20 = value$1["blockTime"];
+                  var tmp$10;
+                  if (match$20 !== undefined) {
+                    var match$21 = Js_json.decodeString(match$20);
+                    if (match$21) {
+                      tmp$10 = match$21[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$20)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blockTime on type Poll is missing"
+                        ];
+                  }
+                  return {
+                          id: tmp,
+                          pollId: tmp$1,
+                          pollCreator: tmp$2,
+                          title: tmp$3,
+                          whitelist: tmp$4,
+                          blacklist: tmp$5,
+                          openTime: tmp$6,
+                          closeTime: tmp$7,
+                          options: tmp$9,
+                          blockTime: tmp$10
+                        };
+                } else {
+                  throw [
+                        Graphql_error,
+                        "Object is not a value"
+                      ];
+                }
+              }));
       } else {
         throw [
               Graphql_error,
-              "Expected string, got " + JSON.stringify(match$1)
+              "Expected array, got " + JSON.stringify(match$1)
             ];
       }
     } else {
       throw [
             Graphql_error,
-            "Field echo on type Query is missing"
+            "Field polls on type Query is missing"
           ];
     }
     return {
-            echo: tmp
+            polls: tmp
           };
   } else {
     throw [
@@ -333,47 +530,18 @@ function parse(value) {
   }
 }
 
-function json_of_optional(encoder, value) {
-  if (value) {
-    return Curry._1(encoder, value[0]);
-  } else {
-    return null;
-  }
-}
-
-function json_of_array(encoder, value) {
-  return value.map(Curry.__1(encoder));
-}
-
-function json_of_String(value) {
-  return value;
-}
-
-function make(message, _) {
+function make() {
   return {
           query: ppx_printed_query,
-          variables: Js_dict.fromList(/* :: */[
-                /* tuple */[
-                  "message",
-                  message
-                ],
-                /* [] */0
-              ]),
+          variables: null,
           parse: parse
         };
 }
 
-function makeWithVariables(variables) {
-  var message = variables.message;
+function makeWithVariables() {
   return {
           query: ppx_printed_query,
-          variables: Js_dict.fromList(/* :: */[
-                /* tuple */[
-                  "message",
-                  message
-                ],
-                /* [] */0
-              ]),
+          variables: null,
           parse: parse
         };
 }
@@ -384,167 +552,35 @@ function ret_type() {
 
 var MT_Ret = /* module */[];
 
-var GetEcho = /* module */[
+var GetPolls = /* module */[
   /* Graphql_error */Graphql_error,
   /* ppx_printed_query */ppx_printed_query,
   /* query */ppx_printed_query,
   /* parse */parse,
-  /* json_of_optional */json_of_optional,
-  /* json_of_array */json_of_array,
-  /* json_of_String */json_of_String,
   /* make */make,
   /* makeWithVariables */makeWithVariables,
   /* ret_type */ret_type,
   /* MT_Ret */MT_Ret
 ];
 
-var GetEchoQuery = ReasonApollo.CreateQuery([
+var GetPollsQuery = ReasonApollo.CreateQuery([
       ppx_printed_query,
       parse
     ]);
 
-var Graphql_error$1 = Caml_exceptions.create("HomePage-ReactTemplate.EverySecond.Graphql_error");
-
-var ppx_printed_query$1 = "subscription   {\neverySecond  \n}";
-
-function parse$1(value) {
-  var match = Js_json.decodeObject(value);
-  if (match) {
-    var match$1 = match[0]["everySecond"];
-    var tmp;
-    if (match$1 !== undefined) {
-      var match$2 = Js_json.decodeNumber(match$1);
-      if (match$2) {
-        tmp = match$2[0];
-      } else {
-        throw [
-              Graphql_error$1,
-              "Expected float, got " + JSON.stringify(match$1)
-            ];
-      }
-    } else {
-      throw [
-            Graphql_error$1,
-            "Field everySecond on type Subscription is missing"
-          ];
-    }
-    return {
-            everySecond: tmp
-          };
-  } else {
-    throw [
-          Graphql_error$1,
-          "Object is not a value"
-        ];
-  }
-}
-
-function make$1() {
-  return {
-          query: ppx_printed_query$1,
-          variables: null,
-          parse: parse$1
-        };
-}
-
-function makeWithVariables$1() {
-  return {
-          query: ppx_printed_query$1,
-          variables: null,
-          parse: parse$1
-        };
-}
-
-function ret_type$1() {
-  return /* module */[];
-}
-
-var MT_Ret$1 = /* module */[];
-
-var EverySecond = /* module */[
-  /* Graphql_error */Graphql_error$1,
-  /* ppx_printed_query */ppx_printed_query$1,
-  /* query */ppx_printed_query$1,
-  /* parse */parse$1,
-  /* make */make$1,
-  /* makeWithVariables */makeWithVariables$1,
-  /* ret_type */ret_type$1,
-  /* MT_Ret */MT_Ret$1
-];
-
-var EverySecondSubscription = ReasonApollo.CreateSubscription([
-      ppx_printed_query$1,
-      parse$1
-    ]);
-
-function make$2(context, _) {
+function make$1(context, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
-          /* didMount */(function (self) {
-              Promise.all(/* tuple */[
-                      Api$ReactTemplate.pollRefs(eos, Env$ReactTemplate.codeName, "recentpolls", /* None */0, /* None */0, /* None */0, /* () */0),
-                      Api$ReactTemplate.pollRefs(eos, Env$ReactTemplate.codeName, "popularpolls", /* None */0, /* None */0, /* None */0, /* () */0),
-                      Api$ReactTemplate.voteRefs(eos, Env$ReactTemplate.codeName, "recentvotes", /* None */0, /* None */0, /* None */0, /* () */0)
-                    ]).then((function (param) {
-                      Curry._1(self[/* send */3], /* ChangeRecentPolls */Block.__(3, [Api$ReactTemplate.Data[/* fromResult */0](param[0])]));
-                      Curry._1(self[/* send */3], /* ChangePopularPolls */Block.__(4, [Api$ReactTemplate.Data[/* fromResult */0](param[1])]));
-                      Curry._1(self[/* send */3], /* ChangeRecentVotes */Block.__(5, [Api$ReactTemplate.Data[/* fromResult */0](param[2])]));
-                      return Promise.resolve(/* () */0);
-                    }));
-              return /* () */0;
-            }),
+          /* didMount */component[/* didMount */4],
           /* didUpdate */component[/* didUpdate */5],
           /* willUnmount */component[/* willUnmount */6],
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              var echoQuery = make("Bawlz", /* () */0);
               var match = self[/* state */1][/* showAdvanced */4];
-              var match$1 = self[/* state */1][/* popularPolls */6];
-              var tmp;
-              tmp = typeof match$1 === "number" ? (
-                  match$1 === 0 ? "" : "Loading..."
-                ) : (
-                  match$1.tag ? "Failed to load" : React.createElement("ul", undefined, Belt_Array.map(match$1[0], (function (p) {
-                                return React.createElement("li", {
-                                            key: "" + (String(p) + (".creator_" + (String(p) + ".id")))
-                                          }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
-                                                      p[/* pollCreator */2],
-                                                      String(p[/* pollId */1])
-                                                    ]), /* None */0, /* array */[p[/* title */3]])));
-                              })))
-                );
-              var match$2 = self[/* state */1][/* recentPolls */5];
-              var tmp$1;
-              tmp$1 = typeof match$2 === "number" ? (
-                  match$2 === 0 ? "" : "Loading..."
-                ) : (
-                  match$2.tag ? "Failed to load" : React.createElement("ul", undefined, Belt_Array.map(match$2[0], (function (p) {
-                                return React.createElement("li", {
-                                            key: "" + (String(p) + (".creator_" + (String(p) + ".id")))
-                                          }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
-                                                      p[/* pollCreator */2],
-                                                      String(p[/* pollId */1])
-                                                    ]), /* None */0, /* array */[p[/* title */3]])));
-                              })))
-                );
-              var match$3 = self[/* state */1][/* recentVotes */7];
-              var tmp$2;
-              tmp$2 = typeof match$3 === "number" ? (
-                  match$3 === 0 ? "" : "Loading..."
-                ) : (
-                  match$3.tag ? "Failed to load" : React.createElement("ul", undefined, Belt_Array.map(match$3[0], (function (v) {
-                                return React.createElement("li", {
-                                            key: "" + (String(v) + (".pollCreator_" + (String(v) + (".pollId_" + (String(v) + ".voter")))))
-                                          }, v[/* voter */4], " voted on ", ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
-                                                      v[/* pollCreator */2],
-                                                      String(v[/* pollId */1])
-                                                    ]), /* None */0, /* array */[v[/* pollTitle */3]])));
-                              })))
-                );
               return React.createElement("main", {
                           className: TypedGlamor.toString(HomePageStyles$ReactTemplate.main)
                         }, ReasonReact.element(/* None */0, /* None */0, Helmet$ReactTemplate.make(/* array */[
@@ -559,38 +595,8 @@ function make$2(context, _) {
                                       })
                                 ])), React.createElement("form", {
                               className: TypedGlamor.toString(HomePageStyles$ReactTemplate.form)
-                            }, React.createElement("h1", undefined, "Create a poll"), ReasonReact.element(/* None */0, /* None */0, Curry.app(GetEchoQuery[/* make */3], [
-                                      /* Some */[echoQuery.variables],
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      /* None */0,
-                                      (function (param) {
-                                          var result = param[/* result */0];
-                                          if (typeof result === "number") {
-                                            return "Loading echo result";
-                                          } else if (result.tag) {
-                                            return result[0].echo;
-                                          } else {
-                                            return result[0].message;
-                                          }
-                                        })
-                                    ])), ReasonReact.element(/* None */0, /* None */0, Curry._2(EverySecondSubscription[/* make */3], /* None */0, (function (param) {
-                                        var result = param[/* result */0];
-                                        if (typeof result === "number") {
-                                          return "Loading";
-                                        } else if (result.tag) {
-                                          return Pervasives.string_of_float(result[0].everySecond);
-                                        } else {
-                                          console.log(result[0]);
-                                          return "Something went wrong";
-                                        }
-                                      }))), React.createElement("label", undefined, React.createElement("input", {
-                                      placeholder: "Type your question here",
+                            }, React.createElement("h1", undefined, "Create a poll"), React.createElement("label", undefined, React.createElement("input", {
+                                      placeholder: "Type your question hereee",
                                       required: true,
                                       value: getInputValue(self[/* state */1][/* inputs */0], /* title */272307608),
                                       onChange: (function (param) {
@@ -666,11 +672,35 @@ function make$2(context, _) {
                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.poll)
                                 }, React.createElement("h2", {
                                       className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
-                                    }, "Popular Polls"), tmp), React.createElement("div", undefined, React.createElement("h2", {
-                                      className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
-                                    }, "Recent Polls"), tmp$1), React.createElement("div", undefined, React.createElement("h2", {
-                                      className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
-                                    }, "Recent Votes"), tmp$2)));
+                                    }, "New Polls"), ReasonReact.element(/* None */0, /* None */0, Curry.app(GetPollsQuery[/* make */3], [
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          /* None */0,
+                                          (function (param) {
+                                              var result = param[/* result */0];
+                                              if (typeof result === "number") {
+                                                return "Loading...";
+                                              } else if (result.tag) {
+                                                return React.createElement("ul", undefined, result[0].polls.map((function (p, _) {
+                                                                  var date = new Date(p.blockTime + "Z");
+                                                                  return React.createElement("li", {
+                                                                              key: p.id
+                                                                            }, React.createElement("h3", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
+                                                                                            p.pollCreator,
+                                                                                            p.pollId
+                                                                                          ]), /* None */0, /* array */[p.title]))), React.createElement("p", undefined, ReasonReact.element(/* None */0, /* None */0, DateFormat$ReactTemplate.make(date, /* array */[])), " by ", ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, [p.pollCreator]), /* None */0, /* array */[p.pollCreator]))));
+                                                                })));
+                                              } else {
+                                                return result[0].message;
+                                              }
+                                            })
+                                        ])))));
             }),
           /* initialState */(function () {
               return /* record */[
@@ -689,10 +719,7 @@ function make$2(context, _) {
                         ""
                       ],
                       /* optionErrors : array */[],
-                      /* showAdvanced */false,
-                      /* recentPolls : NotAsked */0,
-                      /* popularPolls : NotAsked */0,
-                      /* recentVotes : NotAsked */0
+                      /* showAdvanced */false
                     ];
             }),
           /* retainedProps */component[/* retainedProps */11],
@@ -774,9 +801,7 @@ exports.reducer = reducer;
 exports.onInputChange = onInputChange;
 exports.component = component;
 exports.eos = eos;
-exports.GetEcho = GetEcho;
-exports.GetEchoQuery = GetEchoQuery;
-exports.EverySecond = EverySecond;
-exports.EverySecondSubscription = EverySecondSubscription;
-exports.make = make$2;
+exports.GetPolls = GetPolls;
+exports.GetPollsQuery = GetPollsQuery;
+exports.make = make$1;
 /* component Not a pure module */

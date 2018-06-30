@@ -25,7 +25,7 @@ function encode$2(prim) {
   return prim;
 }
 
-var TxId = /* module */[
+var TrxId = /* module */[
   /* decode */Json_decode.string,
   /* encode */encode$2
 ];
@@ -49,7 +49,7 @@ var Mongo = /* module */[
 
 exports.AccountName = AccountName;
 exports.Asset = Asset;
-exports.TxId = TxId;
+exports.TrxId = TrxId;
 exports.Config = Config;
 exports.TableRows = TableRows;
 exports.Account = Account;

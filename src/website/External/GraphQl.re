@@ -10,6 +10,12 @@ module PubSub = {
   external make : unit => t = "PubSub";
   type asyncIterable;
   [@bs.send] external asyncIterator : (t, string) => asyncIterable = "";
+  [@bs.module "graphql-subscriptions"]
+  external withFilter_ :
+    (unit => asyncIterable, ('payload, 'variables) => bool) => asyncIterable =
+    "";
+  let withFilter = (test, asyncIterable) =>
+    withFilter_(() => asyncIterable, test);
   [@bs.send] external publish : (t, string, 'payload) => unit = "";
 };
 
@@ -37,3 +43,12 @@ type executeT;
 type subscribeT;
 
 [@bs.module "graphql"] [@bs.val] external subscribe : subscribeT = "";
+
+module Scalars = {
+  [@bs.module "graphql-iso-date"] [@bs.val]
+  external date : 'scalar = "GraphQLDate";
+  [@bs.module "graphql-iso-date"] [@bs.val]
+  external time : 'scalar = "GraphQLTime";
+  [@bs.module "graphql-iso-date"] [@bs.val]
+  external dateTime : 'scalar = "GraphQLDateTime";
+};

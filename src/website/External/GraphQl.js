@@ -2,10 +2,17 @@
 'use strict';
 
 var GraphqlTools = require("graphql-tools");
+var GraphqlSubscriptions = require("graphql-subscriptions");
 
 var Resolver = /* module */[];
 
-var PubSub = /* module */[];
+function withFilter(test, asyncIterable) {
+  return GraphqlSubscriptions.withFilter_((function () {
+                return asyncIterable;
+              }), test);
+}
+
+var PubSub = /* module */[/* withFilter */withFilter];
 
 function make(typeDefs, resolvers) {
   return GraphqlTools.makeExecutableSchema({
@@ -16,7 +23,10 @@ function make(typeDefs, resolvers) {
 
 var Schema = /* module */[/* make */make];
 
+var Scalars = /* module */[];
+
 exports.Resolver = Resolver;
 exports.PubSub = PubSub;
 exports.Schema = Schema;
+exports.Scalars = Scalars;
 /* graphql-tools Not a pure module */

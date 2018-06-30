@@ -1,18 +1,10 @@
-type pollData = Api.Data.t(Api.Poll.t);
-
-type state = {
-  accountName: string,
-  pollData,
-  choices: Belt.Set.Int.t,
-};
+type state = {choices: Belt.Set.Int.t};
 
 type action =
-  | ChangePollData(pollData)
   | ToggleChoice(int);
 
 let reducer = (action, state) =>
   switch (action) {
-  | ChangePollData(pollData) => ReasonReact.Update({...state, pollData})
   | ToggleChoice(i) =>
     ReasonReact.Update({
       ...state,
@@ -24,8 +16,6 @@ let reducer = (action, state) =>
   };
 
 let component = ReasonReact.reducerComponent("PollPage");
-
-let eos = Util.loadEosReadOnly();
 
 let renderOption = ({ReasonReact.state, send}, i, option) => {
   Js.log3("choices", state.choices, i);
@@ -41,12 +31,7 @@ let renderOption = ({ReasonReact.state, send}, i, option) => {
 };
 
 let castVote =
-    (
-      {ReasonReact.state} as self,
-      context: Context.t,
-      poll: Api.Poll.t,
-      _event,
-    ) =>
+    ({ReasonReact.state} as self, context: Context.t, poll, _event) =>
   switch (context.scatter) {
   | Some(scatter) =>
     Api.Contract.make(scatter)
@@ -54,8 +39,8 @@ let castVote =
          Js.Promise.resolve(
            Api.vote(
              contract,
-             ~creator=poll.creator,
-             ~pollId=poll.id,
+             ~pollCreator=poll##pollCreator,
+             ~pollId=poll##pollId,
              ~voter="alice",
              ~choices=Belt.Set.Int.toArray(self.state.choices),
            ),
@@ -73,56 +58,91 @@ let castVote =
   | None => Js.log("No scatter")
   };
 
-let renderPoll =
-    ({ReasonReact.state} as self, context: Context.t, poll: Api.Poll.t) => {
-  let numVoters = Array.length(poll.votes);
-  <div>
-    <h1> (ReasonReact.string(poll.title)) </h1>
-    <p> (ReasonReact.string({j|Voters: $numVoters|j})) </p>
-    <ol>
-      (poll.options |> Array.mapi(renderOption(self)) |> ReasonReact.array)
-    </ol>
-    <div>
-      <button
-        disabled=(context.scatter == None)
-        onClick=(castVote(self, context, poll))>
-        (ReasonReact.string("Vote"))
-      </button>
-      <Link route=(Route.PollResults(poll.creator, string_of_int(poll.id)))>
-        (ReasonReact.string("Results"))
-      </Link>
-    </div>
-  </div>;
-  /* if there is a blacklist, check if the user is on it */
-  /* if there is a whitelist, check if the user is on it */
-  /* check if user is logged in */
-  /* check if scatter is available */
-};
+module PollData = [%graphql
+  {|
+  query pollData($creator: String!, $id: String!) {
+    poll(creator:$creator,id:$id) {
+      id
+      pollId
+      pollCreator
+      title
+      description
+      options
+      whitelist
+      blacklist
+      openTime
+      closeTime
+      blockId
+      blockNum
+      blockTime
+      trxId
+      appLabel
+      votes {
+        id
+        voter
+        choices
+        blockNum
+        blockTime
+        trxId
+        appLabel
+      }
+      comments {
+        id
+        commenter
+        content
+        blockTime
+        trxId
+        appLabel
+      }
+    }
+  }
+|}
+];
+
+module PollDataQuery = ReasonApollo.CreateQuery(PollData);
 
 let make = (~context: Context.t, ~accountName, ~pollId, _children) => {
   ...component,
   reducer,
-  initialState: () => {
-    accountName,
-    pollData: Api.Data.Loading,
-    choices: Belt.Set.Int.empty,
+  initialState: () => {choices: Belt.Set.Int.empty},
+  render: self => {
+    let pollData = PollData.make(~creator=accountName, ~id=pollId, ());
+    <PollDataQuery variables=pollData##variables>
+      ...(
+           ({result}) =>
+             switch (result) {
+             | Loading => ReasonReact.string("Loading...")
+             | Error(error) => ReasonReact.string(error##message)
+             | Data(response) =>
+               switch (response##poll) {
+               | Some(poll) =>
+                 <div>
+                   <h1> (ReasonReact.string(poll##title)) </h1>
+                   <ol>
+                     (
+                       poll##options
+                       |> Array.mapi(renderOption(self))
+                       |> ReasonReact.array
+                     )
+                   </ol>
+                   <div>
+                     <button
+                       disabled=(context.scatter == None)
+                       onClick=(castVote(self, context, poll))>
+                       (ReasonReact.string("Vote"))
+                     </button>
+                     <Link
+                       route=(
+                         Route.PollResults(poll##pollCreator, poll##pollId)
+                       )>
+                       (ReasonReact.string("Results"))
+                     </Link>
+                   </div>
+                 </div>
+               | None => ReasonReact.string("Couldn't find poll")
+               }
+             }
+         )
+    </PollDataQuery>;
   },
-  didMount: ({send}) =>
-    pollId
-    |> int_of_string
-    |> Api.pollById(eos, accountName)
-    |> Js.Promise.then_(result => {
-         let pollData = Api.Data.fromResult(result);
-         send(ChangePollData(pollData));
-         Js.log2("got poll data", pollData);
-         Js.Promise.resolve();
-       })
-    |> ignore,
-  render: self =>
-    switch (self.state.pollData) {
-    | Api.Data.NotAsked => ReasonReact.string("")
-    | Api.Data.Loading => ReasonReact.string("Loading...")
-    | Api.Data.Success(poll) => renderPoll(self, context, poll)
-    | Api.Data.Failure(message) => ReasonReact.string(message)
-    },
 };

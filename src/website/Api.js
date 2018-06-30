@@ -8,6 +8,7 @@ var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 var Env$ReactTemplate = require("./Env/Env.js");
 var Scatter$ReactTemplate = require("./External/Scatter.js");
+var WebClientEnv$ReactTemplate = require("./Env/WebClientEnv.js");
 
 function fromResult(result) {
   if (result.tag) {
@@ -28,52 +29,49 @@ function make(scatter) {
 
 var Contract = /* module */[/* make */make];
 
-function create(contract, creator, title, options, $staropt$star, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, _) {
-  var whitelist = $staropt$star ? $staropt$star[0] : /* array */[];
-  var blacklist = $staropt$star$1 ? $staropt$star$1[0] : /* array */[];
-  var minNumChoices = $staropt$star$2 ? $staropt$star$2[0] : 0;
-  var maxNumChoices = $staropt$star$3 ? $staropt$star$3[0] : 0;
-  var openTime = $staropt$star$4 ? $staropt$star$4[0] : 0;
-  var closeTime = $staropt$star$5 ? $staropt$star$5[0] : 0;
+function create(contract, pollCreator, pollId, title, $staropt$star, options, $staropt$star$1, $staropt$star$2, $staropt$star$3, $staropt$star$4, $staropt$star$5, $staropt$star$6, _) {
+  var description = $staropt$star ? $staropt$star[0] : "";
+  var whitelist = $staropt$star$1 ? $staropt$star$1[0] : /* array */[];
+  var blacklist = $staropt$star$2 ? $staropt$star$2[0] : /* array */[];
+  var minChoices = $staropt$star$3 ? $staropt$star$3[0] : 0;
+  var maxChoices = $staropt$star$4 ? $staropt$star$4[0] : 0;
+  var openTime = $staropt$star$5 ? $staropt$star$5[0] : 0;
+  var closeTime = $staropt$star$6 ? $staropt$star$6[0] : 0;
   return contract.create({
-              creator: creator,
+              poll_creator: pollCreator,
+              poll_id: pollId,
               title: title,
+              description: description,
               options: options,
               whitelist: whitelist,
               blacklist: blacklist,
-              min_num_choices: minNumChoices,
-              max_num_choices: maxNumChoices,
+              min_choices: minChoices,
+              max_choices: maxChoices,
               open_time: openTime,
-              close_time: closeTime
+              close_time: closeTime,
+              app_label: WebClientEnv$ReactTemplate.appLabel
             }, {
-              authorization: /* array */["" + (String(creator) + "@active")]
+              authorization: /* array */["" + (String(pollCreator) + "@active")]
             });
 }
 
-function close(contract, creator, pollId) {
+function close(contract, pollCreator, pollId) {
   return contract.close({
-              creator: creator,
-              poll_id: pollId
+              poll_creator: pollCreator,
+              poll_id: pollId,
+              app_label: WebClientEnv$ReactTemplate.appLabel
             }, {
-              authorization: /* array */["" + (String(creator) + "@active")]
+              authorization: /* array */["" + (String(pollCreator) + "@active")]
             });
 }
 
-function destroy(contract, creator, pollId) {
-  return contract.close({
-              creator: creator,
-              poll_id: pollId
-            }, {
-              authorization: /* array */["" + (String(creator) + "@active")]
-            });
-}
-
-function vote(contract, creator, pollId, voter, choices) {
+function vote(contract, pollCreator, pollId, voter, choices) {
   return contract.vote({
-              creator: creator,
+              poll_creator: pollCreator,
               poll_id: pollId,
               voter: voter,
-              choices: choices
+              choices: choices,
+              app_label: WebClientEnv$ReactTemplate.appLabel
             }, {
               authorization: /* array */["" + (String(voter) + "@active")]
             });
@@ -111,7 +109,7 @@ var VoteRef = /* module */[/* decode */decode$1];
 function decode$2(json) {
   return /* record */[
           /* id */Json_decode.field("id", Json_decode.$$int, json),
-          /* creator */Json_decode.field("creator", Json_decode.string, json),
+          /* creator */Json_decode.field("poll_creator", Json_decode.string, json),
           /* title */Json_decode.field("title", Json_decode.string, json),
           /* options */Json_decode.field("options", (function (param) {
                   return Json_decode.array(Json_decode.string, param);
@@ -211,7 +209,6 @@ exports.Data = Data;
 exports.Contract = Contract;
 exports.create = create;
 exports.close = close;
-exports.destroy = destroy;
 exports.vote = vote;
 exports.Vote = Vote;
 exports.VoteRef = VoteRef;

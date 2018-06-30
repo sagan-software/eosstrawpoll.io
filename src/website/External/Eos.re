@@ -16,13 +16,13 @@ module Asset = {
 
 type asset = Asset.t;
 
-module TxId = {
+module TrxId = {
   type t = string;
   let decode = Json.Decode.string;
   let encode = Json.Encode.string;
-}
+};
 
-type txId = TxId.t;
+type trxId = TrxId.t;
 
 module Config = {
   [@bs.deriving abstract]
@@ -82,7 +82,6 @@ module Action = {
 };
 
 module Mongo = {
-
   module Authorization = {
     [@bs.deriving abstract]
     type t = {
@@ -90,12 +89,13 @@ module Mongo = {
       permission: string,
     };
   };
-
   module Action = {
     [@bs.deriving abstract]
     type t('data) = {
-      [@bs.as "action_num"] actionNum: int,
-      [@bs.as "trx_id"] trxId: txId,
+      [@bs.as "action_num"]
+      actionNum: int,
+      [@bs.as "trx_id"]
+      trxId,
       cfa: bool,
       account: accountName,
       name: string,
@@ -103,5 +103,4 @@ module Mongo = {
       data: 'data,
     };
   };
-
 };

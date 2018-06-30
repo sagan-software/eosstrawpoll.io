@@ -1,10 +1,4 @@
 /* http://mongodb.github.io/node-mongodb-native/3.0/api/ */
-[@bs.deriving abstract]
-type pipeline = {
-  [@bs.optional] [@bs.as "$match"]
-  match: Js.Dict.t(string),
-};
-
 module ChangeEvent = {
   [@bs.deriving abstract]
   type t('document) = {
@@ -14,11 +8,11 @@ module ChangeEvent = {
 };
 
 module ChangeStream = {
-  type t('document);
+  type t;
   [@bs.send]
   external on :
     (
-      t('document),
+      t,
       [@bs.string] [
         | `change(ChangeEvent.t('document) => unit)
         | `close(unit => unit)
@@ -26,7 +20,7 @@ module ChangeStream = {
         | `error(Js.Exn.t => unit)
       ]
     ) =>
-    t('document) =
+    t =
     "";
 };
 
@@ -38,21 +32,29 @@ module WriteOpResult = {
   };
 };
 
+module Cursor = {
+  type t;
+  [@bs.send] external limit : (t, int) => t = "";
+  [@bs.send] external toArray : t => Js.Promise.t(array('document)) = "";
+  [@bs.send]
+  external next : t => Js.Promise.t(Js.Nullable.t('document)) = "";
+  [@bs.send] external sort : (t, 'keyOrList, int) => t = "";
+  [@bs.send] external limit : (t, int) => t = "";
+};
+
 module Collection = {
-  type t('document);
+  type t;
+  [@bs.send] external watch : (t, 'query) => ChangeStream.t = "";
+  [@bs.send] external watchAll : t => ChangeStream.t = "watch";
   [@bs.send]
-  external watch :
-    (t('document), array(pipeline)) => ChangeStream.t('document) =
-    "";
-  [@bs.send]
-  external save : (t('document), 'document) => Js.Promise.t(WriteOpResult.t) =
-    "";
+  external save : (t, 'document) => Js.Promise.t(WriteOpResult.t) = "";
+  [@bs.send] external find : (t, 'query) => Cursor.t = "";
+  [@bs.send] external findAll : t => Cursor.t = "find";
 };
 
 module Database = {
   type t;
-  [@bs.send]
-  external collection : (t, string) => Collection.t('document) = "";
+  [@bs.send] external collection : (t, string) => Collection.t = "";
 };
 
 module Client = {

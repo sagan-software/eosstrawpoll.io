@@ -1,46 +1,42 @@
-let renderPost = (poll: Api.Poll.t) =>
-  <div key=(string_of_int(poll.id))>
-    <Link route=(Route.Poll(poll.creator, poll.id |> string_of_int))>
-      (ReasonReact.string(poll.title))
-    </Link>
-  </div>;
+let component = ReasonReact.statelessComponent("ProfilePage");
 
-type pollData = Api.Data.t(array(Api.Poll.t));
+module AccountData = [%graphql
+  {|
+  query accountData($name: String!) {
+    account(name:$name) {
+      polls {
+        id
+        pollId
+        pollCreator
+        title
+        openTime
+        closeTime
+        blockTime
+      }
+      votes {
+        id
+        pollId
+        pollCreator
+        blockTime
+      }
+      comments {
+        id
+        pollId
+        pollCreator
+        content
+        blockTime
+      }
+    }
+  }
+|}
+];
 
-type action =
-  | ChangePollData(pollData);
-
-type state = {
-  accountName: string,
-  pollData,
-};
-
-let reducer = (action, state) =>
-  switch (action) {
-  | ChangePollData(pollData) => ReasonReact.Update({...state, pollData})
-  };
-
-let component = ReasonReact.reducerComponent("ProfilePage");
-
-let numPerPage = 20;
-
-let eos = Util.loadEosReadOnly();
-
-let tmp = [%bs.raw {| global.eos = eos |}];
+module AccountDataQuery = ReasonApollo.CreateQuery(AccountData);
 
 let make = (~context: Context.t, ~accountName, _children) => {
   ...component,
-  reducer,
-  initialState: () => {accountName, pollData: Api.Data.Loading},
-  didMount: self =>
-    Api.polls(eos, accountName, ~limit=numPerPage, ())
-    |> Js.Promise.then_(result => {
-         let pollData = Api.Data.fromResult(result);
-         self.send(ChangePollData(pollData));
-         Js.Promise.resolve();
-       })
-    |> ignore,
-  render: self =>
+  render: self => {
+    let accountData = AccountData.make(~name=accountName, ());
     <div>
       <Helmet>
         <title> (ReasonReact.string(accountName)) </title>
@@ -58,16 +54,31 @@ let make = (~context: Context.t, ~accountName, _children) => {
       <h1> (ReasonReact.string(accountName)) </h1>
       (ReasonReact.string("Profile"))
       <div>
-        (
-          switch (self.state.pollData) {
-          | Api.Data.NotAsked => ReasonReact.string("")
-          | Api.Data.Loading => ReasonReact.string("Loading...")
-          | Api.Data.Success(polls) =>
-            <div> (polls |> Array.map(renderPost) |> ReasonReact.array) </div>
-          | Api.Data.Failure(_message) =>
-            ReasonReact.string("Failed to load")
-          }
-        )
+        <AccountDataQuery variables=accountData##variables>
+          ...(
+               ({result}) =>
+                 switch (result) {
+                 | Loading => ReasonReact.string("Loading...")
+                 | Error(error) => ReasonReact.string(error##message)
+                 | Data(response) =>
+                   switch (response##account) {
+                   | Some(account) =>
+                     account##polls
+                     |> Array.map(p =>
+                          <div key=p##id>
+                            <Link
+                              route=(Route.Poll(p##pollCreator, p##pollId))>
+                              (ReasonReact.string(p##title))
+                            </Link>
+                          </div>
+                        )
+                     |> ReasonReact.array
+                   | None => ReasonReact.string("No polls created")
+                   }
+                 }
+             )
+        </AccountDataQuery>
       </div>
-    </div>,
+    </div>;
+  },
 };

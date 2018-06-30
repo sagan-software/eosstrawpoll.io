@@ -19,6 +19,8 @@ var siteUrl = Env$ReactTemplate.siteUrl;
 
 var staticBaseUrl = Env$ReactTemplate.staticBaseUrl;
 
+var appLabel = Env$ReactTemplate.appLabel;
+
 exports.codeName = codeName;
 exports.contractAccount = contractAccount;
 exports.localNetwork = localNetwork;
@@ -27,4 +29,5 @@ exports.httpEndpoint = httpEndpoint;
 exports.eosConfig = eosConfig;
 exports.siteUrl = siteUrl;
 exports.staticBaseUrl = staticBaseUrl;
+exports.appLabel = appLabel;
 /* Env-ReactTemplate Not a pure module */

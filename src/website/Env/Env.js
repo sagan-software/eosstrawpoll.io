@@ -21,6 +21,8 @@ var network = localNetwork;
 
 var staticBaseUrl = siteUrl;
 
+var appLabel = "eosstrawpoll.com";
+
 exports.codeName = codeName;
 exports.contractAccount = contractAccount;
 exports.localNetwork = localNetwork;
@@ -29,4 +31,5 @@ exports.httpEndpoint = httpEndpoint;
 exports.eosConfig = eosConfig;
 exports.siteUrl = siteUrl;
 exports.staticBaseUrl = staticBaseUrl;
+exports.appLabel = appLabel;
 /* localNetwork Not a pure module */

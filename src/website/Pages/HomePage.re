@@ -204,7 +204,7 @@ let make = (~context: Context.t, _children) => {
         <meta property="og:title" content="EOS Straw Poll" />
         <meta property="og:description" content="Home page!!!" />
       </Helmet>
-      <form className=(Styles.form |> TypedGlamor.toString)>
+      <div className=(Styles.form |> TypedGlamor.toString)>
         <h1> (ReasonReact.string("Create a poll")) </h1>
         /* <EverySecondSubscription>
              ...(
@@ -222,98 +222,8 @@ let make = (~context: Context.t, _children) => {
                     }
                 )
            </EverySecondSubscription> */
-        <label>
-          <input
-            placeholder="Type your question hereee"
-            required=true
-            value=(getInputValue(self.state.inputs, `title))
-            onChange=(onInputChange(self, `title))
-          />
-        </label>
-        <fieldset className=(Styles.optionList |> TypedGlamor.toString)>
-          <legend> (ReasonReact.string("Options")) </legend>
-          <label className=(Styles.option |> TypedGlamor.toString)>
-            <input
-              className=(Styles.optionInput |> TypedGlamor.toString)
-              placeholder="Enter poll option"
-              required=true
-            />
-          </label>
-          <label>
-            <input placeholder="Enter poll option" required=true />
-          </label>
-          <label> <input placeholder="Enter poll option" /> </label>
-        </fieldset>
-        <fieldset>
-          <legend onClick=(_e => self.send(ToggleAdvanced))>
-            (ReasonReact.string("Advanced"))
-          </legend>
-          (
-            self.state.showAdvanced ?
-              <div>
-                <label>
-                  (ReasonReact.string("Min choices"))
-                  <input
-                    type_="number"
-                    min=1
-                    max=(self.state.options |> Array.length |> string_of_int)
-                    value=(getInputValue(self.state.inputs, `minNumChoices))
-                    onChange=(onInputChange(self, `minNumChoices))
-                  />
-                </label>
-                <label>
-                  (ReasonReact.string("Max choices"))
-                  <input
-                    type_="number"
-                    min=1
-                    max=(self.state.options |> Array.length |> string_of_int)
-                    value=(getInputValue(self.state.inputs, `maxNumChoices))
-                    onChange=(onInputChange(self, `maxNumChoices))
-                  />
-                </label>
-                <label>
-                  (ReasonReact.string("Open time"))
-                  <input
-                    type_="datetime-local"
-                    value=(getInputValue(self.state.inputs, `openTime))
-                    onChange=(onInputChange(self, `openTime))
-                  />
-                </label>
-                <label>
-                  (ReasonReact.string("Close time"))
-                  <input
-                    type_="datetime-local"
-                    value=(getInputValue(self.state.inputs, `closeTime))
-                    onChange=(onInputChange(self, `closeTime))
-                  />
-                </label>
-                <label>
-                  (ReasonReact.string("Whitelist"))
-                  <input
-                    placeholder="alice, bob, janice"
-                    pattern="([\\w+]{1,12}(\\.\\w+)?)(,\\s*([\\w+]{1,12}(\\.\\w+)?))*"
-                    value=(getInputValue(self.state.inputs, `whitelist))
-                    onChange=(onInputChange(self, `whitelist))
-                  />
-                </label>
-                <label>
-                  (ReasonReact.string("Blacklist"))
-                  <input
-                    placeholder="carol, jim, dan"
-                    pattern="([\\w+]{1,12}(\\.\\w+)?)(,\\s*([\\w+]{1,12}(\\.\\w+)?))*"
-                    value=(getInputValue(self.state.inputs, `blacklist))
-                    onChange=(onInputChange(self, `blacklist))
-                  />
-                </label>
-              </div> :
-              <div />
-          )
-        </fieldset>
-        <button type_="reset"> (ReasonReact.string("Reset")) </button>
-        <button type_="submit" disabled=(context.scatter == None)>
-          (ReasonReact.string("Create Poll"))
-        </button>
-      </form>
+        <PollForm />
+      </div>
       <aside className=(Styles.sidebar |> TypedGlamor.toString)>
         <div className=(Styles.poll |> TypedGlamor.toString)>
           <h2 className=(Styles.pollTitle |> TypedGlamor.toString)>

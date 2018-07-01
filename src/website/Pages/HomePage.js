@@ -16,6 +16,7 @@ var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Link$ReactTemplate = require("../Components/Link.js");
 var Util$ReactTemplate = require("../Util.js");
 var Helmet$ReactTemplate = require("../External/Helmet.js");
+var PollForm$ReactTemplate = require("../Components/PollForm.js");
 var DateFormat$ReactTemplate = require("../Components/DateFormat.js");
 var HomePageStyles$ReactTemplate = require("../Styles/HomePageStyles.js");
 
@@ -568,7 +569,7 @@ var GetPollsQuery = ReasonApollo.CreateQuery([
       parse
     ]);
 
-function make$1(context, _) {
+function make$1(_, _$1) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -579,8 +580,7 @@ function make$1(context, _) {
           /* willUnmount */component[/* willUnmount */6],
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
-          /* render */(function (self) {
-              var match = self[/* state */1][/* showAdvanced */4];
+          /* render */(function () {
               return React.createElement("main", {
                           className: TypedGlamor.toString(HomePageStyles$ReactTemplate.main)
                         }, ReasonReact.element(/* None */0, /* None */0, Helmet$ReactTemplate.make(/* array */[
@@ -593,80 +593,9 @@ function make$1(context, _) {
                                         content: "Home page!!!",
                                         property: "og:description"
                                       })
-                                ])), React.createElement("form", {
+                                ])), React.createElement("div", {
                               className: TypedGlamor.toString(HomePageStyles$ReactTemplate.form)
-                            }, React.createElement("h1", undefined, "Create a poll"), React.createElement("label", undefined, React.createElement("input", {
-                                      placeholder: "Type your question hereee",
-                                      required: true,
-                                      value: getInputValue(self[/* state */1][/* inputs */0], /* title */272307608),
-                                      onChange: (function (param) {
-                                          return onInputChange(self, /* title */272307608, param);
-                                        })
-                                    })), React.createElement("fieldset", {
-                                  className: TypedGlamor.toString(HomePageStyles$ReactTemplate.optionList)
-                                }, React.createElement("legend", undefined, "Options"), React.createElement("label", {
-                                      className: TypedGlamor.toString(HomePageStyles$ReactTemplate.option)
-                                    }, React.createElement("input", {
-                                          className: TypedGlamor.toString(HomePageStyles$ReactTemplate.optionInput),
-                                          placeholder: "Enter poll option",
-                                          required: true
-                                        })), React.createElement("label", undefined, React.createElement("input", {
-                                          placeholder: "Enter poll option",
-                                          required: true
-                                        })), React.createElement("label", undefined, React.createElement("input", {
-                                          placeholder: "Enter poll option"
-                                        }))), React.createElement("fieldset", undefined, React.createElement("legend", {
-                                      onClick: (function () {
-                                          return Curry._1(self[/* send */3], /* ToggleAdvanced */0);
-                                        })
-                                    }, "Advanced"), match ? React.createElement("div", undefined, React.createElement("label", undefined, "Min choices", React.createElement("input", {
-                                                max: String(self[/* state */1][/* options */2].length),
-                                                min: 1,
-                                                type: "number",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* minNumChoices */167015550),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* minNumChoices */167015550, param);
-                                                  })
-                                              })), React.createElement("label", undefined, "Max choices", React.createElement("input", {
-                                                max: String(self[/* state */1][/* options */2].length),
-                                                min: 1,
-                                                type: "number",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* maxNumChoices */78198800),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* maxNumChoices */78198800, param);
-                                                  })
-                                              })), React.createElement("label", undefined, "Open time", React.createElement("input", {
-                                                type: "datetime-local",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* openTime */-298276617),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* openTime */-298276617, param);
-                                                  })
-                                              })), React.createElement("label", undefined, "Close time", React.createElement("input", {
-                                                type: "datetime-local",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* closeTime */382421989),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* closeTime */382421989, param);
-                                                  })
-                                              })), React.createElement("label", undefined, "Whitelist", React.createElement("input", {
-                                                pattern: "([\\w+]{1,12}(\\.\\w+)?)(,\\s*([\\w+]{1,12}(\\.\\w+)?))*",
-                                                placeholder: "alice, bob, janice",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* whitelist */697659271),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* whitelist */697659271, param);
-                                                  })
-                                              })), React.createElement("label", undefined, "Blacklist", React.createElement("input", {
-                                                pattern: "([\\w+]{1,12}(\\.\\w+)?)(,\\s*([\\w+]{1,12}(\\.\\w+)?))*",
-                                                placeholder: "carol, jim, dan",
-                                                value: getInputValue(self[/* state */1][/* inputs */0], /* blacklist */473709981),
-                                                onChange: (function (param) {
-                                                    return onInputChange(self, /* blacklist */473709981, param);
-                                                  })
-                                              }))) : React.createElement("div", undefined)), React.createElement("button", {
-                                  type: "reset"
-                                }, "Reset"), React.createElement("button", {
-                                  disabled: context[/* scatter */0] === /* None */0,
-                                  type: "submit"
-                                }, "Create Poll")), React.createElement("aside", {
+                            }, React.createElement("h1", undefined, "Create a poll"), ReasonReact.element(/* None */0, /* None */0, PollForm$ReactTemplate.make(/* array */[]))), React.createElement("aside", {
                               className: TypedGlamor.toString(HomePageStyles$ReactTemplate.sidebar)
                             }, React.createElement("div", {
                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.poll)

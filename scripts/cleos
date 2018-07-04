@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+PREFIX="docker-compose --file docker/docker-compose.yml exec keosd cleos --wallet-url http://localhost:8888"
+$PREFIX "$@"

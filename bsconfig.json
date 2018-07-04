@@ -3,34 +3,34 @@
   comma. If this screws with your editor highlighting, please tell us by filing
   an issue! */
 {
-	"name": "react-template",
-	"bsc-flags": ["-bs-super-errors"],
-	"reason": {
-		"react-jsx": 2
-	},
-	"sources": [
-		{
-			"dir": "src/website",
-			"subdirs": true
-		}
-	],
-	"package-specs": [
-		{
-			"module": "commonjs",
-			"in-source": true
-		}
-	],
-	"suffix": ".js",
-	"namespace": true,
-	"bs-dependencies": [
-		"reason-react",
-		"bs-webapi",
-		"@glennsl/bs-json",
-		"bs-typed-glamor",
-		"re-formality",
-		"bs-express",
-		"reason-apollo"
-	],
-	"ppx-flags": ["graphql_ppx/ppx"],
-	"refmt": 3
+  "name": "react-template",
+  "bsc-flags": ["-bs-super-errors"],
+  "reason": {
+    "react-jsx": 2
+  },
+  "sources": [
+    {
+      "dir": "website",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "commonjs",
+      "in-source": true
+    }
+  ],
+  "suffix": ".js",
+  "namespace": true,
+  "bs-dependencies": [
+    "reason-react",
+    "bs-webapi",
+    "@glennsl/bs-json",
+    "bs-typed-glamor",
+    "re-formality",
+    "bs-express",
+    "reason-apollo"
+  ],
+  "ppx-flags": ["graphql_ppx/ppx"],
+  "refmt": 3
 }

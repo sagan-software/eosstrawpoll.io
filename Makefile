@@ -1,8 +1,9 @@
-DOCKER_COMPOSE := docker-compose --file src/docker/docker-compose.yml
+DOCKER_COMPOSE := docker-compose --file docker/docker-compose.yml
 DOCKER_EXEC := $(DOCKER_COMPOSE) exec keosd
 CLEOS := $(DOCKER_EXEC) cleos -u http://nodeosd:8888 --wallet-url http://localhost:8888
 EOSIOCPP := $(DOCKER_EXEC) eosiocpp
 PUBKEY := EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+PRIVKEY := 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 
 .PHONY: build build-contracts build-website
 build: build-contracts build-website
@@ -46,7 +47,7 @@ clean-docker:
 	docker volume prune
 
 setup-chain:
-	$(CLEOS) wallet import $(PUBKEY) || exit 0
+	$(CLEOS) wallet import $(PRIVKEY) || exit 0
 	$(CLEOS) create account eosio eosio.token $(PUBKEY) $(PUBKEY) || exit 0
 	$(CLEOS) create account eosio eosio.msig $(PUBKEY) $(PUBKEY) || exit 0
 	$(CLEOS) create account eosio eosio.ram $(PUBKEY) $(PUBKEY)
@@ -67,7 +68,7 @@ setup-chain:
 	$(CLEOS) system newaccount eosio --transfer bob $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
 	$(CLEOS) system newaccount eosio --transfer carol $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
 
-#PW5JzF4wenHHG3rus4FYymhP6G4Q6kXe3wrP6gPsTFyp1oCUf6TJ3
+#PW5KUmsXex44naiSwH1SFcFpcmzWw9n3thX3adGEZduJYGpSLHaQS
 redeploy:
 	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
 	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp

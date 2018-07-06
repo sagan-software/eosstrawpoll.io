@@ -47,6 +47,7 @@ clean-docker:
 	docker volume prune
 
 setup-chain:
+	$(CLEOS) wallet create
 	$(CLEOS) wallet import $(PRIVKEY) || exit 0
 	$(CLEOS) create account eosio eosio.token $(PUBKEY) $(PUBKEY) || exit 0
 	$(CLEOS) create account eosio eosio.msig $(PUBKEY) $(PUBKEY) || exit 0
@@ -63,25 +64,20 @@ setup-chain:
 	$(CLEOS) push action eosio.token issue '[ "eosio", "10000000000.0000 SYS", "memo" ]' -p eosio
 	$(CLEOS) set contract eosio /eos/build/contracts/eosio.system || exit 0
 	$(CLEOS) push action eosio setpriv '["eosio.msig", 1]' -p eosio@active
+	make create-accounts
+	make deploy-contract
+
+create-accounts:
 	$(CLEOS) system newaccount eosio --transfer eosstrawpoll $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 2000
 	$(CLEOS) system newaccount eosio --transfer alice $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
 	$(CLEOS) system newaccount eosio --transfer bob $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
 	$(CLEOS) system newaccount eosio --transfer carol $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
-
-#PW5KUmsXex44naiSwH1SFcFpcmzWw9n3thX3adGEZduJYGpSLHaQS
-redeploy:
+	$(CLEOS) system newaccount eosio --transfer williamcurry $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
+	$(CLEOS) system newaccount eosio --transfer saganonroids $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
+	$(CLEOS) system newaccount eosio --transfer g4ydegenesis $(PUBKEY) --stake-net "100000.0000 SYS" --stake-cpu "100000.0000 SYS" --buy-ram-kbytes 512
+	
+deploy-contract:
 	$(EOSIOCPP) --outname /dist/eosstrawpoll.wast /src/eosstrawpoll/eosstrawpoll.cpp
 	$(EOSIOCPP) --genabi /dist/eosstrawpoll.abi /src/eosstrawpoll/eosstrawpoll.cpp
 	$(CLEOS) set contract eosstrawpoll /dist /dist/eosstrawpoll.wast /dist/eosstrawpoll.abi
 	$(CLEOS) get table eosstrawpoll alice polls
-
-create-data:
-	$(CLEOS) push action eosstrawpoll close '["alice", "fuckballs", "cleos"]' -p alice@active || exit 0
-	$(CLEOS) push action eosstrawpoll create '["alice", "fuckballs", "BALLS","Description A",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p alice@active
-	$(CLEOS) push action eosstrawpoll close '["alice", "balls", "cleos"]' -p alice@active || exit 0
-	$(CLEOS) push action eosstrawpoll create '["alice","balls", "Neato","Description B",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p alice@active
-	$(CLEOS) push action eosstrawpoll close '["bob", "hello", "cleos"]' -p bob@active || exit 0
-	$(CLEOS) push action eosstrawpoll create '["bob","hello", "Nice poll title 2","Description C",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p bob@active
-	$(CLEOS) push action eosstrawpoll close '["carol", "asdf", "cleos"]' -p carol@active || exit 0
-	$(CLEOS) push action eosstrawpoll create '["carol","asdf", "Nice poll title 2","Description D",["Option A","Option B","Option C"],[],[],0,0,0,0,"cleos"]' -p carol@active
-	$(CLEOS) push action eosstrawpoll vote '["alice","fuckballs","bob",[1],"cleos"]' -p bob@active

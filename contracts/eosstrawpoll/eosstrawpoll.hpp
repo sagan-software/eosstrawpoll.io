@@ -17,8 +17,7 @@ constexpr uint16_t MAX_OPTIONS_SIZE = 100;
 constexpr uint16_t MAX_OPTION_LENGTH = 280;
 constexpr uint16_t MAX_ACCOUNT_LIST_SIZE = 500;
 constexpr uint16_t MIN_POLL_AGE_SECONDS = 60;
-constexpr uint8_t MAX_APP_LABEL_LENGTH = 50;
-constexpr uint32_t MAX_JSON_LENGTH = 2500;
+constexpr uint16_t MAX_METADATA_LENGTH = 300;
 constexpr uint16_t MAX_COMMENT_LENGTH = 1000;
 
 // @abi table polls i64
@@ -65,38 +64,37 @@ class eosstrawpoll : public eosio::contract
         const uint16_t max_choices,
         const timestamp open_time,
         const timestamp close_time,
-        const string &app_label);
+        const string &metadata);
 
     void close(
         const account_name poll_creator,
         const uuid poll_id,
-        const string &app_label);
+        const string &metadata);
 
     void vote(
         const account_name poll_creator,
         const uuid poll_id,
         const account_name voter,
         const vector<uint16_t> &choices,
-        const string &app_label);
+        const string &metadata);
 
     void comment(
         const account_name poll_creator,
         const uuid poll_id,
         const account_name commenter,
         const string &content,
-        const string &app_label);
+        const string &metadata);
 
     void react(
         const account_name poll_creator,
         const uuid poll_id,
         const account_name reacter,
         const reaction_name reaction,
-        const string &app_label);
+        const string &metadata);
 
     void settings(
         const account_name account,
-        const string &json_metadata,
         const vector<account_name> default_whitelist,
         const vector<account_name> default_blacklist,
-        const string &app_label);
+        const string &metadata);
 };

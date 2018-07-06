@@ -19,7 +19,7 @@ module Poll = {
     "blockNum": int,
     "blockTime": string,
     "trxId": string,
-    "appLabel": string,
+    "metadata": string,
   };
   let empty: t = {
     "id": "",
@@ -38,7 +38,7 @@ module Poll = {
     "blockNum": 0,
     "blockTime": "",
     "trxId": "",
-    "appLabel": "",
+    "metadata": "",
   };
 };
 
@@ -46,6 +46,7 @@ module Vote = {
   type t = {
     .
     "id": string,
+    "pollRef": string,
     "pollId": string,
     "pollCreator": string,
     "voter": string,
@@ -54,10 +55,11 @@ module Vote = {
     "blockNum": int,
     "blockTime": string,
     "trxId": string,
-    "appLabel": string,
+    "metadata": string,
   };
   let empty: t = {
     "id": "",
+    "pollRef": "",
     "pollId": "",
     "pollCreator": "",
     "voter": "",
@@ -66,7 +68,7 @@ module Vote = {
     "blockNum": 0,
     "blockTime": "",
     "trxId": "",
-    "appLabel": "",
+    "metadata": "",
   };
 };
 
@@ -82,7 +84,7 @@ module Comment = {
     "blockNum": int,
     "blockTime": string,
     "trxId": string,
-    "appLabel": string,
+    "metadata": string,
   };
   let empty: t = {
     "id": "",
@@ -94,7 +96,7 @@ module Comment = {
     "blockNum": 0,
     "blockTime": "",
     "trxId": "",
-    "appLabel": "",
+    "metadata": "",
   };
 };
 
@@ -113,8 +115,24 @@ module Block = {
     "id": string,
     "num": int,
     "time": string,
+    "numPolls": int,
+    "numCloses": int,
+    "numVotes": int,
+    "numComments": int,
+    "numReactions": int,
+    "numDonations": int,
   };
-  let empty: t = {"id": "", "num": 0, "time": ""};
+  let empty: t = {
+    "id": "",
+    "num": 0,
+    "time": "",
+    "numPolls": 0,
+    "numCloses": 0,
+    "numVotes": 0,
+    "numComments": 0,
+    "numReactions": 0,
+    "numDonations": 0,
+  };
 };
 
 module EosAction = {
@@ -146,30 +164,64 @@ module EosAction = {
     "hex_data": "",
     "data": Js.Null_undefined.null,
   };
-  module Decode = {
-    include Json.Decode;
-    let create = j => {
-      "poll_creator": j |> field("poll_creator", string),
-      "poll_id": j |> field("poll_id", string),
-      "title": j |> field("title", string),
-      "description": j |> field("description", string),
-      "options": j |> field("options", array(string)),
-      "whitelist": j |> field("whitelist", array(string)),
-      "blacklist": j |> field("blacklist", array(string)),
-      "min_choices": j |> field("min_choices", int),
-      "max_choices": j |> field("max_choices", int),
-      "open_time": j |> field("open_time", int),
-      "close_time": j |> field("close_time", int),
-      "app_label": j |> field("app_label", string),
-    };
-    let vote = j => {
-      "poll_creator": j |> field("poll_creator", string),
-      "poll_id": j |> field("poll_id", string),
-      "voter": j |> field("voter", string),
-      "choices": j |> field("choices", array(int)),
-      "app_label": j |> field("app_label", string),
-    };
+  type create = {
+    .
+    "poll_creator": string,
+    "poll_id": string,
+    "title": string,
+    "description": string,
+    "options": array(string),
+    "whitelist": array(string),
+    "blacklist": array(string),
+    "min_choices": int,
+    "max_choices": int,
+    "open_time": int,
+    "close_time": int,
+    "metadata": string,
   };
+  external asCreate : Js.Json.t => create = "%identity";
+  type close = {
+    .
+    "poll_creator": string,
+    "poll_id": int,
+    "metadata": string,
+  };
+  external asClose : Js.Json.t => close = "%identity";
+  type vote = {
+    .
+    "poll_creator": string,
+    "poll_id": string,
+    "voter": string,
+    "choices": array(int),
+    "metadata": string,
+  };
+  external asVote : Js.Json.t => vote = "%identity";
+  type comment = {
+    .
+    "poll_creator": string,
+    "poll_id": string,
+    "commenter": string,
+    "content": string,
+    "metadata": string,
+  };
+  external asComment : Js.Json.t => comment = "%identity";
+  type data =
+    | Create(create)
+    | Close(close)
+    | Vote(vote)
+    | Comment(comment);
+  let getData = action =>
+    if (action##account == Env.contractAccount) {
+      switch (action##name, action##data |. Js.Nullable.toOption) {
+      | ("create", Some(data)) => data |. asCreate |. Create |. Some
+      | ("close", Some(data)) => data |. asClose |. Close |. Some
+      | ("vote", Some(data)) => data |. asVote |. Vote |. Some
+      | ("comment", Some(data)) => data |. asComment |. Comment |. Some
+      | _ => None
+      };
+    } else {
+      None;
+    };
 };
 
 module EosBlock = {
@@ -188,6 +240,49 @@ module EosBlock = {
       "action_mroot": string,
       "schedule_version": int,
       "producer_signature": string,
+      "transactions":
+        array(
+          {
+            .
+            "status": string,
+            "cpu_usage_us": int,
+            "net_usage_words": int,
+            "trx": {
+              .
+              "id": string,
+              "signatures": array(string),
+              "compression": string,
+              "packed_context_free_data": string,
+              "context_free_data": string,
+              "packed_trx": string,
+              "transaction": {
+                .
+                "expiration": string,
+                "ref_block_num": int,
+                "max_net_usage_words": int,
+                "max_cpu_usage_ms": int,
+                "delay_sec": int,
+                "actions":
+                  array(
+                    {
+                      .
+                      "account": string,
+                      "name": string,
+                      "authorization":
+                        array(
+                          {
+                            .
+                            "actor": string,
+                            "permission": string,
+                          },
+                        ),
+                      "data": string,
+                    },
+                  ),
+              },
+            },
+          },
+        ),
     },
   };
   let empty: t = {
@@ -203,6 +298,7 @@ module EosBlock = {
       "action_mroot": "",
       "schedule_version": 0,
       "producer_signature": "",
+      "transactions": [||],
     },
   };
 };

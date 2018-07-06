@@ -34,17 +34,20 @@ let castVote =
     ({ReasonReact.state} as self, context: Context.t, poll, _event) =>
   switch (context.scatter) {
   | Some(scatter) =>
-    Api.Contract.make(scatter)
+    scatter
+    |> Contract.fromScatter
     |> Js.Promise.then_(contract =>
-         Js.Promise.resolve(
-           Api.vote(
-             contract,
-             ~pollCreator=poll##pollCreator,
-             ~pollId=poll##pollId,
-             ~voter="alice",
-             ~choices=Belt.Set.Int.toArray(self.state.choices),
-           ),
-         )
+         contract
+         |. Contract.vote(
+              {
+                "poll_creator": poll##pollCreator,
+                "poll_id": poll##pollId,
+                "voter": "alice",
+                "choices": Belt.Set.Int.toArray(self.state.choices),
+                "metadata": Env.metadata,
+              },
+              {"authorization": [|"alice@active"|]},
+            )
        )
     |> Js.Promise.then_(result => {
          Js.log2("Created", result);
@@ -76,7 +79,7 @@ module PollData = [%graphql
       blockNum
       blockTime
       trxId
-      appLabel
+      metadata
       votes {
         id
         voter
@@ -84,7 +87,7 @@ module PollData = [%graphql
         blockNum
         blockTime
         trxId
-        appLabel
+        metadata
       }
       comments {
         id
@@ -92,7 +95,7 @@ module PollData = [%graphql
         content
         blockTime
         trxId
-        appLabel
+        metadata
       }
     }
   }

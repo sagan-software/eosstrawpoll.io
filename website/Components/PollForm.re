@@ -129,19 +129,6 @@ module Container = Formality.Make(Form);
 
 let component = ReasonReact.statelessComponent(__MODULE__);
 
-let randomPollId = () => {
-  let possibleChars = "12345abcdefghijklmnopqrstuvwxyz";
-  let possibleCharsLength = possibleChars |> Js.String.length;
-  let chosenChars = [||];
-  Belt.Array.range(0, 11)
-  |. Belt.Array.forEach(_i => {
-       let chosenIndex = Random.int(possibleCharsLength);
-       let chosenChar = possibleChars |> Js.String.charAt(chosenIndex);
-       chosenChars |> Js.Array.push(chosenChar) |> ignore;
-     });
-  chosenChars |> Js.Array.joinWith("");
-};
-
 Random.self_init();
 
 let make = (~context: Context.t, _children) => {
@@ -165,16 +152,16 @@ let make = (~context: Context.t, _children) => {
           Js.log2("Called with:", state);
           let pollId =
             state.pollId |> String.trim |> String.length == 0 ?
-              randomPollId() : state.pollId;
+              Eos.Name.random() : state.pollId;
           switch (context.scatter, context.identity) {
           | (Some(scatter), Some(identity)) =>
             let pollCreator =
               (identity |. Scatter.Identity.accounts)[0]
               |. Scatter.Account.name;
             scatter
-            |> Api.Contract.make
+            |> Contract.fromScatter
             |> Js.Promise.then_(contract =>
-                 Api.Contract.create(
+                 Contract.create(
                    contract,
                    {
                      "poll_creator": pollCreator,
@@ -192,12 +179,9 @@ let make = (~context: Context.t, _children) => {
                      "max_choices": state.maxChoices,
                      "open_time": 0,
                      "close_time": 0,
-                     "app_label": "eosstrawpoll",
+                     "metadata": Env.metadata,
                    },
-                   Eos.Action.options(
-                     ~authorization=[|{j|$pollCreator@active|j}|],
-                     (),
-                   ),
+                   {"authorization": [|{j|$pollCreator@active|j}|]},
                  )
                )
             |> Js.Promise.then_(_result =>

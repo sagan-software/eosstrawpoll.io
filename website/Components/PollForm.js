@@ -14,11 +14,12 @@ var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var Formality__Form = require("re-formality/src/Formality__Form.bs.js");
-var Api$ReactTemplate = require("../Api.js");
+var Eos$ReactTemplate = require("../External/Eos.js");
 var Icon$ReactTemplate = require("./Icon.js");
 var Forms$ReactTemplate = require("./Forms.js");
 var Route$ReactTemplate = require("./Route.js");
 var Formality__Validation = require("re-formality/src/Formality__Validation.bs.js");
+var Contract$ReactTemplate = require("../Contract.js");
 var Formality__PublicHelpers = require("re-formality/src/Formality__PublicHelpers.bs.js");
 var PollFormStyles$ReactTemplate = require("./Styles/PollFormStyles.js");
 
@@ -296,19 +297,6 @@ var Container = Formality__Form.Make([
 
 var component = ReasonReact.statelessComponent("PollForm-ReactTemplate");
 
-function randomPollId() {
-  var possibleChars = "12345abcdefghijklmnopqrstuvwxyz";
-  var possibleCharsLength = possibleChars.length;
-  var chosenChars = /* array */[];
-  Belt_Array.forEach(Belt_Array.range(0, 11), (function () {
-          var chosenIndex = Random.$$int(possibleCharsLength);
-          var chosenChar = possibleChars.charAt(chosenIndex);
-          chosenChars.push(chosenChar);
-          return /* () */0;
-        }));
-  return chosenChars.join("");
-}
-
 Random.self_init(/* () */0);
 
 function make(context, _) {
@@ -341,13 +329,13 @@ function make(context, _) {
                             ], (function (state, _) {
                                 console.log("Called with:", state);
                                 var match = $$String.trim(state[/* pollId */0]).length === 0;
-                                var pollId = match ? randomPollId(/* () */0) : state[/* pollId */0];
+                                var pollId = match ? Eos$ReactTemplate.Name[/* random */4](/* () */0) : state[/* pollId */0];
                                 var match$1 = context[/* scatter */0];
                                 var match$2 = context[/* identity */1];
                                 if (match$1) {
                                   if (match$2) {
                                     var pollCreator = Caml_array.caml_array_get(match$2[0].accounts, 0).name;
-                                    Api$ReactTemplate.Contract[/* make */0](match$1[0]).then((function (contract) {
+                                    Contract$ReactTemplate.fromScatter(match$1[0]).then((function (contract) {
                                               return contract.create({
                                                           poll_creator: pollCreator,
                                                           poll_id: pollId,
@@ -362,7 +350,7 @@ function make(context, _) {
                                                           max_choices: state[/* maxChoices */7],
                                                           open_time: 0,
                                                           close_time: 0,
-                                                          app_label: "eosstrawpoll"
+                                                          metadata: process.env.APP_LABEL
                                                         }, {
                                                           authorization: /* array */["" + (String(pollCreator) + "@active")]
                                                         });
@@ -480,6 +468,5 @@ exports.Cn = Cn;
 exports.Form = Form;
 exports.Container = Container;
 exports.component = component;
-exports.randomPollId = randomPollId;
 exports.make = make;
 /* Validators Not a pure module */

@@ -12,7 +12,7 @@ var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Link$ReactTemplate = require("./Link.js");
-var Helmet$ReactTemplate = require("./Helmet.js");
+var Helmet$ReactTemplate = require("../External/Helmet.js");
 var AppStyles$ReactTemplate = require("./Styles/AppStyles.js");
 var CommonStyles$ReactTemplate = require("./Styles/CommonStyles.js");
 
@@ -601,7 +601,7 @@ function make$1(_, accountName, _$1) {
                                               return "No polls created";
                                             }
                                           } else {
-                                            return result[0].message;
+                                            return "Error: " + result[0].message;
                                           }
                                         })
                                     ]))));

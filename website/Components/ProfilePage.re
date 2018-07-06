@@ -61,7 +61,8 @@ let make = (~context: Context.t, ~accountName, _children) => {
                ({result}) =>
                  switch (result) {
                  | Loading => ReasonReact.string("Loading...")
-                 | Error(error) => ReasonReact.string(error##message)
+                 | Error(error) =>
+                   ReasonReact.string("Error: " ++ error##message)
                  | Data(response) =>
                    switch (response##account) {
                    | Some(account) =>

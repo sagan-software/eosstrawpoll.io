@@ -21,11 +21,11 @@ let renderTemplate = (~content, ~helmet, ~apolloClient) => {
       $style
       <script>
         window.__APOLLO_STATE__ = $apolloState;
-        //window._glam = $ids;
+        window._glam = $ids;
       </script>
-      <!--<style type="text/css" data-glamor>
+      <style type="text/css" data-glamor>
         $css
-      </style>-->
+      </style>
     </head>
   <body $bodyAttributes>
     <div id="app">$html</div>

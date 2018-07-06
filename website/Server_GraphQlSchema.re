@@ -1,121 +1,113 @@
 include Server_Database;
 
 let typeDefs = {|
-    scalar Date
-    scalar DateTime
-    scalar Time
+  scalar Date
+  scalar DateTime
+  scalar Time
 
+  type Vote {
+    id: String!
+    pollId: String!
+    pollCreator: String!
+    pollVersion: Int!
+    poll: Poll!
+    voter: String!
+    voterStaked: Int!
+    choices: [Int!]!
+    blockId: String!
+    blockNum: Int!
+    blockTime: String!
+    trxId: String!
+    metadata: String!
+  }
 
-    type Vote {
-      id: String!
-      pollId: String!
-      pollCreator: String!
-      pollVersion: Int!
-      poll: Poll!
-      voter: String!
-      voterStaked: Int!
-      choices: [Int!]!
-      blockId: String!
-      blockNum: Int!
-      blockTime: String!
-      trxId: String!
-      appLabel: String!
-    }
+  type Comment {
+    id: String!
+    pollId: String!
+    pollCreator: String!
+    pollVersion: Int!
+    pollTitle: String!
+    poll: Poll!
+    commenter: String!
+    content: String!
+    blockId: String!
+    blockNum: Int!
+    blockTime: String!
+    trxId: String!
+    metadata: String!
+  }
 
-    type Comment {
-      id: String!
-      pollId: String!
-      pollCreator: String!
-      pollVersion: Int!
-      pollTitle: String!
-      poll: Poll!
-      commenter: String!
-      content: String!
-      blockId: String!
-      blockNum: Int!
-      blockTime: String!
-      trxId: String!
-      appLabel: String!
-    }
+  type Poll {
+    id: String!
+    pollId: String!
+    pollCreator: String!
+    version: Int!
+    title: String!
+    description: String!
+    options: [String!]!
+    whitelist: [String!]!
+    blacklist: [String!]!
+    openTime: Int!
+    closeTime: Int!
+    blockId: String!
+    blockNum: Int!
+    blockTime: String!
+    trxId: String!
+    votes: [Vote!]!
+    comments: [Comment!]!
+    numVotes: Int!
+    numComments: Int!
+    metadata: String!
+  }
 
-    type Poll {
-      id: String!
-      pollId: String!
-      pollCreator: String!
-      version: Int!
-      title: String!
-      description: String!
-      options: [String!]!
-      whitelist: [String!]!
-      blacklist: [String!]!
-      openTime: String!
-      closeTime: String
-      blockId: String!
-      blockNum: Int!
-      blockTime: String!
-      trxId: String!
-      votes: [Vote!]!
-      comments: [Comment!]!
-      appLabel: String!
-    }
+  type Settings {
+    account: String!
+    theme: String!
+    defaultWhitelist: [String!]!
+    defaultBlacklist: [String!]!
+    metadata: String!
+  }
 
-    type Block {
-      id: String!
-      num: Int!
-      time: String!
-      numPolls: Int!
-      numVotes: Int!
-      numComments: Int!
-      polls: [Poll!]!
-      votes: [Vote!]!
-      comments: [Comment!]!
-    }
+  type Account {
+    name: String!
+    holdings: String!
+    polls: [Poll!]!
+    votes: [Vote!]!
+    comments: [Comment!]!
+    settings: Settings
+  }
 
-    type Settings {
-      account: String!
-      theme: String!
-      defaultWhitelist: [String!]!
-      defaultBlacklist: [String!]!
-      appLabel: String!
-    }
+  enum SortBy {
+    POPULARITY
+    CREATED
+    CLOSING
+  }
 
-    type Account {
-      name: String!
-      holdings: String!
-      polls: [Poll!]!
-      votes: [Vote!]!
-      comments: [Comment!]!
-      settings: Settings
-    }
+  type Query {
+    polls(sortBy: SortBy): [Poll!]!
+    votes: [Vote!]!
+    comments: [Comment!]!
+    poll(creator: String!, id: String!): Poll
+    account(name: String!): Account
+  }
 
-    type Query {
-      polls: [Poll!]!
-      votes: [Vote!]!
-      comments: [Comment!]!
-      blocks: [Block!]!
-      block(num: Int!): Block
-      poll(creator: String!, id: String!): Poll
-      account(name: String!): Account
-    }
+  type Subscription {
+    polls: Poll!
+    pollsFromAccount(account: String!): Poll!
+    votes: Vote!
+    votesOnPoll(creator: String!, id: String!): Vote!
+    votesFromAccount(account: String!): Vote!
+    comments: Comment!
+    commentsOnPoll(creator: String!, id: String!): Comment!
+    commentsFromAccount(account: String!): Comment!
+  }
 
-    type Subscription {
-      blocks: Block!
-      polls: Poll!
-      pollsFromAccount(account: String!): Poll!
-      votes: Vote!
-      votesOnPoll(creator: String!, id: String!): Vote!
-      votesFromAccount(account: String!): Vote!
-      comments: Comment!
-      commentsOnPoll(creator: String!, id: String!): Comment!
-      commentsFromAccount(account: String!): Comment!
-    }
+  schema {
+    query: Query
+    subscription: Subscription
+  }
 
-    schema {
-      query: Query
-      subscription: Subscription
-    }
-
-  |};
+|};
 
 let findAll = (_args, collection) =>
   collection
@@ -147,40 +139,84 @@ let eos =
     Eos.Config.t(~httpEndpoint="http://nodeosd:8888", ~verbose=false, ()),
   );
 
+let popularityAggregations = () => {
+  let nowSeconds = Js.Date.now() /. 1000.;
+  Mongo.AggregationStage.(
+    [|
+      match({
+        "openTime": lt(nowSeconds),
+        "closeTime": gt(nowSeconds -. 60. *. 60. *. 24.),
+      }),
+      lookup({
+        "from": "votes",
+        "localField": "id",
+        "foreignField": "pollRef",
+        "as": "votes",
+      }),
+      addFields({
+        "score":
+          divide(
+            size("$votes"),
+            pow(
+              add(divide(subtract(nowSeconds, "$openTime"), 60 * 60), 2),
+              1.8,
+            ),
+          ),
+      }),
+      sort({"score": (-1)}),
+      limit(5),
+    |]
+  );
+};
+
 let makeResolvers = mongo => {
   /* "Date": GraphQl.Scalars.date,
      "DateTime": GraphQl.Scalars.dateTime,
      "Time": GraphQl.Scalars.time, */
   "Query": {
-    "polls": () =>
-      mongo
-      |> Polls.findAll
-      |. Mongo.Cursor.sort("blockNum", -1)
-      |. Mongo.Cursor.limit(5)
-      |. Mongo.Cursor.toArray,
+    "polls": (_obj, args) =>
+      switch (args##sortBy) {
+      | "POPULARITY" =>
+        mongo
+        |. Polls.collection
+        |. Mongo.Collection.aggregate(popularityAggregations())
+        |. Mongo.AggregationCursor.toArray
+      | "CLOSING" =>
+        mongo
+        |. Polls.collection
+        |. Mongo.Collection.find({
+             "closeTime": {
+               "$gt": Js.Date.now() /. 1000.,
+             },
+           })
+        |. Mongo.Cursor.sort("closeTime", 1)
+        |. Mongo.Cursor.limit(5)
+        |. Mongo.Cursor.toArray
+      | _ =>
+        Js.log2("!!!!!!!!!!!!!!!! sort by", args);
+        mongo
+        |> Polls.findAll
+        |. Mongo.Cursor.sort("blockTime", -1)
+        |. Mongo.Cursor.limit(5)
+        |. Mongo.Cursor.toArray;
+      },
     "votes": mongo |> Votes.collection |> findAllResolver,
     "comments": mongo |> Comments.collection |> findAllResolver,
-    "blocks": (_obj, _args) =>
-      mongo
-      |. Blocks.collection
-      |. Mongo.Collection.findAll
-      |. Mongo.Cursor.sort("num", -1)
-      |. Mongo.Cursor.limit(10)
-      |. Mongo.Cursor.toArray,
-    "block": (_obj, args) =>
-      mongo |> Blocks.collection |> findOne({"num": args##num}),
     "poll": (_obj, args) =>
       mongo |> findPoll(~creator=args##creator, ~id=args##id),
     "account": (_obj, args) => {"name": args##name},
   },
   "Poll": {
     "votes": (poll, args) =>
+      mongo |> Votes.collection |> findMany(args, {"pollRef": poll##id}),
+    "numVotes": poll =>
       mongo
-      |> Votes.collection
-      |> findMany(
-           args,
-           {"pollCreator": poll##pollCreator, "pollId": poll##pollId},
-         ),
+      |. Votes.collection
+      |. Mongo.Collection.find({
+           "pollCreator": poll##pollCreator,
+           "pollId": poll##pollId,
+         })
+      |. Mongo.Cursor.count,
     "comments": (poll, args) =>
       mongo
       |> Comments.collection
@@ -188,6 +224,14 @@ let makeResolvers = mongo => {
            args,
            {"pollCreator": poll##pollCreator, "pollId": poll##pollId},
          ),
+    "numComments": poll =>
+      mongo
+      |. Comments.collection
+      |. Mongo.Collection.find({
+           "pollCreator": poll##pollCreator,
+           "pollId": poll##pollId,
+         })
+      |. Mongo.Cursor.count,
   },
   "Vote": {
     "poll": vote =>
@@ -216,17 +260,6 @@ let makeResolvers = mongo => {
     "poll": comment =>
       mongo |> findPoll(~creator=comment##pollCreator, ~id=comment##pollId),
   },
-  "Block": {
-    "polls": (block, args) =>
-      mongo |> Polls.collection |> findMany(args, {"blockNum": block##num}),
-    "votes": (block, args) =>
-      mongo |> Votes.collection |> findMany(args, {"blockNum": block##num}),
-    "comments": (block, args) =>
-      mongo
-      |> Comments.collection
-      |> findMany(args, {"blockNum": block##num}),
-    "numPolls": mongo |. Blocks.numPolls,
-  },
   "Account": {
     "holdings": () => "",
     "polls": (account, args) =>
@@ -239,7 +272,6 @@ let makeResolvers = mongo => {
       |> findMany(args, {"commenter": account##name}),
   },
   "Subscription": {
-    "blocks": pubsub |> Blocks.iterator |> sub,
     "polls": pubsub |> Polls.iterator |> sub,
     "pollsFromAccount":
       pubsub

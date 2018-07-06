@@ -3,7 +3,7 @@
 
 var React = require("react");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Helmet$ReactTemplate = require("./Helmet.js");
+var Helmet$ReactTemplate = require("../External/Helmet.js");
 
 var component = ReasonReact.statelessComponent("AboutPage");
 

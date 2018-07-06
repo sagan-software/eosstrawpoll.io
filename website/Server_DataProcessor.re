@@ -10,34 +10,43 @@ let blockByTrxId = (mongo, trxId) =>
 /* connect to mongo */
 /* listen for changes */
 /* on 'create' action, add the new poll to the 'polls' mongo collection */
-let onCreateAction = (mongo, trxId, block, data) =>
-  Polls.save(
-    mongo,
-    {
-      "id":
-        data##poll_creator
-        ++ "_"
-        ++ data##poll_id
-        ++ "_"
-        ++ string_of_int(block##block_num),
-      "pollId": data##poll_id,
-      "pollCreator": data##poll_creator,
-      "title": data##title,
-      "description": data##description,
-      "options": data##options,
-      "whitelist": data##whitelist,
-      "blacklist": data##blacklist,
-      "minChoices": 0,
-      "maxChoices": 0,
-      "openTime": data##open_time,
-      "closeTime": data##close_time,
-      "blockId": block##block_id,
-      "blockNum": block##block_num,
-      "blockTime": block##block##timestamp,
-      "trxId": trxId,
-      "appLabel": data##app_label,
-    },
-  );
+let onCreateAction = (~mongo, ~logger, ~trxId, ~block, data) => {
+  let id =
+    data##poll_creator
+    ++ "_"
+    ++ data##poll_id
+    ++ "_"
+    ++ string_of_int(block##block_num);
+  let poll = {
+    "id": id,
+    "pollId": data##poll_id,
+    "pollCreator": data##poll_creator,
+    "title": data##title,
+    "description": data##description,
+    "options": data##options,
+    "whitelist": data##whitelist,
+    "blacklist": data##blacklist,
+    "minChoices": data##min_choices,
+    "maxChoices": data##max_choices,
+    "openTime": data##open_time,
+    "closeTime": data##close_time,
+    "blockId": block##block_id,
+    "blockNum": block##block_num,
+    "blockTime": block##block##timestamp,
+    "trxId": trxId,
+    "metadata": data##metadata,
+  };
+  mongo
+  |. Polls.save(poll)
+  |> Js.Promise.then_(_result =>
+       logger |. Winston.info("saved poll", {"id": id}) |. Js.Promise.resolve
+     )
+  |> Js.Promise.catch(error =>
+       logger
+       |. Winston.error("error saving vote", {"error": error, "poll": poll})
+       |. Js.Promise.resolve
+     );
+};
 
 /* let onCloseAction = (mongo, block, data) =>
    mongo
@@ -54,92 +63,155 @@ let onCreateAction = (mongo, trxId, block, data) =>
       |> Polls.collection
       |>
       );  */
-let onVoteAction = (mongo, trxId, block, data) =>
-  Votes.save(
-    mongo,
-    {
-      "id":
-        data##poll_creator
-        ++ "_"
-        ++ data##poll_id
-        ++ "_"
-        ++ data##voter
-        ++ "_"
-        ++ string_of_int(block##block_num),
-      "pollId": data##poll_id,
-      "pollCreator": data##poll_creator,
-      "voter": data##voter,
-      "choices": data##choices,
-      "blockId": block##block_id,
-      "blockNum": block##block_num,
-      "blockTime": block##block##timestamp,
-      "trxId": trxId,
-      "appLabel": data##app_label,
-    },
-  );
+let onVoteAction = (~mongo, ~logger, ~trxId, ~block, data) =>
+  mongo
+  |> Polls.find({"pollId": data##poll_id, "pollCreator": data##poll_creator})
+  |. Mongo.Cursor.sort("blockTime", -1)
+  |. Mongo.Cursor.next
+  |> Js.Promise.then_(poll =>
+       switch (poll |> Js.Null_undefined.toOption) {
+       | Some(poll) =>
+         let id = poll##id ++ "_" ++ data##voter;
+         let vote = {
+           "id": id,
+           "pollRef": poll##id,
+           "pollId": data##poll_id,
+           "pollCreator": data##poll_creator,
+           "voter": data##voter,
+           "choices": data##choices,
+           "blockId": block##block_id,
+           "blockNum": block##block_num,
+           "blockTime": block##block##timestamp,
+           "trxId": trxId,
+           "metadata": data##metadata,
+         };
+         mongo
+         |. Votes.collection
+         |. Mongo.Collection.updateOne(
+              {"id": id},
+              {"$set": vote},
+              {"upsert": true},
+            )
+         |> Js.Promise.then_(_result =>
+              logger
+              |. Winston.info(
+                   "saved vote",
+                   {"blockNum": block##block_num, "id": id},
+                 )
+              |. Js.Promise.resolve
+            )
+         |> Js.Promise.catch(error =>
+              logger
+              |. Winston.error(
+                   "error saving vote",
+                   {"error": error, "vote": vote},
+                 )
+              |. Js.Promise.resolve
+            );
+       | None =>
+         logger
+         |. Winston.warn(
+              "couldn't find poll for vote",
+              {"pollId": data##poll_id, "pollCreator": data##poll_creator},
+            )
+         |. Js.Promise.resolve
+       }
+     );
 
-let onCommentAction = (mongo, trxId, block, data) =>
-  Comments.save(
-    mongo,
-    {
-      "id":
-        data##poll_creator
-        ++ "_"
-        ++ data##poll_id
-        ++ "_"
-        ++ data##commenter
-        ++ "_"
-        ++ string_of_int(block##block_num),
-      "pollId": data##poll_id,
-      "pollCreator": data##poll_creator,
-      "commenter": data##commenter,
-      "content": data##content,
-      "blockId": block##block_id,
-      "blockNum": block##block_num,
-      "blockTime": block##block##timestamp,
-      "trxId": trxId,
-      "appLabel": data##app_label,
-    },
-  );
+let onCommentAction = (~mongo, ~logger, ~trxId, ~block, data) => {
+  let id =
+    data##poll_creator
+    ++ "_"
+    ++ data##poll_id
+    ++ "_"
+    ++ data##commenter
+    ++ "_"
+    ++ string_of_int(block##block_num);
+  let comment = {
+    "id": id,
+    "pollId": data##poll_id,
+    "pollCreator": data##poll_creator,
+    "commenter": data##commenter,
+    "content": data##content,
+    "blockId": block##block_id,
+    "blockNum": block##block_num,
+    "blockTime": block##block##timestamp,
+    "trxId": trxId,
+    "metadata": data##metadata,
+  };
+  mongo
+  |. Comments.save(comment)
+  |> Js.Promise.then_(_result =>
+       logger
+       |. Winston.info(
+            "saved comment",
+            {"blockNum": block##block_num, "id": id},
+          )
+       |. Js.Promise.resolve
+     )
+  |> Js.Promise.catch(error =>
+       logger
+       |. Winston.error(
+            "error saving comment",
+            {"error": error, "comment": comment},
+          )
+       |. Js.Promise.resolve
+     );
+};
 
-let onSettingsAction = (mongo, data) =>
-  Settings.save(mongo, {"id": data##account, "account": data##account});
+let onSettingsAction = (~mongo, ~logger, data) =>
+  mongo
+  |. Settings.collection
+  |. Mongo.Collection.updateOne(
+       {"id": data##account},
+       {
+         "$set": {
+           "id": data##account,
+           "account": data##account,
+         },
+       },
+       {"upsert": true},
+     );
 
-let onActionsChange = (client, change) => {
+let onActionsChange = (~mongo, ~logger, change) => {
   let action = change##fullDocument;
-  let name = action##name;
-  let data =
-    action##data
-    |> Js.Null_undefined.toOption
-    |. Belt.Option.getWithDefault(Js.Json.null);
+  let data = Model.EosAction.getData(action);
   let trxId = action##trx_id;
-  Js.log3("New action", name, action);
+  logger
+  |. Winston.debug(
+       "new action",
+       {"account": action##account, "name": action##name},
+     );
   Js.Global.setTimeout(
     () =>
-      blockByTrxId(client, trxId)
+      blockByTrxId(mongo, trxId)
       |> Js.Promise.then_(block => {
-           let b =
-             block
-             |> Js.Nullable.toOption
-             |> Js.Option.getWithDefault(Model.EosBlock.empty);
-           Js.log3("!!!!!! BLOaaCK", trxId, b);
-           switch (name) {
-           | "create" =>
+           switch (block |. Js.Nullable.toOption, data) {
+           | (Some(block), Some(Model.EosAction.Create(data))) =>
+             data |> onCreateAction(~mongo, ~logger, ~trxId, ~block) |> ignore
+           | (Some(block), Some(Model.EosAction.Vote(data))) =>
+             data |> onVoteAction(~mongo, ~logger, ~trxId, ~block) |> ignore
+           | (Some(block), Some(Model.EosAction.Comment(data))) =>
              data
-             |> Model.EosAction.Decode.create
-             |> onCreateAction(client, trxId, b)
+             |> onCommentAction(~mongo, ~logger, ~trxId, ~block)
              |> ignore
-           | "vote" =>
-             data
-             |> Model.EosAction.Decode.vote
-             |> onVoteAction(client, trxId, b)
-             |> ignore
-           | _ => Js.log2("unknown action:", name)
+           | _ =>
+             if (action##account == Env.contractAccount) {
+               logger
+               |. Winston.warn(
+                    "unhandled action from our contract's account",
+                    {"action": action},
+                  );
+             }
            };
            Js.Promise.resolve();
          })
-      |> Js.Promise.catch(e => {
-           Js.log2("Error getting block ", e);
+      |> Js.Promise.catch(error => {
+           logger
+           |. Winston.error(
+                "error getting block for action change",
+                {"error": error, "action": action},
+              );
            Js.Promise.resolve();
          })
       |> ignore,
@@ -148,21 +220,7 @@ let onActionsChange = (client, change) => {
   |> ignore;
 };
 
-let onBlocksChange = (~mongo, ~logger, change) => {
-  let block = change##fullDocument;
-  logger |. Winston.info("block change", {"block_num": block##block_num});
-  Blocks.save(
-    mongo,
-    {
-      "id": block##block_id,
-      "num": block##block_num,
-      "time": block##block##timestamp,
-    },
-  )
-  |> ignore;
-};
-
-let listenToActions = (~mongo, ~logger) =>
+let start = (~mongo, ~logger) =>
   mongo
   |> EosActions.collection
   |. Mongo.Collection.watch([|
@@ -173,22 +231,5 @@ let listenToActions = (~mongo, ~logger) =>
          },
        },
      |])
-  |. Mongo.ChangeStream.on(`change(onActionsChange(mongo)))
+  |. Mongo.ChangeStream.on(`change(onActionsChange(~mongo, ~logger)))
   |> Js.Promise.resolve;
-
-let listenToBlocks = (~mongo, ~logger) =>
-  mongo
-  |> EosBlocks.collection
-  |. Mongo.Collection.watch([|{
-                                "$match": {
-                                  "operationType": "insert",
-                                },
-                              }|])
-  |. Mongo.ChangeStream.on(`change(onBlocksChange(~mongo, ~logger)))
-  |> Js.Promise.resolve;
-
-let start = (~mongo, ~logger) =>
-  Js.Promise.all2((
-    listenToActions(~mongo, ~logger),
-    listenToBlocks(~mongo, ~logger),
-  ));

@@ -7,14 +7,14 @@ let renderOption = (poll, option) =>
     <span> (ReasonReact.string("0%")) </span>
   </li>;
 
-let renderPoll = (poll: Api.Poll.t) =>
+let renderPoll = (poll: Model.Poll.t) =>
   <div>
-    <h1> (ReasonReact.string(poll.title)) </h1>
+    <h1> (ReasonReact.string(poll##title)) </h1>
     <ol>
-      (poll.options |> Array.map(renderOption(poll)) |> ReasonReact.array)
+      (poll##options |> Array.map(renderOption(poll)) |> ReasonReact.array)
     </ol>
     <div>
-      <Link route=(Route.Poll(poll.creator, string_of_int(poll.id)))>
+      <Link route=(Route.Poll(poll##pollCreator, poll##pollId))>
         (ReasonReact.string("Vote"))
       </Link>
     </div>

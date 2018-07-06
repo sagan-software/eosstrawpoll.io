@@ -11,7 +11,7 @@ var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Link$ReactTemplate = require("./Link.js");
-var Helmet$ReactTemplate = require("./Helmet.js");
+var Helmet$ReactTemplate = require("../External/Helmet.js");
 var PollForm$ReactTemplate = require("./PollForm.js");
 var DateFormat$ReactTemplate = require("./DateFormat.js");
 var HomePageStyles$ReactTemplate = require("./Styles/HomePageStyles.js");
@@ -20,12 +20,13 @@ var component = ReasonReact.statelessComponent("HomePage-ReactTemplate");
 
 var Graphql_error = Caml_exceptions.create("HomePage-ReactTemplate.GetPolls.Graphql_error");
 
-var ppx_printed_query = "query polls  {\npolls  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \noptions  \nblockTime  \n}\n}";
+var ppx_printed_query = "query polls  {\npopularPolls: polls(sortBy: POPULARITY)  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \nnumVotes  \n}\nnewPolls: polls  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\nclosingSoon: polls(sortBy: CLOSING)  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
   if (match) {
-    var match$1 = match[0]["polls"];
+    var value$1 = match[0];
+    var match$1 = value$1["popularPolls"];
     var tmp;
     if (match$1 !== undefined) {
       var match$2 = Js_json.decodeArray(match$1);
@@ -165,13 +166,13 @@ function parse(value) {
                   var match$13 = value$1["openTime"];
                   var tmp$6;
                   if (match$13 !== undefined) {
-                    var match$14 = Js_json.decodeString(match$13);
+                    var match$14 = Js_json.decodeNumber(match$13);
                     if (match$14) {
-                      tmp$6 = match$14[0];
+                      tmp$6 = match$14[0] | 0;
                     } else {
                       throw [
                             Graphql_error,
-                            "Expected string, got " + JSON.stringify(match$13)
+                            "Expected int, got " + JSON.stringify(match$13)
                           ];
                     }
                   } else {
@@ -183,21 +184,14 @@ function parse(value) {
                   var match$15 = value$1["closeTime"];
                   var tmp$7;
                   if (match$15 !== undefined) {
-                    var match$16 = Js_json.decodeNull(match$15);
+                    var match$16 = Js_json.decodeNumber(match$15);
                     if (match$16) {
-                      tmp$7 = /* None */0;
+                      tmp$7 = match$16[0] | 0;
                     } else {
-                      var match$17 = Js_json.decodeString(match$15);
-                      var tmp$8;
-                      if (match$17) {
-                        tmp$8 = match$17[0];
-                      } else {
-                        throw [
-                              Graphql_error,
-                              "Expected string, got " + JSON.stringify(match$15)
-                            ];
-                      }
-                      tmp$7 = /* Some */[tmp$8];
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$15)
+                          ];
                     }
                   } else {
                     throw [
@@ -205,50 +199,40 @@ function parse(value) {
                           "Field closeTime on type Poll is missing"
                         ];
                   }
-                  var match$18 = value$1["options"];
-                  var tmp$9;
-                  if (match$18 !== undefined) {
-                    var match$19 = Js_json.decodeArray(match$18);
-                    if (match$19) {
-                      tmp$9 = match$19[0].map((function (value) {
-                              var match = Js_json.decodeString(value);
-                              if (match) {
-                                return match[0];
-                              } else {
-                                throw [
-                                      Graphql_error,
-                                      "Expected string, got " + JSON.stringify(value)
-                                    ];
-                              }
-                            }));
+                  var match$17 = value$1["blockTime"];
+                  var tmp$8;
+                  if (match$17 !== undefined) {
+                    var match$18 = Js_json.decodeString(match$17);
+                    if (match$18) {
+                      tmp$8 = match$18[0];
                     } else {
                       throw [
                             Graphql_error,
-                            "Expected array, got " + JSON.stringify(match$18)
-                          ];
-                    }
-                  } else {
-                    throw [
-                          Graphql_error,
-                          "Field options on type Poll is missing"
-                        ];
-                  }
-                  var match$20 = value$1["blockTime"];
-                  var tmp$10;
-                  if (match$20 !== undefined) {
-                    var match$21 = Js_json.decodeString(match$20);
-                    if (match$21) {
-                      tmp$10 = match$21[0];
-                    } else {
-                      throw [
-                            Graphql_error,
-                            "Expected string, got " + JSON.stringify(match$20)
+                            "Expected string, got " + JSON.stringify(match$17)
                           ];
                     }
                   } else {
                     throw [
                           Graphql_error,
                           "Field blockTime on type Poll is missing"
+                        ];
+                  }
+                  var match$19 = value$1["numVotes"];
+                  var tmp$9;
+                  if (match$19 !== undefined) {
+                    var match$20 = Js_json.decodeNumber(match$19);
+                    if (match$20) {
+                      tmp$9 = match$20[0] | 0;
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$19)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field numVotes on type Poll is missing"
                         ];
                   }
                   return {
@@ -260,8 +244,8 @@ function parse(value) {
                           blacklist: tmp$5,
                           openTime: tmp$6,
                           closeTime: tmp$7,
-                          options: tmp$9,
-                          blockTime: tmp$10
+                          blockTime: tmp$8,
+                          numVotes: tmp$9
                         };
                 } else {
                   throw [
@@ -279,11 +263,455 @@ function parse(value) {
     } else {
       throw [
             Graphql_error,
-            "Field polls on type Query is missing"
+            "Field popularPolls on type Query is missing"
+          ];
+    }
+    var match$3 = value$1["newPolls"];
+    var tmp$1;
+    if (match$3 !== undefined) {
+      var match$4 = Js_json.decodeArray(match$3);
+      if (match$4) {
+        tmp$1 = match$4[0].map((function (value) {
+                var match = Js_json.decodeObject(value);
+                if (match) {
+                  var value$1 = match[0];
+                  var match$1 = value$1["id"];
+                  var tmp;
+                  if (match$1 !== undefined) {
+                    var match$2 = Js_json.decodeString(match$1);
+                    if (match$2) {
+                      tmp = match$2[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$1)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field id on type Poll is missing"
+                        ];
+                  }
+                  var match$3 = value$1["pollId"];
+                  var tmp$1;
+                  if (match$3 !== undefined) {
+                    var match$4 = Js_json.decodeString(match$3);
+                    if (match$4) {
+                      tmp$1 = match$4[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$3)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollId on type Poll is missing"
+                        ];
+                  }
+                  var match$5 = value$1["pollCreator"];
+                  var tmp$2;
+                  if (match$5 !== undefined) {
+                    var match$6 = Js_json.decodeString(match$5);
+                    if (match$6) {
+                      tmp$2 = match$6[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$5)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollCreator on type Poll is missing"
+                        ];
+                  }
+                  var match$7 = value$1["title"];
+                  var tmp$3;
+                  if (match$7 !== undefined) {
+                    var match$8 = Js_json.decodeString(match$7);
+                    if (match$8) {
+                      tmp$3 = match$8[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$7)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field title on type Poll is missing"
+                        ];
+                  }
+                  var match$9 = value$1["whitelist"];
+                  var tmp$4;
+                  if (match$9 !== undefined) {
+                    var match$10 = Js_json.decodeArray(match$9);
+                    if (match$10) {
+                      tmp$4 = match$10[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$9)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field whitelist on type Poll is missing"
+                        ];
+                  }
+                  var match$11 = value$1["blacklist"];
+                  var tmp$5;
+                  if (match$11 !== undefined) {
+                    var match$12 = Js_json.decodeArray(match$11);
+                    if (match$12) {
+                      tmp$5 = match$12[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$11)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blacklist on type Poll is missing"
+                        ];
+                  }
+                  var match$13 = value$1["openTime"];
+                  var tmp$6;
+                  if (match$13 !== undefined) {
+                    var match$14 = Js_json.decodeNumber(match$13);
+                    if (match$14) {
+                      tmp$6 = match$14[0] | 0;
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$13)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field openTime on type Poll is missing"
+                        ];
+                  }
+                  var match$15 = value$1["closeTime"];
+                  var tmp$7;
+                  if (match$15 !== undefined) {
+                    var match$16 = Js_json.decodeNumber(match$15);
+                    if (match$16) {
+                      tmp$7 = match$16[0] | 0;
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$15)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field closeTime on type Poll is missing"
+                        ];
+                  }
+                  var match$17 = value$1["blockTime"];
+                  var tmp$8;
+                  if (match$17 !== undefined) {
+                    var match$18 = Js_json.decodeString(match$17);
+                    if (match$18) {
+                      tmp$8 = match$18[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$17)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blockTime on type Poll is missing"
+                        ];
+                  }
+                  return {
+                          id: tmp,
+                          pollId: tmp$1,
+                          pollCreator: tmp$2,
+                          title: tmp$3,
+                          whitelist: tmp$4,
+                          blacklist: tmp$5,
+                          openTime: tmp$6,
+                          closeTime: tmp$7,
+                          blockTime: tmp$8
+                        };
+                } else {
+                  throw [
+                        Graphql_error,
+                        "Object is not a value"
+                      ];
+                }
+              }));
+      } else {
+        throw [
+              Graphql_error,
+              "Expected array, got " + JSON.stringify(match$3)
+            ];
+      }
+    } else {
+      throw [
+            Graphql_error,
+            "Field newPolls on type Query is missing"
+          ];
+    }
+    var match$5 = value$1["closingSoon"];
+    var tmp$2;
+    if (match$5 !== undefined) {
+      var match$6 = Js_json.decodeArray(match$5);
+      if (match$6) {
+        tmp$2 = match$6[0].map((function (value) {
+                var match = Js_json.decodeObject(value);
+                if (match) {
+                  var value$1 = match[0];
+                  var match$1 = value$1["id"];
+                  var tmp;
+                  if (match$1 !== undefined) {
+                    var match$2 = Js_json.decodeString(match$1);
+                    if (match$2) {
+                      tmp = match$2[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$1)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field id on type Poll is missing"
+                        ];
+                  }
+                  var match$3 = value$1["pollId"];
+                  var tmp$1;
+                  if (match$3 !== undefined) {
+                    var match$4 = Js_json.decodeString(match$3);
+                    if (match$4) {
+                      tmp$1 = match$4[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$3)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollId on type Poll is missing"
+                        ];
+                  }
+                  var match$5 = value$1["pollCreator"];
+                  var tmp$2;
+                  if (match$5 !== undefined) {
+                    var match$6 = Js_json.decodeString(match$5);
+                    if (match$6) {
+                      tmp$2 = match$6[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$5)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field pollCreator on type Poll is missing"
+                        ];
+                  }
+                  var match$7 = value$1["title"];
+                  var tmp$3;
+                  if (match$7 !== undefined) {
+                    var match$8 = Js_json.decodeString(match$7);
+                    if (match$8) {
+                      tmp$3 = match$8[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$7)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field title on type Poll is missing"
+                        ];
+                  }
+                  var match$9 = value$1["whitelist"];
+                  var tmp$4;
+                  if (match$9 !== undefined) {
+                    var match$10 = Js_json.decodeArray(match$9);
+                    if (match$10) {
+                      tmp$4 = match$10[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$9)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field whitelist on type Poll is missing"
+                        ];
+                  }
+                  var match$11 = value$1["blacklist"];
+                  var tmp$5;
+                  if (match$11 !== undefined) {
+                    var match$12 = Js_json.decodeArray(match$11);
+                    if (match$12) {
+                      tmp$5 = match$12[0].map((function (value) {
+                              var match = Js_json.decodeString(value);
+                              if (match) {
+                                return match[0];
+                              } else {
+                                throw [
+                                      Graphql_error,
+                                      "Expected string, got " + JSON.stringify(value)
+                                    ];
+                              }
+                            }));
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected array, got " + JSON.stringify(match$11)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blacklist on type Poll is missing"
+                        ];
+                  }
+                  var match$13 = value$1["openTime"];
+                  var tmp$6;
+                  if (match$13 !== undefined) {
+                    var match$14 = Js_json.decodeNumber(match$13);
+                    if (match$14) {
+                      tmp$6 = match$14[0] | 0;
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$13)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field openTime on type Poll is missing"
+                        ];
+                  }
+                  var match$15 = value$1["closeTime"];
+                  var tmp$7;
+                  if (match$15 !== undefined) {
+                    var match$16 = Js_json.decodeNumber(match$15);
+                    if (match$16) {
+                      tmp$7 = match$16[0] | 0;
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected int, got " + JSON.stringify(match$15)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field closeTime on type Poll is missing"
+                        ];
+                  }
+                  var match$17 = value$1["blockTime"];
+                  var tmp$8;
+                  if (match$17 !== undefined) {
+                    var match$18 = Js_json.decodeString(match$17);
+                    if (match$18) {
+                      tmp$8 = match$18[0];
+                    } else {
+                      throw [
+                            Graphql_error,
+                            "Expected string, got " + JSON.stringify(match$17)
+                          ];
+                    }
+                  } else {
+                    throw [
+                          Graphql_error,
+                          "Field blockTime on type Poll is missing"
+                        ];
+                  }
+                  return {
+                          id: tmp,
+                          pollId: tmp$1,
+                          pollCreator: tmp$2,
+                          title: tmp$3,
+                          whitelist: tmp$4,
+                          blacklist: tmp$5,
+                          openTime: tmp$6,
+                          closeTime: tmp$7,
+                          blockTime: tmp$8
+                        };
+                } else {
+                  throw [
+                        Graphql_error,
+                        "Object is not a value"
+                      ];
+                }
+              }));
+      } else {
+        throw [
+              Graphql_error,
+              "Expected array, got " + JSON.stringify(match$5)
+            ];
+      }
+    } else {
+      throw [
+            Graphql_error,
+            "Field closingSoon on type Query is missing"
           ];
     }
     return {
-            polls: tmp
+            popularPolls: tmp,
+            newPolls: tmp$1,
+            closingSoon: tmp$2
           };
   } else {
     throw [
@@ -383,7 +811,7 @@ function make$1(context, _) {
                                                             className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollList)
                                                           }, React.createElement("h2", {
                                                                 className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollListTitle)
-                                                              }, "Popular Polls"), response.polls.map((function (p, _) {
+                                                              }, "Popular Polls"), response.popularPolls.map((function (p, _) {
                                                                   new Date(p.blockTime + "Z");
                                                                   return React.createElement("div", {
                                                                               key: p.id,
@@ -395,12 +823,12 @@ function make$1(context, _) {
                                                                                             p.pollId
                                                                                           ]), /* None */0, /* array */[p.title]))), React.createElement("p", {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollInfo)
-                                                                                }, "37 votes in 2 hours"));
+                                                                                }, String(p.numVotes) + " votes"));
                                                                 }))), React.createElement("div", {
                                                             className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollList)
                                                           }, React.createElement("h2", {
                                                                 className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollListTitle)
-                                                              }, "Recently Created"), response.polls.map((function (p, _) {
+                                                              }, "Recently Created"), response.newPolls.map((function (p, _) {
                                                                   var date = new Date(p.blockTime + "Z");
                                                                   return React.createElement("div", {
                                                                               key: p.id,
@@ -417,8 +845,9 @@ function make$1(context, _) {
                                                             className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollList)
                                                           }, React.createElement("h2", {
                                                                 className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollListTitle)
-                                                              }, "Closing Soon"), response.polls.map((function (p, _) {
-                                                                  var date = new Date(p.blockTime + "Z");
+                                                              }, "Closing Soon"), response.closingSoon.map((function (p, _) {
+                                                                  var date = new Date(p.closeTime * 1000);
+                                                                  console.log("!!!!!!!!!!!", date, p);
                                                                   return React.createElement("div", {
                                                                               key: p.id,
                                                                               className: TypedGlamor.toString(HomePageStyles$ReactTemplate.poll)
@@ -429,7 +858,7 @@ function make$1(context, _) {
                                                                                             p.pollId
                                                                                           ]), /* None */0, /* array */[p.title]))), React.createElement("p", {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollInfo)
-                                                                                }, "Closes in ", ReasonReact.element(/* None */0, /* None */0, DateFormat$ReactTemplate.make(date, /* array */[]))));
+                                                                                }, "Closes ", ReasonReact.element(/* None */0, /* None */0, DateFormat$ReactTemplate.make(date, /* array */[]))));
                                                                 }))));
                                           } else {
                                             return result[0].message;

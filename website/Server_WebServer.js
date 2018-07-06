@@ -13,8 +13,8 @@ var ReactHelmet = require("react-helmet");
 var Server = require("glamor/server");
 var App$ReactTemplate = require("./Components/App.js");
 var Route$ReactTemplate = require("./Components/Route.js");
-var Helmet$ReactTemplate = require("./Components/Helmet.js");
-var ApolloServer$ReactTemplate = require("./Libraries/ApolloServer.js");
+var Helmet$ReactTemplate = require("./External/Helmet.js");
+var ApolloServer$ReactTemplate = require("./External/ApolloServer.js");
 var Server_GraphQlServer$ReactTemplate = require("./Server_GraphQlServer.js");
 
 function renderTemplate(content, helmet, apolloClient) {
@@ -32,7 +32,7 @@ function renderTemplate(content, helmet, apolloClient) {
   var css = styles.css;
   var html = styles.html;
   var ids = JSON.stringify(styles.ids);
-  return "<!DOCTYPE html>\n  <html " + (String(htmlAttributes) + (">\n    <head>\n      <meta charset=\"utf-8\">\n      <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">\n      " + (String(title) + ("\n      " + (String(meta) + ("\n      " + (String(style) + ("\n      <script>\n        window.__APOLLO_STATE__ = " + (String(apolloState) + (";\n        //window._glam = " + (String(ids) + (";\n      </script>\n      <!--<style type=\"text/css\" data-glamor>\n        " + (String(css) + ("\n      </style>-->\n    </head>\n  <body " + (String(bodyAttributes) + (">\n    <div id=\"app\">" + (String(html) + ("</div>\n    <script src=\"" + (String(staticUrl) + ("/client.js\"></script>\n    " + (String(script) + "\n  </body>\n  </html>\n")))))))))))))))))))));
+  return "<!DOCTYPE html>\n  <html " + (String(htmlAttributes) + (">\n    <head>\n      <meta charset=\"utf-8\">\n      <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">\n      " + (String(title) + ("\n      " + (String(meta) + ("\n      " + (String(style) + ("\n      <script>\n        window.__APOLLO_STATE__ = " + (String(apolloState) + (";\n        window._glam = " + (String(ids) + (";\n      </script>\n      <style type=\"text/css\" data-glamor>\n        " + (String(css) + ("\n      </style>\n    </head>\n  <body " + (String(bodyAttributes) + (">\n    <div id=\"app\">" + (String(html) + ("</div>\n    <script src=\"" + (String(staticUrl) + ("/client.js\"></script>\n    " + (String(script) + "\n  </body>\n  </html>\n")))))))))))))))))))));
 }
 
 function renderHtml(apolloClient, _, req, res) {

@@ -22,8 +22,11 @@ var content = TypedGlamor.css(/* None */0, /* :: */[
 var form = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.flex_(TypedGlamor.auto),
       /* :: */[
-        TypedGlamor.marginBottom(TypedGlamor.rem(2.5)),
-        /* [] */0
+        TypedGlamor.marginBottom(TypedGlamor.rem(2)),
+        /* :: */[
+          TypedGlamor.unsafe("boxShadow", "0 5px 15px -2px rgba(0, 0, 0, 0.25)"),
+          /* [] */0
+        ]
       ]
     ]);
 
@@ -35,7 +38,13 @@ var pollLists = TypedGlamor.css(/* None */0, /* :: */[
           TypedGlamor.backgroundColor(TypedGlamor.white),
           /* :: */[
             TypedGlamor.borderRadius(Theme$ReactTemplate.borderRadius),
-            /* [] */0
+            /* :: */[
+              TypedGlamor.border3(TypedGlamor.rem(0.1), TypedGlamor.solid, TypedGlamor.hex("e6e6e6")),
+              /* :: */[
+                TypedGlamor.margin2(TypedGlamor.rem(1), TypedGlamor.zero),
+                /* [] */0
+              ]
+            ]
           ]
         ]
       ]
@@ -47,7 +56,7 @@ var pollList = TypedGlamor.css(/* None */0, /* :: */[
         TypedGlamor.paddingBottom(TypedGlamor.rem(1)),
         /* :: */[
           TypedGlamor.select(":not(:last-of-type)", /* :: */[
-                TypedGlamor.borderRight3(TypedGlamor.rem(0.5), TypedGlamor.solid, Theme$ReactTemplate.Color[/* background */3]),
+                TypedGlamor.borderRight3(TypedGlamor.rem(0.1), TypedGlamor.solid, TypedGlamor.hex("e6e6e6")),
                 /* [] */0
               ]),
           /* [] */0

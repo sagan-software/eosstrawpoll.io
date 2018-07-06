@@ -7,7 +7,7 @@ let component = ReasonReact.statelessComponent(__MODULE__);
 module GetPolls = [%graphql
   {|
   query polls {
-    polls {
+    popularPolls: polls(sortBy: POPULARITY) {
       id
       pollId
       pollCreator
@@ -16,7 +16,29 @@ module GetPolls = [%graphql
       blacklist
       openTime
       closeTime
-      options
+      blockTime
+      numVotes
+    }
+    newPolls: polls {
+      id
+      pollId
+      pollCreator
+      title
+      whitelist
+      blacklist
+      openTime
+      closeTime
+      blockTime
+    }
+    closingSoon: polls(sortBy: CLOSING) {
+      id
+      pollId
+      pollCreator
+      title
+      whitelist
+      blacklist
+      openTime
+      closeTime
       blockTime
     }
   }
@@ -57,7 +79,7 @@ let make = (~context: Context.t, _children) => {
                          ("Popular Polls" |> ReasonReact.string)
                        </h2>
                        (
-                         response##polls
+                         response##popularPolls
                          |> Js.Array.mapi((p, i) => {
                               let date =
                                 p##blockTime ++ "Z" |> Js.Date.fromString;
@@ -79,7 +101,11 @@ let make = (~context: Context.t, _children) => {
                                   className=(
                                     Cn.pollInfo |> TypedGlamor.toString
                                   )>
-                                  ("37 votes in 2 hours" |> ReasonReact.string)
+                                  (
+                                    string_of_int(p##numVotes)
+                                    ++ " votes"
+                                    |> ReasonReact.string
+                                  )
                                 </p>
                               </div>;
                             })
@@ -92,7 +118,7 @@ let make = (~context: Context.t, _children) => {
                          ("Recently Created" |> ReasonReact.string)
                        </h2>
                        (
-                         response##polls
+                         response##newPolls
                          |> Js.Array.mapi((p, i) => {
                               let date =
                                 p##blockTime ++ "Z" |> Js.Date.fromString;
@@ -136,10 +162,13 @@ let make = (~context: Context.t, _children) => {
                          ("Closing Soon" |> ReasonReact.string)
                        </h2>
                        (
-                         response##polls
+                         response##closingSoon
                          |> Js.Array.mapi((p, i) => {
                               let date =
-                                p##blockTime ++ "Z" |> Js.Date.fromString;
+                                float_of_int(p##closeTime)
+                                *. 1000.
+                                |> Js.Date.fromFloat;
+                              Js.log3("!!!!!!!!!!!", date, p);
                               <div
                                 key=p##id
                                 className=(Cn.poll |> TypedGlamor.toString)>
@@ -158,7 +187,7 @@ let make = (~context: Context.t, _children) => {
                                   className=(
                                     Cn.pollInfo |> TypedGlamor.toString
                                   )>
-                                  ("Closes in " |> ReasonReact.string)
+                                  ("Closes " |> ReasonReact.string)
                                   <DateFormat date />
                                 </p>
                               </div>;

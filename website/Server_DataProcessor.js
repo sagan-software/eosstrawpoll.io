@@ -2,9 +2,6 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
-var Js_option = require("bs-platform/lib/js/js_option.js");
-var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
-var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var Model$ReactTemplate = require("./Model.js");
 var Server_Database$ReactTemplate = require("./Server_Database.js");
 
@@ -14,88 +11,170 @@ function blockByTrxId(mongo, trxId) {
                 }).limit(1).next();
 }
 
-function onCreateAction(mongo, trxId, block, data) {
-  return Curry._2(Server_Database$ReactTemplate.Polls[/* save */7], mongo, {
-              id: data.poll_creator + ("_" + (data.poll_id + ("_" + String(block.block_num)))),
-              pollId: data.poll_id,
-              pollCreator: data.poll_creator,
-              title: data.title,
-              description: data.description,
-              options: data.options,
-              whitelist: data.whitelist,
-              blacklist: data.blacklist,
-              minChoices: 0,
-              maxChoices: 0,
-              openTime: data.open_time,
-              closeTime: data.close_time,
-              blockId: block.block_id,
-              blockNum: block.block_num,
-              blockTime: block.block.timestamp,
-              trxId: trxId,
-              appLabel: data.app_label
+function onCreateAction(mongo, logger, trxId, block, data) {
+  var id = data.poll_creator + ("_" + (data.poll_id + ("_" + String(block.block_num))));
+  var poll = {
+    id: id,
+    pollId: data.poll_id,
+    pollCreator: data.poll_creator,
+    title: data.title,
+    description: data.description,
+    options: data.options,
+    whitelist: data.whitelist,
+    blacklist: data.blacklist,
+    minChoices: data.min_choices,
+    maxChoices: data.max_choices,
+    openTime: data.open_time,
+    closeTime: data.close_time,
+    blockId: block.block_id,
+    blockNum: block.block_num,
+    blockTime: block.block.timestamp,
+    trxId: trxId,
+    metadata: data.metadata
+  };
+  return Curry._2(Server_Database$ReactTemplate.Polls[/* save */7], mongo, poll).then((function () {
+                  return Promise.resolve((logger.info("saved poll", {
+                                    id: id
+                                  }), /* () */0));
+                })).catch((function (error) {
+                return Promise.resolve((logger.error("error saving vote", {
+                                  error: error,
+                                  poll: poll
+                                }), /* () */0));
+              }));
+}
+
+function onVoteAction(mongo, logger, trxId, block, data) {
+  return Curry._2(Server_Database$ReactTemplate.Polls[/* find */3], {
+                    pollId: data.poll_id,
+                    pollCreator: data.poll_creator
+                  }, mongo).sort("blockTime", -1).next().then((function (poll) {
+                if (poll == null) {
+                  return Promise.resolve((logger.warn("couldn't find poll for vote", {
+                                    pollId: data.poll_id,
+                                    pollCreator: data.poll_creator
+                                  }), /* () */0));
+                } else {
+                  var id = poll.id + ("_" + data.voter);
+                  var vote = {
+                    id: id,
+                    pollRef: poll.id,
+                    pollId: data.poll_id,
+                    pollCreator: data.poll_creator,
+                    voter: data.voter,
+                    choices: data.choices,
+                    blockId: block.block_id,
+                    blockNum: block.block_num,
+                    blockTime: block.block.timestamp,
+                    trxId: trxId,
+                    metadata: data.metadata
+                  };
+                  return Curry._1(Server_Database$ReactTemplate.Votes[/* collection */1], mongo).updateOne({
+                                  id: id
+                                }, {
+                                  $set: vote
+                                }, {
+                                  upsert: true
+                                }).then((function () {
+                                  return Promise.resolve((logger.info("saved vote", {
+                                                    blockNum: block.block_num,
+                                                    id: id
+                                                  }), /* () */0));
+                                })).catch((function (error) {
+                                return Promise.resolve((logger.error("error saving vote", {
+                                                  error: error,
+                                                  vote: vote
+                                                }), /* () */0));
+                              }));
+                }
+              }));
+}
+
+function onCommentAction(mongo, logger, trxId, block, data) {
+  var id = data.poll_creator + ("_" + (data.poll_id + ("_" + (data.commenter + ("_" + String(block.block_num))))));
+  var comment = {
+    id: id,
+    pollId: data.poll_id,
+    pollCreator: data.poll_creator,
+    commenter: data.commenter,
+    content: data.content,
+    blockId: block.block_id,
+    blockNum: block.block_num,
+    blockTime: block.block.timestamp,
+    trxId: trxId,
+    metadata: data.metadata
+  };
+  return Curry._2(Server_Database$ReactTemplate.Comments[/* save */7], mongo, comment).then((function () {
+                  return Promise.resolve((logger.info("saved comment", {
+                                    blockNum: block.block_num,
+                                    id: id
+                                  }), /* () */0));
+                })).catch((function (error) {
+                return Promise.resolve((logger.error("error saving comment", {
+                                  error: error,
+                                  comment: comment
+                                }), /* () */0));
+              }));
+}
+
+function onSettingsAction(mongo, _, data) {
+  return Curry._1(Server_Database$ReactTemplate.Settings[/* collection */1], mongo).updateOne({
+              id: data.account
+            }, {
+              $set: {
+                id: data.account,
+                account: data.account
+              }
+            }, {
+              upsert: true
             });
 }
 
-function onVoteAction(mongo, trxId, block, data) {
-  return Curry._2(Server_Database$ReactTemplate.Votes[/* save */7], mongo, {
-              id: data.poll_creator + ("_" + (data.poll_id + ("_" + (data.voter + ("_" + String(block.block_num)))))),
-              pollId: data.poll_id,
-              pollCreator: data.poll_creator,
-              voter: data.voter,
-              choices: data.choices,
-              blockId: block.block_id,
-              blockNum: block.block_num,
-              blockTime: block.block.timestamp,
-              trxId: trxId,
-              appLabel: data.app_label
-            });
-}
-
-function onCommentAction(mongo, trxId, block, data) {
-  return Curry._2(Server_Database$ReactTemplate.Comments[/* save */7], mongo, {
-              id: data.poll_creator + ("_" + (data.poll_id + ("_" + (data.commenter + ("_" + String(block.block_num)))))),
-              pollId: data.poll_id,
-              pollCreator: data.poll_creator,
-              commenter: data.commenter,
-              content: data.content,
-              blockId: block.block_id,
-              blockNum: block.block_num,
-              blockTime: block.block.timestamp,
-              trxId: trxId,
-              appLabel: data.app_label
-            });
-}
-
-function onSettingsAction(mongo, data) {
-  return Curry._2(Server_Database$ReactTemplate.Settings[/* save */7], mongo, {
-              id: data.account,
-              account: data.account
-            });
-}
-
-function onActionsChange(client, change) {
+function onActionsChange(mongo, logger, change) {
   var action = change.fullDocument;
-  var name = action.name;
-  var data = Belt_Option.getWithDefault(Js_primitive.null_undefined_to_opt(action.data), null);
+  var data = Model$ReactTemplate.EosAction[/* getData */1](action);
   var trxId = action.trx_id;
-  console.log("New action", name, action);
+  logger.debug("new action", {
+        account: action.account,
+        name: action.name
+      });
   setTimeout((function () {
-          blockByTrxId(client, trxId).then((function (block) {
-                    var b = Js_option.getWithDefault(Model$ReactTemplate.EosBlock[/* empty */0], (block == null) ? /* None */0 : [block]);
-                    console.log("!!!!!! BLOaaCK", trxId, b);
-                    switch (name) {
-                      case "create" : 
-                          onCreateAction(client, trxId, b, Curry._1(Model$ReactTemplate.EosAction[/* Decode */1][/* create */24], data));
-                          break;
-                      case "vote" : 
-                          onVoteAction(client, trxId, b, Curry._1(Model$ReactTemplate.EosAction[/* Decode */1][/* vote */25], data));
-                          break;
-                      default:
-                        console.log("unknown action:", name);
+          blockByTrxId(mongo, trxId).then((function (block) {
+                    var exit = 0;
+                    if ((block == null) || !data) {
+                      exit = 1;
+                    } else {
+                      var match = data[0];
+                      switch (match.tag | 0) {
+                        case 0 : 
+                            onCreateAction(mongo, logger, trxId, block, match[0]);
+                            break;
+                        case 1 : 
+                            exit = 1;
+                            break;
+                        case 2 : 
+                            onVoteAction(mongo, logger, trxId, block, match[0]);
+                            break;
+                        case 3 : 
+                            onCommentAction(mongo, logger, trxId, block, match[0]);
+                            break;
+                        
+                      }
+                    }
+                    if (exit === 1) {
+                      if (action.account === process.env.CONTRACT_ACCOUNT) {
+                        logger.warn("unhandled action from our contract's account", {
+                              action: action
+                            });
+                      }
+                      
                     }
                     return Promise.resolve(/* () */0);
-                  })).catch((function (e) {
-                  console.log("Error getting block ", e);
+                  })).catch((function (error) {
+                  logger.error("error getting block for action change", {
+                        error: error,
+                        action: action
+                      });
                   return Promise.resolve(/* () */0);
                 }));
           return /* () */0;
@@ -103,45 +182,15 @@ function onActionsChange(client, change) {
   return /* () */0;
 }
 
-function onBlocksChange(mongo, logger, change) {
-  var block = change.fullDocument;
-  logger.info("block change", {
-        block_num: block.block_num
-      });
-  Curry._2(Server_Database$ReactTemplate.Blocks[/* save */7], mongo, {
-        id: block.block_id,
-        num: block.block_num,
-        time: block.block.timestamp
-      });
-  return /* () */0;
-}
-
-function listenToActions(mongo, _) {
+function start(mongo, logger) {
   return Promise.resolve(Curry._1(Server_Database$ReactTemplate.EosActions[/* collection */1], mongo).watch(/* array */[{
                       $match: {
                         operationType: "insert",
                         "fullDocument.account": process.env.CONTRACT_ACCOUNT
                       }
                     }]).on("change", (function (param) {
-                    return onActionsChange(mongo, param);
+                    return onActionsChange(mongo, logger, param);
                   })));
-}
-
-function listenToBlocks(mongo, logger) {
-  return Promise.resolve(Curry._1(Server_Database$ReactTemplate.EosBlocks[/* collection */1], mongo).watch(/* array */[{
-                      $match: {
-                        operationType: "insert"
-                      }
-                    }]).on("change", (function (param) {
-                    return onBlocksChange(mongo, logger, param);
-                  })));
-}
-
-function start(mongo, logger) {
-  return Promise.all(/* tuple */[
-              listenToActions(mongo, logger),
-              listenToBlocks(mongo, logger)
-            ]);
 }
 
 var MakeCollection = Server_Database$ReactTemplate.MakeCollection;
@@ -174,8 +223,5 @@ exports.onVoteAction = onVoteAction;
 exports.onCommentAction = onCommentAction;
 exports.onSettingsAction = onSettingsAction;
 exports.onActionsChange = onActionsChange;
-exports.onBlocksChange = onBlocksChange;
-exports.listenToActions = listenToActions;
-exports.listenToBlocks = listenToBlocks;
 exports.start = start;
 /* Server_Database-ReactTemplate Not a pure module */

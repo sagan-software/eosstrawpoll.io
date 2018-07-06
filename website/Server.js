@@ -5,8 +5,9 @@ var Block = require("bs-platform/lib/js/block.js");
 var Mongodb = require("mongodb");
 var Process = require("process");
 var Winston = require("winston");
-var Winston$ReactTemplate = require("./Libraries/Winston.js");
+var Winston$ReactTemplate = require("./External/Winston.js");
 var Server_WebServer$ReactTemplate = require("./Server_WebServer.js");
+var Server_DataGenerator$ReactTemplate = require("./Server_DataGenerator.js");
 var Server_DataProcessor$ReactTemplate = require("./Server_DataProcessor.js");
 var Server_GraphQlSchema$ReactTemplate = require("./Server_GraphQlSchema.js");
 var Server_GraphQlServer$ReactTemplate = require("./Server_GraphQlServer.js");
@@ -42,11 +43,14 @@ promiseToResult(Mongodb.MongoClient.connect(process.env.MONGO_URI)).then((functi
           var apolloClient = Server_GraphQlServer$ReactTemplate.makeApolloClient(schema);
           Server_DataProcessor$ReactTemplate.start(mongo$1, logger);
           Server_WebServer$ReactTemplate.start(apolloClient, schema, logger);
+          Server_DataGenerator$ReactTemplate.start(mongo$1, logger);
         }
         return Promise.resolve(/* () */0);
       }));
 
 var Database = 0;
+
+var DataGenerator = 0;
 
 var DataProcessor = 0;
 
@@ -57,6 +61,7 @@ var GraphQlServer = 0;
 var WebServer = 0;
 
 exports.Database = Database;
+exports.DataGenerator = DataGenerator;
 exports.DataProcessor = DataProcessor;
 exports.GraphQlSchema = GraphQlSchema;
 exports.GraphQlServer = GraphQlServer;

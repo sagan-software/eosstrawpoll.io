@@ -1,4 +1,6 @@
-[@bs.val] [@bs.scope "process.env"] external appLabel : string = "APP_LABEL";
+[@bs.val] [@bs.scope "process.env"] external nodeEnv : string = "NODE_ENV";
+
+[@bs.val] [@bs.scope "process.env"] external metadata : string = "APP_LABEL";
 
 [@bs.val] [@bs.scope "process.env"]
 external twitterName : string = "TWITTER_NAME";
@@ -27,6 +29,19 @@ external mongoAppDb : string = "MONGO_APP_DB";
 
 [@bs.val] [@bs.scope "process.env"]
 external mongoEosDb : string = "MONGO_EOS_DB";
+
+[@bs.val] [@bs.scope "process.env"] external devPubKey : string = "DEV_PUBKEY";
+
+[@bs.val] [@bs.scope "process.env"]
+external devPrivKey : string = "DEV_PRIVKEY";
+
+[@bs.val] [@bs.scope "process.env"]
+external devAccounts : string = "DEV_ACCOUNTS";
+
+[@bs.val] [@bs.scope "process.env"]
+external devDataGenRate : string = "DEV_DATAGEN_RATE";
+
+let isDev = nodeEnv == "development";
 
 let scatterNetwork =
   Scatter.Network.make(

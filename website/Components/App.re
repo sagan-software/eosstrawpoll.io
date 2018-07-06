@@ -245,7 +245,7 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
               </ol>
             </div>
             <div>
-              <h3> ("Social Media" |> ReasonReact.string) </h3>
+              <h3> ("Links" |> ReasonReact.string) </h3>
               <ol>
                 <li>
                   <a href=("https://twitter.com/" ++ Env.twitterName)>
@@ -259,6 +259,9 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
                 </li>
                 <li>
                   <a href="#steemit"> ("Steemit" |> ReasonReact.string) </a>
+                </li>
+                <li>
+                  <a href="#roadmap"> ("Roadmap" |> ReasonReact.string) </a>
                 </li>
                 <li>
                   <Link route=Route.About>

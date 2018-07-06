@@ -5,7 +5,7 @@ var Graphql = require("graphql");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var ApolloInMemoryCache = require("reason-apollo/src/ApolloInMemoryCache.bs.js");
 var SubscriptionsTransportWs = require("subscriptions-transport-ws");
-var ApolloSchemaLink$ReactTemplate = require("./Libraries/ApolloSchemaLink.js");
+var ApolloSchemaLink$ReactTemplate = require("./External/ApolloSchemaLink.js");
 
 function make(schema, server, path) {
   return new SubscriptionsTransportWs.SubscriptionServer({

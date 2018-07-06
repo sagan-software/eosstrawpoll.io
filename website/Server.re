@@ -1,5 +1,7 @@
 module Database = Server_Database;
 
+module DataGenerator = Server_DataGenerator;
+
 module DataProcessor = Server_DataProcessor;
 
 module GraphQlSchema = Server_GraphQlSchema;
@@ -40,6 +42,7 @@ Env.mongoUri
        let apolloClient = GraphQlServer.makeApolloClient(~schema);
        DataProcessor.start(~mongo, ~logger) |> ignore;
        WebServer.start(~apolloClient, ~schema, ~logger) |> ignore;
+       DataGenerator.start(~mongo, ~logger) |> ignore;
      | Belt.Result.Error(err) =>
        logger |. Winston.error("Error connecting to MongoDB", err);
        Node.Process.exit(1);

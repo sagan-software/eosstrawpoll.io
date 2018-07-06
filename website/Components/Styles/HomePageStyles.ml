@@ -14,7 +14,8 @@ let content = css [
 
 let form = css [
     flex_ auto;
-    marginBottom (rem 2.5);
+    marginBottom (rem 2.);
+    unsafe "boxShadow" "0 5px 15px -2px rgba(0, 0, 0, 0.25)";
 ]
 
 let pollLists = css [
@@ -22,6 +23,8 @@ let pollLists = css [
     flexDirection row;
     backgroundColor white;
     borderRadius Theme.borderRadius;
+    border3 (rem 0.1) solid (hex "e6e6e6");
+    margin2 ~v:(rem 1.) ~h:zero;
 ]
 
 let pollList = css [
@@ -29,7 +32,7 @@ let pollList = css [
     paddingBottom (rem 1.);
 
     select ":not(:last-of-type)" [
-        borderRight3 (rem 0.5) solid Theme.Color.background;
+        borderRight3 (rem 0.1) solid (hex "e6e6e6");
     ]
 ]
 

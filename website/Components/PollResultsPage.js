@@ -19,11 +19,11 @@ function renderOption(_, option) {
 }
 
 function renderPoll(poll) {
-  return React.createElement("div", undefined, React.createElement("h1", undefined, poll[/* title */2]), React.createElement("ol", undefined, $$Array.map((function (param) {
+  return React.createElement("div", undefined, React.createElement("h1", undefined, poll.title), React.createElement("ol", undefined, $$Array.map((function (param) {
                         return renderOption(poll, param);
-                      }), poll[/* options */3])), React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
-                            poll[/* creator */1],
-                            String(poll[/* id */0])
+                      }), poll.options)), React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
+                            poll.pollCreator,
+                            poll.pollId
                           ]), /* None */0, /* array */["Vote"]))));
 }
 

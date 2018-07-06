@@ -63,7 +63,7 @@ services:
 
   keosd:
     image: eosio/eos
-    command: /eos/build/programs/keosd/keosd
+    command: keosd --unlock-timeout 999999
     hostname: keosd
     links:
       - nodeosd

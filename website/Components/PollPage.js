@@ -12,8 +12,8 @@ var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
-var Api$ReactTemplate = require("../Api.js");
 var Link$ReactTemplate = require("./Link.js");
+var Contract$ReactTemplate = require("../Contract.js");
 var AppStyles$ReactTemplate = require("./Styles/AppStyles.js");
 var CommonStyles$ReactTemplate = require("./Styles/CommonStyles.js");
 
@@ -42,8 +42,16 @@ function renderOption(param, i, option) {
 function castVote(self, context, poll, _) {
   var match = context[/* scatter */0];
   if (match) {
-    Api$ReactTemplate.Contract[/* make */0](match[0]).then((function (contract) {
-                return Promise.resolve(Api$ReactTemplate.vote(contract, poll.pollCreator, poll.pollId, "alice", Belt_SetInt.toArray(self[/* state */1][/* choices */0])));
+    Contract$ReactTemplate.fromScatter(match[0]).then((function (contract) {
+                return contract.vote({
+                            poll_creator: poll.pollCreator,
+                            poll_id: poll.pollId,
+                            voter: "alice",
+                            choices: Belt_SetInt.toArray(self[/* state */1][/* choices */0]),
+                            metadata: process.env.APP_LABEL
+                          }, {
+                            authorization: /* array */["alice@active"]
+                          });
               })).then((function (result) {
               console.log("Created", result);
               return Promise.resolve(/* () */0);
@@ -60,7 +68,7 @@ function castVote(self, context, poll, _) {
 
 var Graphql_error = Caml_exceptions.create("PollPage-ReactTemplate.PollData.Graphql_error");
 
-var ppx_printed_query = "query pollData($creator: String!, $id: String!)  {\npoll(creator: $creator, id: $id)  {\nid  \npollId  \npollCreator  \ntitle  \ndescription  \noptions  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockId  \nblockNum  \nblockTime  \ntrxId  \nappLabel  \nvotes  {\nid  \nvoter  \nchoices  \nblockNum  \nblockTime  \ntrxId  \nappLabel  \n}\ncomments  {\nid  \ncommenter  \ncontent  \nblockTime  \ntrxId  \nappLabel  \n}\n}\n}";
+var ppx_printed_query = "query pollData($creator: String!, $id: String!)  {\npoll(creator: $creator, id: $id)  {\nid  \npollId  \npollCreator  \ntitle  \ndescription  \noptions  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockId  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \nvotes  {\nid  \nvoter  \nchoices  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \n}\ncomments  {\nid  \ncommenter  \ncontent  \nblockTime  \ntrxId  \nmetadata  \n}\n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
@@ -365,7 +373,7 @@ function parse(value) {
                   "Field trxId on type Poll is missing"
                 ];
           }
-          var match$33 = value$1["appLabel"];
+          var match$33 = value$1["metadata"];
           var tmp$17;
           if (match$33 !== undefined) {
             var match$34 = Js_json.decodeString(match$33);
@@ -380,7 +388,7 @@ function parse(value) {
           } else {
             throw [
                   Graphql_error,
-                  "Field appLabel on type Poll is missing"
+                  "Field metadata on type Poll is missing"
                 ];
           }
           var match$35 = value$1["votes"];
@@ -510,7 +518,7 @@ function parse(value) {
                                 "Field trxId on type Vote is missing"
                               ];
                         }
-                        var match$13 = value$1["appLabel"];
+                        var match$13 = value$1["metadata"];
                         var tmp$6;
                         if (match$13 !== undefined) {
                           var match$14 = Js_json.decodeString(match$13);
@@ -525,7 +533,7 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
-                                "Field appLabel on type Vote is missing"
+                                "Field metadata on type Vote is missing"
                               ];
                         }
                         return {
@@ -535,7 +543,7 @@ function parse(value) {
                                 blockNum: tmp$3,
                                 blockTime: tmp$4,
                                 trxId: tmp$5,
-                                appLabel: tmp$6
+                                metadata: tmp$6
                               };
                       } else {
                         throw [
@@ -655,7 +663,7 @@ function parse(value) {
                                 "Field trxId on type Comment is missing"
                               ];
                         }
-                        var match$11 = value$1["appLabel"];
+                        var match$11 = value$1["metadata"];
                         var tmp$5;
                         if (match$11 !== undefined) {
                           var match$12 = Js_json.decodeString(match$11);
@@ -670,7 +678,7 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
-                                "Field appLabel on type Comment is missing"
+                                "Field metadata on type Comment is missing"
                               ];
                         }
                         return {
@@ -679,7 +687,7 @@ function parse(value) {
                                 content: tmp$2,
                                 blockTime: tmp$3,
                                 trxId: tmp$4,
-                                appLabel: tmp$5
+                                metadata: tmp$5
                               };
                       } else {
                         throw [
@@ -715,7 +723,7 @@ function parse(value) {
             blockNum: tmp$14,
             blockTime: tmp$15,
             trxId: tmp$16,
-            appLabel: tmp$17,
+            metadata: tmp$17,
             votes: tmp$18,
             comments: tmp$19
           };

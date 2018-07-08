@@ -132,6 +132,8 @@ module Collection = {
     (t('document), array(AggregationStage.t)) =>
     AggregationCursor.t('document) =
     "";
+  [@bs.send]
+  external createIndex : (t('document), 'index) => Js.Promise.t(string) = "";
 };
 
 module Database = {

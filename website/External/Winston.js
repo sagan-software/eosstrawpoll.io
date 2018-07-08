@@ -19,8 +19,9 @@ function $$console(format) {
             });
 }
 
-function make(transports) {
+function make(level, transports) {
   return Winston.createLogger({
+              level: level,
               transports: transports
             });
 }

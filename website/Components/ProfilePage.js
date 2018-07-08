@@ -20,7 +20,7 @@ var component = ReasonReact.statelessComponent("ProfilePage");
 
 var Graphql_error = Caml_exceptions.create("ProfilePage-ReactTemplate.AccountData.Graphql_error");
 
-var ppx_printed_query = "query accountData($name: String!)  {\naccount(name: $name)  {\npolls  {\nid  \npollId  \npollCreator  \ntitle  \nopenTime  \ncloseTime  \nblockTime  \n}\nvotes  {\nid  \npollId  \npollCreator  \nblockTime  \n}\ncomments  {\nid  \npollId  \npollCreator  \ncontent  \nblockTime  \n}\n}\n}";
+var ppx_printed_query = "query accountData($name: String!)  {\naccount(name: $name)  {\npolls  {\nid  \npollName  \npollCreator  \ntitle  \nopenTime  \ncloseTime  \nblockTime  \n}\nvotes  {\nid  \npollId  \npollCreator  \nblockTime  \n}\ncomments  {\nid  \npollName  \npollCreator  \ncontent  \nblockTime  \n}\n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
@@ -63,7 +63,7 @@ function parse(value) {
                                 "Field id on type Poll is missing"
                               ];
                         }
-                        var match$3 = value$1["pollId"];
+                        var match$3 = value$1["pollName"];
                         var tmp$1;
                         if (match$3 !== undefined) {
                           var match$4 = Js_json.decodeString(match$3);
@@ -78,7 +78,7 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
-                                "Field pollId on type Poll is missing"
+                                "Field pollName on type Poll is missing"
                               ];
                         }
                         var match$5 = value$1["pollCreator"];
@@ -120,13 +120,13 @@ function parse(value) {
                         var match$9 = value$1["openTime"];
                         var tmp$4;
                         if (match$9 !== undefined) {
-                          var match$10 = Js_json.decodeString(match$9);
+                          var match$10 = Js_json.decodeNumber(match$9);
                           if (match$10) {
-                            tmp$4 = match$10[0];
+                            tmp$4 = match$10[0] | 0;
                           } else {
                             throw [
                                   Graphql_error,
-                                  "Expected string, got " + JSON.stringify(match$9)
+                                  "Expected int, got " + JSON.stringify(match$9)
                                 ];
                           }
                         } else {
@@ -138,21 +138,14 @@ function parse(value) {
                         var match$11 = value$1["closeTime"];
                         var tmp$5;
                         if (match$11 !== undefined) {
-                          var match$12 = Js_json.decodeNull(match$11);
+                          var match$12 = Js_json.decodeNumber(match$11);
                           if (match$12) {
-                            tmp$5 = /* None */0;
+                            tmp$5 = match$12[0] | 0;
                           } else {
-                            var match$13 = Js_json.decodeString(match$11);
-                            var tmp$6;
-                            if (match$13) {
-                              tmp$6 = match$13[0];
-                            } else {
-                              throw [
-                                    Graphql_error,
-                                    "Expected string, got " + JSON.stringify(match$11)
-                                  ];
-                            }
-                            tmp$5 = /* Some */[tmp$6];
+                            throw [
+                                  Graphql_error,
+                                  "Expected int, got " + JSON.stringify(match$11)
+                                ];
                           }
                         } else {
                           throw [
@@ -160,16 +153,16 @@ function parse(value) {
                                 "Field closeTime on type Poll is missing"
                               ];
                         }
-                        var match$14 = value$1["blockTime"];
-                        var tmp$7;
-                        if (match$14 !== undefined) {
-                          var match$15 = Js_json.decodeString(match$14);
-                          if (match$15) {
-                            tmp$7 = match$15[0];
+                        var match$13 = value$1["blockTime"];
+                        var tmp$6;
+                        if (match$13 !== undefined) {
+                          var match$14 = Js_json.decodeString(match$13);
+                          if (match$14) {
+                            tmp$6 = match$14[0];
                           } else {
                             throw [
                                   Graphql_error,
-                                  "Expected string, got " + JSON.stringify(match$14)
+                                  "Expected string, got " + JSON.stringify(match$13)
                                 ];
                           }
                         } else {
@@ -180,12 +173,12 @@ function parse(value) {
                         }
                         return {
                                 id: tmp,
-                                pollId: tmp$1,
+                                pollName: tmp$1,
                                 pollCreator: tmp$2,
                                 title: tmp$3,
                                 openTime: tmp$4,
                                 closeTime: tmp$5,
-                                blockTime: tmp$7
+                                blockTime: tmp$6
                               };
                       } else {
                         throw [
@@ -339,7 +332,7 @@ function parse(value) {
                                 "Field id on type Comment is missing"
                               ];
                         }
-                        var match$3 = value$1["pollId"];
+                        var match$3 = value$1["pollName"];
                         var tmp$1;
                         if (match$3 !== undefined) {
                           var match$4 = Js_json.decodeString(match$3);
@@ -354,7 +347,7 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
-                                "Field pollId on type Comment is missing"
+                                "Field pollName on type Comment is missing"
                               ];
                         }
                         var match$5 = value$1["pollCreator"];
@@ -413,7 +406,7 @@ function parse(value) {
                         }
                         return {
                                 id: tmp,
-                                pollId: tmp$1,
+                                pollName: tmp$1,
                                 pollCreator: tmp$2,
                                 content: tmp$3,
                                 blockTime: tmp$4
@@ -594,7 +587,7 @@ function make$1(_, accountName, _$1) {
                                                                         key: p.id
                                                                       }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
                                                                                   p.pollCreator,
-                                                                                  p.pollId
+                                                                                  p.pollName
                                                                                 ]), /* None */0, /* array */[p.title])));
                                                           }), match[0].polls);
                                             } else {

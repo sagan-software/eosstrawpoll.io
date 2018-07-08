@@ -104,12 +104,9 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
               switch (context.scatter) {
               | Some(scatter) =>
                 /* User has scatter */
-                switch (context.identity) {
-                | Some(identity) =>
+                switch (context |. Context.accountName) {
+                | Some(name) =>
                   /* User has scatter and is logged in */
-                  let name =
-                    (identity |. Scatter.Identity.accounts)[0]
-                    |. Scatter.Account.name;
                   <nav className=(Cn.userNav |> TypedGlamor.toString)>
                     <Link route=(Route.Profile(name))>
                       <img
@@ -122,7 +119,7 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
                     <a onClick=(clickedLogout(self, scatter))>
                       Icon.logout
                     </a>
-                  </nav>;
+                  </nav>
                 /* User has scatter but isn't logged in */
                 | None =>
                   <a
@@ -145,10 +142,10 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
           | Route.Home => <HomePage context />
           | Route.About => <AboutPage />
           | Route.Profile(accountName) => <ProfilePage context accountName />
-          | Route.Poll(accountName, pollId) =>
-            <PollPage context accountName pollId />
-          | Route.PollResults(accountName, pollId) =>
-            <PollResultsPage context accountName pollId />
+          | Route.Poll(accountName, pollName) =>
+            <PollPage context accountName pollName />
+          | Route.PollResults(accountName, pollName) =>
+            <PollResultsPage context accountName pollName />
           }
         )
         <footer className=(Cn.footerContainer |> TypedGlamor.toString)>

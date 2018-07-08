@@ -11,7 +11,7 @@ var GraphQl$ReactTemplate = require("./External/GraphQl.js");
 var GraphqlSubscriptions = require("graphql-subscriptions");
 var Server_Database$ReactTemplate = require("./Server_Database.js");
 
-var typeDefs = "\n  scalar Date\n  scalar DateTime\n  scalar Time\n\n  type Vote {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    pollVersion: Int!\n    poll: Poll!\n    voter: String!\n    voterStaked: Int!\n    choices: [Int!]!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    metadata: String!\n  }\n\n  type Comment {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    pollVersion: Int!\n    pollTitle: String!\n    poll: Poll!\n    commenter: String!\n    content: String!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    metadata: String!\n  }\n\n  type Poll {\n    id: String!\n    pollId: String!\n    pollCreator: String!\n    version: Int!\n    title: String!\n    description: String!\n    options: [String!]!\n    whitelist: [String!]!\n    blacklist: [String!]!\n    openTime: Int!\n    closeTime: Int!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    numVotes: Int!\n    numComments: Int!\n    metadata: String!\n  }\n\n  type Settings {\n    account: String!\n    theme: String!\n    defaultWhitelist: [String!]!\n    defaultBlacklist: [String!]!\n    metadata: String!\n  }\n\n  type Account {\n    name: String!\n    holdings: String!\n    polls: [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    settings: Settings\n  }\n\n  enum SortBy {\n    POPULARITY\n    CREATED\n    CLOSING\n  }\n\n  type Query {\n    polls(sortBy: SortBy): [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    poll(creator: String!, id: String!): Poll\n    account(name: String!): Account\n  }\n\n  type Subscription {\n    polls: Poll!\n    pollsFromAccount(account: String!): Poll!\n    votes: Vote!\n    votesOnPoll(creator: String!, id: String!): Vote!\n    votesFromAccount(account: String!): Vote!\n    comments: Comment!\n    commentsOnPoll(creator: String!, id: String!): Comment!\n    commentsFromAccount(account: String!): Comment!\n  }\n\n  schema {\n    query: Query\n    subscription: Subscription\n  }\n\n";
+var typeDefs = "\n  scalar Date\n  scalar DateTime\n  scalar Time\n\n  type Vote {\n    id: String!\n    pollId: String!\n    pollName: String!\n    pollCreator: String!\n    poll: Poll!\n    voter: String!\n    voterStaked: Int!\n    choices: [Int!]!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    metadata: String!\n  }\n\n  type Comment {\n    id: String!\n    pollName: String!\n    pollCreator: String!\n    pollTitle: String!\n    poll: Poll!\n    commenter: String!\n    content: String!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    metadata: String!\n  }\n\n  type Poll {\n    id: String!\n    pollName: String!\n    pollCreator: String!\n    version: Int!\n    title: String!\n    description: String!\n    options: [String!]!\n    whitelist: [String!]!\n    blacklist: [String!]!\n    minChoices: Int!\n    maxChoices: Int!\n    openTime: Int!\n    closeTime: Int!\n    blockId: String!\n    blockNum: Int!\n    blockTime: String!\n    trxId: String!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    numVotes: Int!\n    numComments: Int!\n    metadata: String!\n  }\n\n  type Settings {\n    account: String!\n    theme: String!\n    defaultWhitelist: [String!]!\n    defaultBlacklist: [String!]!\n    metadata: String!\n  }\n\n  type Account {\n    name: String!\n    holdings: String!\n    polls: [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    settings: Settings\n  }\n\n  enum SortBy {\n    POPULARITY\n    CREATED\n    CLOSING\n  }\n\n  type Query {\n    polls(sortBy: SortBy): [Poll!]!\n    votes: [Vote!]!\n    comments: [Comment!]!\n    poll(creator: String!, id: String!): Poll\n    account(name: String!): Account\n  }\n\n  type Subscription {\n    polls: Poll!\n    pollsFromAccount(account: String!): Poll!\n    votes: Vote!\n    votesOnPoll(creator: String!, id: String!): Vote!\n    votesFromAccount(account: String!): Vote!\n    comments: Comment!\n    commentsOnPoll(creator: String!, id: String!): Comment!\n    commentsFromAccount(account: String!): Comment!\n  }\n\n  schema {\n    query: Query\n    subscription: Subscription\n  }\n\n";
 
 function findAll(_, collection) {
   return collection.find().limit(10).toArray();
@@ -29,11 +29,11 @@ function findOne(query, collection) {
   return collection.find(query).next();
 }
 
-function findPoll(creator, id, mongo) {
+function findPoll(creator, name, mongo) {
   var collection = Curry._1(Server_Database$ReactTemplate.Polls[/* collection */1], mongo);
   return collection.find({
                 pollCreator: creator,
-                pollId: id
+                pollName: name
               }).next();
 }
 
@@ -70,7 +70,7 @@ function popularityAggregations() {
           Mongo$ReactTemplate.AggregationStage[/* lookup */2]({
                 from: "votes",
                 localField: "id",
-                foreignField: "pollRef",
+                foreignField: "pollId",
                 as: "votes"
               }),
           Mongo$ReactTemplate.AggregationStage[/* addFields */3]({
@@ -126,34 +126,33 @@ function makeResolvers(mongo) {
             votes: (function (poll, _) {
                 var collection = Curry._1(Server_Database$ReactTemplate.Votes[/* collection */1], mongo);
                 var query = {
-                  pollRef: poll.id
+                  pollId: poll.id
                 };
                 return collection.find(query).toArray();
               }),
             numVotes: (function (poll) {
                 return Curry._1(Server_Database$ReactTemplate.Votes[/* collection */1], mongo).find({
-                              pollCreator: poll.pollCreator,
-                              pollId: poll.pollId
+                              pollId: poll.id
                             }).count();
               }),
             comments: (function (poll, _) {
                 var collection = Curry._1(Server_Database$ReactTemplate.Comments[/* collection */1], mongo);
                 var query = {
                   pollCreator: poll.pollCreator,
-                  pollId: poll.pollId
+                  pollName: poll.pollName
                 };
                 return collection.find(query).toArray();
               }),
             numComments: (function (poll) {
                 return Curry._1(Server_Database$ReactTemplate.Comments[/* collection */1], mongo).find({
                               pollCreator: poll.pollCreator,
-                              pollId: poll.pollId
+                              pollName: poll.pollName
                             }).count();
               })
           },
           Vote: {
             poll: (function (vote) {
-                return findPoll(vote.pollCreator, vote.pollId, mongo);
+                return findPoll(vote.pollCreator, vote.pollName, mongo);
               }),
             voterStaked: (function (vote) {
                 return eos.getTableRows(true, "eosio", "eosio", "voters", "id", vote.voter, "", 1).then((function (result) {
@@ -166,7 +165,7 @@ function makeResolvers(mongo) {
           },
           Comment: {
             poll: (function (comment) {
-                return findPoll(comment.pollCreator, comment.pollId, mongo);
+                return findPoll(comment.pollCreator, comment.pollName, mongo);
               })
           },
           Account: {
@@ -211,7 +210,7 @@ function makeResolvers(mongo) {
             },
             votesOnPoll: subWithFilter((function (vote, args) {
                     if (Caml_obj.caml_equal(vote.pollCreator, args.creator)) {
-                      return Caml_obj.caml_equal(vote.pollId, args.id);
+                      return Caml_obj.caml_equal(vote.pollName, args.id);
                     } else {
                       return false;
                     }
@@ -226,7 +225,7 @@ function makeResolvers(mongo) {
             },
             commentsOnPoll: subWithFilter((function (comment, args) {
                     if (Caml_obj.caml_equal(comment.pollCreator, args.creator)) {
-                      return Caml_obj.caml_equal(comment.pollId, args.id);
+                      return Caml_obj.caml_equal(comment.pollName, args.id);
                     } else {
                       return false;
                     }

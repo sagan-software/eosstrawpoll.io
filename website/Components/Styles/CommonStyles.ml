@@ -35,6 +35,11 @@ let pagePrimaryBox = css [
   borderRadius Theme.borderRadius;
   padding (rem 4.);
   border3 (rem 0.1) solid (hex "e6e6e6");
+  unsafe "boxShadow" "0 5px 15px -2px rgba(0, 0, 0, 0.25)";
 ]
 
-let pageSecondaryBox = css []
+let pageSecondaryBox = css [
+    backgroundColor white;
+    borderRadius Theme.borderRadius;
+    border3 (rem 0.1) solid (hex "e6e6e6");
+    ]

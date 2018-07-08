@@ -33,19 +33,20 @@ let choose = (array, d) =>
 let chooseAccount = () => choose(accounts, "alice");
 
 let generatePoll = (~contract, ~logger) => {
+  logger |. Winston.debug("generating poll...", ());
   let title = choose(pollTitles, "");
   let options =
     Belt.Array.range(1, 15 |. Random.int |. max(2))
     |. Belt.Array.map(i => {j|Choice #$i|j});
   let numOptions = Belt.Array.length(options);
   let minChoices = 1 + Random.int(numOptions);
-  let maxChoices = Random.int(numOptions + 1) |. max(minChoices);
+  let maxChoices = minChoices + Random.int(numOptions - minChoices + 1);
   let openTime = (Js.Date.now() /. 1000. |> truncate) + 10 + Random.int(120);
-  let closeTime = openTime + 60 + Random.int(60 * 60);
+  let closeTime = openTime + 60 + Random.int(60 * 60 * 24);
   let pollCreator = chooseAccount();
   let poll = {
     "poll_creator": pollCreator,
-    "poll_id": Eos.Name.random(),
+    "poll_name": Eos.Name.random(),
     "title": title,
     "description": "",
     "options": options,
@@ -97,6 +98,7 @@ let generateVote = (~contract, ~mongo, ~logger) =>
   |> Js.Promise.then_(poll =>
        switch (poll) {
        | Some(poll) =>
+         logger |. Winston.debug("generating vote...", {"pollId": poll##id});
          let voter = chooseAccount();
          let choices = [||];
          let numChoices =
@@ -112,7 +114,7 @@ let generateVote = (~contract, ~mongo, ~logger) =>
          };
          let vote = {
            "poll_creator": poll##pollCreator,
-           "poll_id": poll##pollId,
+           "poll_name": poll##pollName,
            "voter": voter,
            "choices": choices,
            "metadata": Env.metadata,
@@ -151,9 +153,11 @@ let generateComment = (~contract, ~mongo, ~logger) =>
   |> Js.Promise.then_(poll =>
        switch (poll) {
        | Some(poll) =>
+         logger
+         |. Winston.debug("generating comment...", {"pollId": poll##id});
          let comment = {
            "poll_creator": poll##pollCreator,
-           "poll_id": poll##pollId,
+           "poll_name": poll##pollName,
            "commenter": "bob",
            "content": "this is a comment",
            "metadata": Env.metadata,
@@ -186,30 +190,45 @@ let generateComment = (~contract, ~mongo, ~logger) =>
        }
      );
 
-let startGenerating = (maxSeconds, fn) => {
+let startGenerating = (minSeconds, maxSeconds, fn) => {
   let rec generate = () =>
     Js.Global.setTimeout(
       () => {
         fn() |> ignore;
         generate() |> ignore;
       },
-      Random.int(maxSeconds) * 1000,
+      minSeconds + Random.int(maxSeconds) * 1000,
     );
   generate() |> ignore;
 };
 
 let startGeneratingPolls = (~contract, ~logger) =>
-  startGenerating(60, () => generatePoll(~contract, ~logger) |> ignore);
+  startGenerating(90, 120, () => generatePoll(~contract, ~logger) |> ignore);
 
 let startGeneratingVotes = (~contract, ~mongo, ~logger) =>
-  startGenerating(30, () =>
+  startGenerating(1, 10, () =>
     generateVote(~contract, ~mongo, ~logger) |> ignore
   );
 
 let startGeneratingComments = (~contract, ~mongo, ~logger) =>
-  startGenerating(90, () =>
+  startGenerating(15, 120, () =>
     generateComment(~contract, ~mongo, ~logger) |> ignore
   );
+
+let seed = (~contract, ~mongo, ~logger) =>
+  Js.Promise.all([|generatePoll(~contract, ~logger)|])
+  |> Js.Promise.then_(_result => {
+       logger |. Winston.info("done creating initial polls", ());
+       let votes =
+         1
+         |> Belt.Array.range(0)
+         |> Js.Array.map(_i => generateVote(~contract, ~mongo, ~logger));
+       let comments =
+         1
+         |> Belt.Array.range(0)
+         |> Js.Array.map(_i => generateComment(~contract, ~mongo, ~logger));
+       Js.Array.concat(votes, comments) |> Js.Promise.all;
+     });
 
 let start = (~mongo, ~logger) =>
   Eos.Config.t(
@@ -221,6 +240,17 @@ let start = (~mongo, ~logger) =>
   |. Eos.make
   |. Contract.fromEos
   |> Js.Promise.then_(contract => {
+       logger |. Winston.info("seeding...", ());
+       seed(~contract, ~mongo, ~logger)
+       |> Js.Promise.then_(_r =>
+            Js.Promise.make((~resolve, ~reject as _) =>
+              Js.Global.setTimeout(() => resolve(. contract), 5 * 1000)
+              |> ignore
+            )
+          );
+     })
+  |> Js.Promise.then_(contract => {
+       logger |. Winston.info("starting to generate fake data", ());
        startGeneratingPolls(~contract, ~logger);
        startGeneratingVotes(~contract, ~mongo, ~logger);
        startGeneratingComments(~contract, ~mongo, ~logger);

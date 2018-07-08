@@ -7,68 +7,23 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var Js_dict = require("bs-platform/lib/js/js_dict.js");
 var Js_json = require("bs-platform/lib/js/js_json.js");
+var Js_option = require("bs-platform/lib/js/js_option.js");
+var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Belt_SetInt = require("bs-platform/lib/js/belt_SetInt.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ReasonApollo = require("reason-apollo/src/ReasonApollo.bs.js");
 var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 var Link$ReactTemplate = require("./Link.js");
+var Route$ReactTemplate = require("./Route.js");
+var Context$ReactTemplate = require("./Context.js");
 var Contract$ReactTemplate = require("../Contract.js");
 var AppStyles$ReactTemplate = require("./Styles/AppStyles.js");
 var CommonStyles$ReactTemplate = require("./Styles/CommonStyles.js");
 
-function reducer(action, state) {
-  var i = action[0];
-  var match = Belt_SetInt.has(state[/* choices */0], i);
-  return /* Update */Block.__(0, [/* record */[/* choices */match ? Belt_SetInt.remove(state[/* choices */0], i) : Belt_SetInt.add(state[/* choices */0], i)]]);
-}
-
-var component = ReasonReact.reducerComponent("PollPage");
-
-function renderOption(param, i, option) {
-  var send = param[/* send */3];
-  var state = param[/* state */1];
-  console.log("choices", state[/* choices */0], i);
-  var isSelected = Belt_SetInt.has(state[/* choices */0], i);
-  var onClick = function () {
-    return Curry._1(send, /* ToggleChoice */[i]);
-  };
-  return React.createElement("li", {
-              key: String(i),
-              onClick: onClick
-            }, option, isSelected ? "(selected)" : "(unselected)");
-}
-
-function castVote(self, context, poll, _) {
-  var match = context[/* scatter */0];
-  if (match) {
-    Contract$ReactTemplate.fromScatter(match[0]).then((function (contract) {
-                return contract.vote({
-                            poll_creator: poll.pollCreator,
-                            poll_id: poll.pollId,
-                            voter: "alice",
-                            choices: Belt_SetInt.toArray(self[/* state */1][/* choices */0]),
-                            metadata: process.env.APP_LABEL
-                          }, {
-                            authorization: /* array */["alice@active"]
-                          });
-              })).then((function (result) {
-              console.log("Created", result);
-              return Promise.resolve(/* () */0);
-            })).catch((function (error) {
-            console.log("Error voting", error);
-            return Promise.resolve(/* () */0);
-          }));
-    return /* () */0;
-  } else {
-    console.log("No scatter");
-    return /* () */0;
-  }
-}
-
 var Graphql_error = Caml_exceptions.create("PollPage-ReactTemplate.PollData.Graphql_error");
 
-var ppx_printed_query = "query pollData($creator: String!, $id: String!)  {\npoll(creator: $creator, id: $id)  {\nid  \npollId  \npollCreator  \ntitle  \ndescription  \noptions  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockId  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \nvotes  {\nid  \nvoter  \nchoices  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \n}\ncomments  {\nid  \ncommenter  \ncontent  \nblockTime  \ntrxId  \nmetadata  \n}\n}\n}";
+var ppx_printed_query = "query pollData($creator: String!, $id: String!)  {\npoll(creator: $creator, id: $id)  {\nid  \npollName  \npollCreator  \ntitle  \ndescription  \noptions  \nwhitelist  \nblacklist  \nminChoices  \nmaxChoices  \nopenTime  \ncloseTime  \nblockId  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \nvotes  {\nid  \nvoter  \nvoterStaked  \nchoices  \nblockNum  \nblockTime  \ntrxId  \nmetadata  \n}\ncomments  {\nid  \ncommenter  \ncontent  \nblockTime  \ntrxId  \nmetadata  \n}\n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
@@ -102,7 +57,7 @@ function parse(value) {
                   "Field id on type Poll is missing"
                 ];
           }
-          var match$6 = value$1["pollId"];
+          var match$6 = value$1["pollName"];
           var tmp$3;
           if (match$6 !== undefined) {
             var match$7 = Js_json.decodeString(match$6);
@@ -117,7 +72,7 @@ function parse(value) {
           } else {
             throw [
                   Graphql_error,
-                  "Field pollId on type Poll is missing"
+                  "Field pollName on type Poll is missing"
                 ];
           }
           var match$8 = value$1["pollCreator"];
@@ -258,16 +213,52 @@ function parse(value) {
                   "Field blacklist on type Poll is missing"
                 ];
           }
-          var match$20 = value$1["openTime"];
+          var match$20 = value$1["minChoices"];
           var tmp$10;
           if (match$20 !== undefined) {
-            var match$21 = Js_json.decodeString(match$20);
+            var match$21 = Js_json.decodeNumber(match$20);
             if (match$21) {
-              tmp$10 = match$21[0];
+              tmp$10 = match$21[0] | 0;
             } else {
               throw [
                     Graphql_error,
-                    "Expected string, got " + JSON.stringify(match$20)
+                    "Expected int, got " + JSON.stringify(match$20)
+                  ];
+            }
+          } else {
+            throw [
+                  Graphql_error,
+                  "Field minChoices on type Poll is missing"
+                ];
+          }
+          var match$22 = value$1["maxChoices"];
+          var tmp$11;
+          if (match$22 !== undefined) {
+            var match$23 = Js_json.decodeNumber(match$22);
+            if (match$23) {
+              tmp$11 = match$23[0] | 0;
+            } else {
+              throw [
+                    Graphql_error,
+                    "Expected int, got " + JSON.stringify(match$22)
+                  ];
+            }
+          } else {
+            throw [
+                  Graphql_error,
+                  "Field maxChoices on type Poll is missing"
+                ];
+          }
+          var match$24 = value$1["openTime"];
+          var tmp$12;
+          if (match$24 !== undefined) {
+            var match$25 = Js_json.decodeNumber(match$24);
+            if (match$25) {
+              tmp$12 = match$25[0] | 0;
+            } else {
+              throw [
+                    Graphql_error,
+                    "Expected int, got " + JSON.stringify(match$24)
                   ];
             }
           } else {
@@ -276,24 +267,17 @@ function parse(value) {
                   "Field openTime on type Poll is missing"
                 ];
           }
-          var match$22 = value$1["closeTime"];
-          var tmp$11;
-          if (match$22 !== undefined) {
-            var match$23 = Js_json.decodeNull(match$22);
-            if (match$23) {
-              tmp$11 = /* None */0;
+          var match$26 = value$1["closeTime"];
+          var tmp$13;
+          if (match$26 !== undefined) {
+            var match$27 = Js_json.decodeNumber(match$26);
+            if (match$27) {
+              tmp$13 = match$27[0] | 0;
             } else {
-              var match$24 = Js_json.decodeString(match$22);
-              var tmp$12;
-              if (match$24) {
-                tmp$12 = match$24[0];
-              } else {
-                throw [
-                      Graphql_error,
-                      "Expected string, got " + JSON.stringify(match$22)
-                    ];
-              }
-              tmp$11 = /* Some */[tmp$12];
+              throw [
+                    Graphql_error,
+                    "Expected int, got " + JSON.stringify(match$26)
+                  ];
             }
           } else {
             throw [
@@ -301,16 +285,16 @@ function parse(value) {
                   "Field closeTime on type Poll is missing"
                 ];
           }
-          var match$25 = value$1["blockId"];
-          var tmp$13;
-          if (match$25 !== undefined) {
-            var match$26 = Js_json.decodeString(match$25);
-            if (match$26) {
-              tmp$13 = match$26[0];
+          var match$28 = value$1["blockId"];
+          var tmp$14;
+          if (match$28 !== undefined) {
+            var match$29 = Js_json.decodeString(match$28);
+            if (match$29) {
+              tmp$14 = match$29[0];
             } else {
               throw [
                     Graphql_error,
-                    "Expected string, got " + JSON.stringify(match$25)
+                    "Expected string, got " + JSON.stringify(match$28)
                   ];
             }
           } else {
@@ -319,16 +303,16 @@ function parse(value) {
                   "Field blockId on type Poll is missing"
                 ];
           }
-          var match$27 = value$1["blockNum"];
-          var tmp$14;
-          if (match$27 !== undefined) {
-            var match$28 = Js_json.decodeNumber(match$27);
-            if (match$28) {
-              tmp$14 = match$28[0] | 0;
+          var match$30 = value$1["blockNum"];
+          var tmp$15;
+          if (match$30 !== undefined) {
+            var match$31 = Js_json.decodeNumber(match$30);
+            if (match$31) {
+              tmp$15 = match$31[0] | 0;
             } else {
               throw [
                     Graphql_error,
-                    "Expected int, got " + JSON.stringify(match$27)
+                    "Expected int, got " + JSON.stringify(match$30)
                   ];
             }
           } else {
@@ -337,16 +321,16 @@ function parse(value) {
                   "Field blockNum on type Poll is missing"
                 ];
           }
-          var match$29 = value$1["blockTime"];
-          var tmp$15;
-          if (match$29 !== undefined) {
-            var match$30 = Js_json.decodeString(match$29);
-            if (match$30) {
-              tmp$15 = match$30[0];
+          var match$32 = value$1["blockTime"];
+          var tmp$16;
+          if (match$32 !== undefined) {
+            var match$33 = Js_json.decodeString(match$32);
+            if (match$33) {
+              tmp$16 = match$33[0];
             } else {
               throw [
                     Graphql_error,
-                    "Expected string, got " + JSON.stringify(match$29)
+                    "Expected string, got " + JSON.stringify(match$32)
                   ];
             }
           } else {
@@ -355,16 +339,16 @@ function parse(value) {
                   "Field blockTime on type Poll is missing"
                 ];
           }
-          var match$31 = value$1["trxId"];
-          var tmp$16;
-          if (match$31 !== undefined) {
-            var match$32 = Js_json.decodeString(match$31);
-            if (match$32) {
-              tmp$16 = match$32[0];
+          var match$34 = value$1["trxId"];
+          var tmp$17;
+          if (match$34 !== undefined) {
+            var match$35 = Js_json.decodeString(match$34);
+            if (match$35) {
+              tmp$17 = match$35[0];
             } else {
               throw [
                     Graphql_error,
-                    "Expected string, got " + JSON.stringify(match$31)
+                    "Expected string, got " + JSON.stringify(match$34)
                   ];
             }
           } else {
@@ -373,16 +357,16 @@ function parse(value) {
                   "Field trxId on type Poll is missing"
                 ];
           }
-          var match$33 = value$1["metadata"];
-          var tmp$17;
-          if (match$33 !== undefined) {
-            var match$34 = Js_json.decodeString(match$33);
-            if (match$34) {
-              tmp$17 = match$34[0];
+          var match$36 = value$1["metadata"];
+          var tmp$18;
+          if (match$36 !== undefined) {
+            var match$37 = Js_json.decodeString(match$36);
+            if (match$37) {
+              tmp$18 = match$37[0];
             } else {
               throw [
                     Graphql_error,
-                    "Expected string, got " + JSON.stringify(match$33)
+                    "Expected string, got " + JSON.stringify(match$36)
                   ];
             }
           } else {
@@ -391,12 +375,12 @@ function parse(value) {
                   "Field metadata on type Poll is missing"
                 ];
           }
-          var match$35 = value$1["votes"];
-          var tmp$18;
-          if (match$35 !== undefined) {
-            var match$36 = Js_json.decodeArray(match$35);
-            if (match$36) {
-              tmp$18 = match$36[0].map((function (value) {
+          var match$38 = value$1["votes"];
+          var tmp$19;
+          if (match$38 !== undefined) {
+            var match$39 = Js_json.decodeArray(match$38);
+            if (match$39) {
+              tmp$19 = match$39[0].map((function (value) {
                       var match = Js_json.decodeObject(value);
                       if (match) {
                         var value$1 = match[0];
@@ -436,12 +420,30 @@ function parse(value) {
                                 "Field voter on type Vote is missing"
                               ];
                         }
-                        var match$5 = value$1["choices"];
+                        var match$5 = value$1["voterStaked"];
                         var tmp$2;
                         if (match$5 !== undefined) {
-                          var match$6 = Js_json.decodeArray(match$5);
+                          var match$6 = Js_json.decodeNumber(match$5);
                           if (match$6) {
-                            tmp$2 = match$6[0].map((function (value) {
+                            tmp$2 = match$6[0] | 0;
+                          } else {
+                            throw [
+                                  Graphql_error,
+                                  "Expected int, got " + JSON.stringify(match$5)
+                                ];
+                          }
+                        } else {
+                          throw [
+                                Graphql_error,
+                                "Field voterStaked on type Vote is missing"
+                              ];
+                        }
+                        var match$7 = value$1["choices"];
+                        var tmp$3;
+                        if (match$7 !== undefined) {
+                          var match$8 = Js_json.decodeArray(match$7);
+                          if (match$8) {
+                            tmp$3 = match$8[0].map((function (value) {
                                     var match = Js_json.decodeNumber(value);
                                     if (match) {
                                       return match[0] | 0;
@@ -455,7 +457,7 @@ function parse(value) {
                           } else {
                             throw [
                                   Graphql_error,
-                                  "Expected array, got " + JSON.stringify(match$5)
+                                  "Expected array, got " + JSON.stringify(match$7)
                                 ];
                           }
                         } else {
@@ -464,16 +466,16 @@ function parse(value) {
                                 "Field choices on type Vote is missing"
                               ];
                         }
-                        var match$7 = value$1["blockNum"];
-                        var tmp$3;
-                        if (match$7 !== undefined) {
-                          var match$8 = Js_json.decodeNumber(match$7);
-                          if (match$8) {
-                            tmp$3 = match$8[0] | 0;
+                        var match$9 = value$1["blockNum"];
+                        var tmp$4;
+                        if (match$9 !== undefined) {
+                          var match$10 = Js_json.decodeNumber(match$9);
+                          if (match$10) {
+                            tmp$4 = match$10[0] | 0;
                           } else {
                             throw [
                                   Graphql_error,
-                                  "Expected int, got " + JSON.stringify(match$7)
+                                  "Expected int, got " + JSON.stringify(match$9)
                                 ];
                           }
                         } else {
@@ -482,25 +484,7 @@ function parse(value) {
                                 "Field blockNum on type Vote is missing"
                               ];
                         }
-                        var match$9 = value$1["blockTime"];
-                        var tmp$4;
-                        if (match$9 !== undefined) {
-                          var match$10 = Js_json.decodeString(match$9);
-                          if (match$10) {
-                            tmp$4 = match$10[0];
-                          } else {
-                            throw [
-                                  Graphql_error,
-                                  "Expected string, got " + JSON.stringify(match$9)
-                                ];
-                          }
-                        } else {
-                          throw [
-                                Graphql_error,
-                                "Field blockTime on type Vote is missing"
-                              ];
-                        }
-                        var match$11 = value$1["trxId"];
+                        var match$11 = value$1["blockTime"];
                         var tmp$5;
                         if (match$11 !== undefined) {
                           var match$12 = Js_json.decodeString(match$11);
@@ -515,10 +499,10 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
-                                "Field trxId on type Vote is missing"
+                                "Field blockTime on type Vote is missing"
                               ];
                         }
-                        var match$13 = value$1["metadata"];
+                        var match$13 = value$1["trxId"];
                         var tmp$6;
                         if (match$13 !== undefined) {
                           var match$14 = Js_json.decodeString(match$13);
@@ -533,17 +517,36 @@ function parse(value) {
                         } else {
                           throw [
                                 Graphql_error,
+                                "Field trxId on type Vote is missing"
+                              ];
+                        }
+                        var match$15 = value$1["metadata"];
+                        var tmp$7;
+                        if (match$15 !== undefined) {
+                          var match$16 = Js_json.decodeString(match$15);
+                          if (match$16) {
+                            tmp$7 = match$16[0];
+                          } else {
+                            throw [
+                                  Graphql_error,
+                                  "Expected string, got " + JSON.stringify(match$15)
+                                ];
+                          }
+                        } else {
+                          throw [
+                                Graphql_error,
                                 "Field metadata on type Vote is missing"
                               ];
                         }
                         return {
                                 id: tmp,
                                 voter: tmp$1,
-                                choices: tmp$2,
-                                blockNum: tmp$3,
-                                blockTime: tmp$4,
-                                trxId: tmp$5,
-                                metadata: tmp$6
+                                voterStaked: tmp$2,
+                                choices: tmp$3,
+                                blockNum: tmp$4,
+                                blockTime: tmp$5,
+                                trxId: tmp$6,
+                                metadata: tmp$7
                               };
                       } else {
                         throw [
@@ -555,7 +558,7 @@ function parse(value) {
             } else {
               throw [
                     Graphql_error,
-                    "Expected array, got " + JSON.stringify(match$35)
+                    "Expected array, got " + JSON.stringify(match$38)
                   ];
             }
           } else {
@@ -564,12 +567,12 @@ function parse(value) {
                   "Field votes on type Poll is missing"
                 ];
           }
-          var match$37 = value$1["comments"];
-          var tmp$19;
-          if (match$37 !== undefined) {
-            var match$38 = Js_json.decodeArray(match$37);
-            if (match$38) {
-              tmp$19 = match$38[0].map((function (value) {
+          var match$40 = value$1["comments"];
+          var tmp$20;
+          if (match$40 !== undefined) {
+            var match$41 = Js_json.decodeArray(match$40);
+            if (match$41) {
+              tmp$20 = match$41[0].map((function (value) {
                       var match = Js_json.decodeObject(value);
                       if (match) {
                         var value$1 = match[0];
@@ -699,7 +702,7 @@ function parse(value) {
             } else {
               throw [
                     Graphql_error,
-                    "Expected array, got " + JSON.stringify(match$37)
+                    "Expected array, got " + JSON.stringify(match$40)
                   ];
             }
           } else {
@@ -710,22 +713,24 @@ function parse(value) {
           }
           tmp$1 = {
             id: tmp$2,
-            pollId: tmp$3,
+            pollName: tmp$3,
             pollCreator: tmp$4,
             title: tmp$5,
             description: tmp$6,
             options: tmp$7,
             whitelist: tmp$8,
             blacklist: tmp$9,
-            openTime: tmp$10,
-            closeTime: tmp$11,
-            blockId: tmp$13,
-            blockNum: tmp$14,
-            blockTime: tmp$15,
-            trxId: tmp$16,
-            metadata: tmp$17,
-            votes: tmp$18,
-            comments: tmp$19
+            minChoices: tmp$10,
+            maxChoices: tmp$11,
+            openTime: tmp$12,
+            closeTime: tmp$13,
+            blockId: tmp$14,
+            blockNum: tmp$15,
+            blockTime: tmp$16,
+            trxId: tmp$17,
+            metadata: tmp$18,
+            votes: tmp$19,
+            comments: tmp$20
           };
         } else {
           throw [
@@ -835,7 +840,68 @@ var PollDataQuery = ReasonApollo.CreateQuery([
       parse
     ]);
 
-function make$1(context, accountName, pollId, _) {
+function reducer(action, state) {
+  var i = action[0];
+  var match = Belt_SetInt.has(state[/* choices */0], i);
+  return /* Update */Block.__(0, [/* record */[/* choices */match ? Belt_SetInt.remove(state[/* choices */0], i) : Belt_SetInt.add(state[/* choices */0], i)]]);
+}
+
+var component = ReasonReact.reducerComponent("PollPage");
+
+function renderOption(param, vote, i, option) {
+  var send = param[/* send */3];
+  var isSelected = Belt_SetInt.has(param[/* state */1][/* choices */0], i) || Js_option.getWithDefault(false, Js_option.map((function (vote) {
+              return vote.choices.includes(i);
+            }), vote));
+  var onClick = function () {
+    return Curry._1(send, /* ToggleChoice */[i]);
+  };
+  return React.createElement("li", {
+              key: String(i),
+              onClick: onClick
+            }, option, isSelected ? "(selected)" : "(unselected)");
+}
+
+function castVote(self, context, poll, _) {
+  var match = context[/* scatter */0];
+  if (match) {
+    Contract$ReactTemplate.fromScatter(match[0]).then((function (contract) {
+                return contract.vote({
+                            poll_creator: poll.pollCreator,
+                            poll_name: poll.pollName,
+                            voter: "alice",
+                            choices: Belt_SetInt.toArray(self[/* state */1][/* choices */0]),
+                            metadata: process.env.APP_LABEL
+                          }, {
+                            authorization: /* array */["alice@active"]
+                          });
+              })).then((function (result) {
+              console.log("Created", result);
+              Route$ReactTemplate.redirectTo(/* PollResults */Block.__(2, [
+                      poll.pollCreator,
+                      poll.pollName
+                    ]));
+              return Promise.resolve(/* () */0);
+            })).catch((function (error) {
+            console.log("Error voting", error);
+            return Promise.resolve(/* () */0);
+          }));
+    return /* () */0;
+  } else {
+    console.log("No scatter");
+    return /* () */0;
+  }
+}
+
+function getVote(context, poll) {
+  return Js_option.andThen((function (accountName) {
+                return Belt_Array.get(poll.votes.filter((function (v) {
+                                  return v.voter === accountName;
+                                })), 0);
+              }), Context$ReactTemplate.accountName(context));
+}
+
+function make$1(context, accountName, pollName, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -847,7 +913,7 @@ function make$1(context, accountName, pollId, _) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
-              var pollData = make(accountName, pollId, /* () */0);
+              var pollData = make(accountName, pollName, /* () */0);
               return ReasonReact.element(/* None */0, /* None */0, Curry.app(PollDataQuery[/* make */3], [
                               /* Some */[pollData.variables],
                               /* None */0,
@@ -866,22 +932,28 @@ function make$1(context, accountName, pollId, _) {
                                     var match = result[0].poll;
                                     if (match) {
                                       var poll = match[0];
+                                      var vote = getVote(context, poll);
+                                      var minChoices = poll.minChoices;
+                                      var maxChoices = poll.maxChoices;
+                                      var match$1 = minChoices === maxChoices;
+                                      var match$2 = vote === /* None */0;
                                       return React.createElement("div", {
                                                   className: TypedGlamor.toString(AppStyles$ReactTemplate.main)
                                                 }, React.createElement("h1", {
                                                       className: TypedGlamor.toString(CommonStyles$ReactTemplate.pageHeader)
                                                     }, poll.title), React.createElement("div", {
                                                       className: TypedGlamor.toString(CommonStyles$ReactTemplate.pagePrimaryBox)
-                                                    }, React.createElement("ol", undefined, $$Array.mapi((function (param, param$1) {
-                                                                return renderOption(self, param, param$1);
+                                                    }, React.createElement("p", undefined, match$1 ? "Select " + (String(minChoices) + " choices") : "Select " + (String(minChoices) + (" to " + (String(maxChoices) + " choices")))), React.createElement("ul", undefined, $$Array.mapi((function (param, param$1) {
+                                                                return renderOption(self, vote, param, param$1);
                                                               }), poll.options)), React.createElement("div", undefined, React.createElement("button", {
+                                                              className: TypedGlamor.toString(CommonStyles$ReactTemplate.button),
                                                               disabled: context[/* scatter */0] === /* None */0,
                                                               onClick: (function (param) {
                                                                   return castVote(self, context, poll, param);
                                                                 })
-                                                            }, "Vote"), ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* PollResults */Block.__(2, [
+                                                            }, match$2 ? "Vote" : "Change Vote"), ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* PollResults */Block.__(2, [
                                                                     poll.pollCreator,
-                                                                    poll.pollId
+                                                                    poll.pollName
                                                                   ]), /* None */0, /* array */["Results"])))));
                                     } else {
                                       return "Couldn't find poll";
@@ -902,11 +974,12 @@ function make$1(context, accountName, pollId, _) {
         ];
 }
 
+exports.PollData = PollData;
+exports.PollDataQuery = PollDataQuery;
 exports.reducer = reducer;
 exports.component = component;
 exports.renderOption = renderOption;
 exports.castVote = castVote;
-exports.PollData = PollData;
-exports.PollDataQuery = PollDataQuery;
+exports.getVote = getVote;
 exports.make = make$1;
-/* component Not a pure module */
+/* PollDataQuery Not a pure module */

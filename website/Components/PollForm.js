@@ -7,10 +7,12 @@ var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
 var Random = require("bs-platform/lib/js/random.js");
 var $$String = require("bs-platform/lib/js/string.js");
+var Belt_List = require("bs-platform/lib/js/belt_List.js");
 var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
+var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var Formality__Form = require("re-formality/src/Formality__Form.bs.js");
@@ -23,27 +25,33 @@ var Contract$ReactTemplate = require("../Contract.js");
 var Formality__PublicHelpers = require("re-formality/src/Formality__PublicHelpers.bs.js");
 var PollFormStyles$ReactTemplate = require("./Styles/PollFormStyles.js");
 
+function clamp(min, max, v) {
+  return Math.min(max, Math.max(min, v));
+}
+
 function get(field, state) {
   if (typeof field === "number") {
     switch (field) {
       case 0 : 
-          return /* String */Block.__(0, [state[/* pollId */0]]);
+          return /* String */Block.__(0, [state[/* pollName */0]]);
       case 1 : 
           return /* String */Block.__(0, [state[/* title */1]]);
       case 2 : 
           return /* String */Block.__(0, [state[/* description */2]]);
+      case 4 : 
+          return /* StringArray */Block.__(1, [state[/* options */3]]);
       case 5 : 
-          return /* String */Block.__(0, [state[/* whitelist */4]]);
+          return /* StringArray */Block.__(1, [state[/* whitelist */4]]);
       case 6 : 
-          return /* String */Block.__(0, [state[/* blacklist */5]]);
+          return /* StringArray */Block.__(1, [state[/* blacklist */5]]);
       case 7 : 
-          return /* Int */Block.__(1, [state[/* minChoices */6]]);
+          return /* Int */Block.__(3, [state[/* minChoices */6]]);
       case 8 : 
-          return /* Int */Block.__(1, [state[/* maxChoices */7]]);
+          return /* Int */Block.__(3, [state[/* maxChoices */7]]);
       case 9 : 
-          return /* String */Block.__(0, [state[/* openTime */8]]);
+          return /* Date */Block.__(2, [state[/* openTime */8]]);
       case 10 : 
-          return /* String */Block.__(0, [state[/* closeTime */9]]);
+          return /* Date */Block.__(2, [state[/* closeTime */9]]);
       default:
         return /* NoValue */0;
     }
@@ -64,7 +72,7 @@ function update(param, state) {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
             return /* record */[
-                    /* pollId */value[0],
+                    /* pollName */value[0],
                     /* title */state[/* title */1],
                     /* description */state[/* description */2],
                     /* options */state[/* options */3],
@@ -81,7 +89,7 @@ function update(param, state) {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
             return /* record */[
-                    /* pollId */state[/* pollId */0],
+                    /* pollName */state[/* pollName */0],
                     /* title */value[0],
                     /* description */state[/* description */2],
                     /* options */state[/* options */3],
@@ -98,7 +106,7 @@ function update(param, state) {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
             return /* record */[
-                    /* pollId */state[/* pollId */0],
+                    /* pollName */state[/* pollName */0],
                     /* title */state[/* title */1],
                     /* description */value[0],
                     /* options */state[/* options */3],
@@ -114,115 +122,213 @@ function update(param, state) {
           state[/* options */3].push("");
           return state;
       case 4 : 
-          return state;
+          var numOptions = state[/* options */3].length;
+          var minChoices = clamp(1, numOptions, state[/* minChoices */6]);
+          var maxChoices = clamp(1, numOptions, state[/* maxChoices */7]);
+          return /* record */[
+                  /* pollName */state[/* pollName */0],
+                  /* title */state[/* title */1],
+                  /* description */state[/* description */2],
+                  /* options */state[/* options */3],
+                  /* whitelist */state[/* whitelist */4],
+                  /* blacklist */state[/* blacklist */5],
+                  /* minChoices */minChoices,
+                  /* maxChoices */maxChoices,
+                  /* openTime */state[/* openTime */8],
+                  /* closeTime */state[/* closeTime */9]
+                ];
       case 5 : 
-          if (typeof value === "number" || value.tag) {
+          if (typeof value === "number") {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
-            return /* record */[
-                    /* pollId */state[/* pollId */0],
-                    /* title */state[/* title */1],
-                    /* description */state[/* description */2],
-                    /* options */state[/* options */3],
-                    /* whitelist */value[0],
-                    /* blacklist */state[/* blacklist */5],
-                    /* minChoices */state[/* minChoices */6],
-                    /* maxChoices */state[/* maxChoices */7],
-                    /* openTime */state[/* openTime */8],
-                    /* closeTime */state[/* closeTime */9]
-                  ];
+            switch (value.tag | 0) {
+              case 0 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */value[0].split(",").map((function (prim) {
+                                  return prim.trim();
+                                })),
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              case 1 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */value[0],
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              default:
+                return Pervasives.failwith("Config.update function received bad input");
+            }
           }
       case 6 : 
-          if (typeof value === "number" || value.tag) {
+          if (typeof value === "number") {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
-            return /* record */[
-                    /* pollId */state[/* pollId */0],
-                    /* title */state[/* title */1],
-                    /* description */state[/* description */2],
-                    /* options */state[/* options */3],
-                    /* whitelist */state[/* whitelist */4],
-                    /* blacklist */value[0],
-                    /* minChoices */state[/* minChoices */6],
-                    /* maxChoices */state[/* maxChoices */7],
-                    /* openTime */state[/* openTime */8],
-                    /* closeTime */state[/* closeTime */9]
-                  ];
+            switch (value.tag | 0) {
+              case 0 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */value[0].split(",").map((function (prim) {
+                                  return prim.trim();
+                                })),
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              case 1 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */value[0],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              default:
+                return Pervasives.failwith("Config.update function received bad input");
+            }
           }
       case 7 : 
-          if (typeof value === "number" || !value.tag) {
+          if (typeof value === "number" || value.tag !== 3) {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
+            var numOptions$1 = state[/* options */3].length;
+            var minChoices$1 = clamp(1, numOptions$1, value[0]);
+            var maxChoices$1 = clamp(minChoices$1, numOptions$1, state[/* maxChoices */7]);
             return /* record */[
-                    /* pollId */state[/* pollId */0],
+                    /* pollName */state[/* pollName */0],
                     /* title */state[/* title */1],
                     /* description */state[/* description */2],
                     /* options */state[/* options */3],
                     /* whitelist */state[/* whitelist */4],
                     /* blacklist */state[/* blacklist */5],
-                    /* minChoices */value[0],
-                    /* maxChoices */state[/* maxChoices */7],
+                    /* minChoices */minChoices$1,
+                    /* maxChoices */maxChoices$1,
                     /* openTime */state[/* openTime */8],
                     /* closeTime */state[/* closeTime */9]
                   ];
           }
       case 8 : 
-          if (typeof value === "number" || !value.tag) {
+          if (typeof value === "number" || value.tag !== 3) {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
+            var numOptions$2 = state[/* options */3].length;
+            var maxChoices$2 = clamp(1, numOptions$2, value[0]);
+            var minChoices$2 = clamp(1, maxChoices$2, state[/* minChoices */6]);
             return /* record */[
-                    /* pollId */state[/* pollId */0],
+                    /* pollName */state[/* pollName */0],
                     /* title */state[/* title */1],
                     /* description */state[/* description */2],
                     /* options */state[/* options */3],
                     /* whitelist */state[/* whitelist */4],
                     /* blacklist */state[/* blacklist */5],
-                    /* minChoices */state[/* minChoices */6],
-                    /* maxChoices */value[0],
+                    /* minChoices */minChoices$2,
+                    /* maxChoices */maxChoices$2,
                     /* openTime */state[/* openTime */8],
                     /* closeTime */state[/* closeTime */9]
                   ];
           }
       case 9 : 
-          if (typeof value === "number" || value.tag) {
+          if (typeof value === "number") {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
-            return /* record */[
-                    /* pollId */state[/* pollId */0],
-                    /* title */state[/* title */1],
-                    /* description */state[/* description */2],
-                    /* options */state[/* options */3],
-                    /* whitelist */state[/* whitelist */4],
-                    /* blacklist */state[/* blacklist */5],
-                    /* minChoices */state[/* minChoices */6],
-                    /* maxChoices */state[/* maxChoices */7],
-                    /* openTime */value[0],
-                    /* closeTime */state[/* closeTime */9]
-                  ];
+            switch (value.tag | 0) {
+              case 0 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */new Date(value[0]),
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              case 2 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */value[0],
+                          /* closeTime */state[/* closeTime */9]
+                        ];
+              default:
+                return Pervasives.failwith("Config.update function received bad input");
+            }
           }
       case 10 : 
-          if (typeof value === "number" || value.tag) {
+          if (typeof value === "number") {
             return Pervasives.failwith("Config.update function received bad input");
           } else {
-            return /* record */[
-                    /* pollId */state[/* pollId */0],
-                    /* title */state[/* title */1],
-                    /* description */state[/* description */2],
-                    /* options */state[/* options */3],
-                    /* whitelist */state[/* whitelist */4],
-                    /* blacklist */state[/* blacklist */5],
-                    /* minChoices */state[/* minChoices */6],
-                    /* maxChoices */state[/* maxChoices */7],
-                    /* openTime */state[/* openTime */8],
-                    /* closeTime */value[0]
-                  ];
+            switch (value.tag | 0) {
+              case 0 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */new Date(value[0])
+                        ];
+              case 2 : 
+                  return /* record */[
+                          /* pollName */state[/* pollName */0],
+                          /* title */state[/* title */1],
+                          /* description */state[/* description */2],
+                          /* options */state[/* options */3],
+                          /* whitelist */state[/* whitelist */4],
+                          /* blacklist */state[/* blacklist */5],
+                          /* minChoices */state[/* minChoices */6],
+                          /* maxChoices */state[/* maxChoices */7],
+                          /* openTime */state[/* openTime */8],
+                          /* closeTime */value[0]
+                        ];
+              default:
+                return Pervasives.failwith("Config.update function received bad input");
+            }
           }
+      case 11 : 
+          return state;
       
     }
   } else if (field.tag) {
     var index = field[0];
     return /* record */[
-            /* pollId */state[/* pollId */0],
+            /* pollName */state[/* pollName */0],
             /* title */state[/* title */1],
             /* description */state[/* description */2],
             /* options */state[/* options */3].filter((function (_, i) {
@@ -257,15 +363,38 @@ var baseValidators = Curry._3(Validators[/* add */3], /* Description */2, /* rec
           /* validate */Forms$ReactTemplate.isRequired
         ], Validators[/* empty */0]));
 
-var validators = Belt_Array.reduce(Belt_Array.range(0, 100), baseValidators, (function (result, i) {
-        return Curry._3(Validators[/* add */3], /* Option */Block.__(0, [i]), /* record */[
-                    /* strategy : OnFirstChange */1,
-                    /* dependents : None */0,
-                    /* validate */(function (param, param$1) {
-                        return Forms$ReactTemplate.atMost(80, param, param$1);
-                      })
-                  ], result);
-      }));
+var validators = Curry._3(Validators[/* add */3], /* Options */4, /* record */[
+      /* strategy : OnFirstChange */1,
+      /* dependents : Some */[Belt_List.fromArray(Belt_Array.range(0, 100).map((function (i) {
+                    return /* Option */Block.__(0, [i]);
+                  })))],
+      /* validate */(function (value, _) {
+          if (typeof value === "number") {
+            console.log("WTF?????", value);
+            return Pervasives.failwith("options validator received bad input");
+          } else if (value.tag === 1) {
+            var numOptions = value[0].filter((function (v) {
+                    return v.trim() !== "";
+                  })).length;
+            if (numOptions < 2) {
+              return /* Invalid */["Must have at least 2 or more options"];
+            } else {
+              return /* Valid */0;
+            }
+          } else {
+            console.log("WTF?????", value);
+            return Pervasives.failwith("options validator received bad input");
+          }
+        })
+    ], Belt_Array.reduce(Belt_Array.range(0, 100), baseValidators, (function (result, i) {
+            return Curry._3(Validators[/* add */3], /* Option */Block.__(0, [i]), /* record */[
+                        /* strategy : OnFirstChange */1,
+                        /* dependents : None */0,
+                        /* validate */(function (param, param$1) {
+                            return Forms$ReactTemplate.atMost(80, param, param$1);
+                          })
+                      ], result);
+          })));
 
 var Form = /* module */[
   /* valueEmpty */Forms$ReactTemplate.valueEmpty,
@@ -299,7 +428,110 @@ var component = ReasonReact.statelessComponent("PollForm-ReactTemplate");
 
 Random.self_init(/* () */0);
 
-function make(context, _) {
+function isValid(result) {
+  if (result && result[0]) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+var component$1 = ReasonReact.statelessComponent("PollForm-ReactTemplate");
+
+function make(form, field, children) {
+  return /* record */[
+          /* debugName */component$1[/* debugName */0],
+          /* reactClassInternal */component$1[/* reactClassInternal */1],
+          /* handedOffState */component$1[/* handedOffState */2],
+          /* willReceiveProps */component$1[/* willReceiveProps */3],
+          /* didMount */component$1[/* didMount */4],
+          /* didUpdate */component$1[/* didUpdate */5],
+          /* willUnmount */component$1[/* willUnmount */6],
+          /* willUpdate */component$1[/* willUpdate */7],
+          /* shouldUpdate */component$1[/* shouldUpdate */8],
+          /* render */(function () {
+              var results = Curry._1(form[/* results */2], field);
+              var tmp;
+              if (results) {
+                var match = results[0];
+                tmp = match ? React.createElement("div", {
+                        className: TypedGlamor.toString(PollFormStyles$ReactTemplate.invalid)
+                      }, Icon$ReactTemplate.exclamation, match[0]) : React.createElement("div", {
+                        className: TypedGlamor.toString(PollFormStyles$ReactTemplate.valid)
+                      }, Icon$ReactTemplate.checkCircle);
+              } else {
+                tmp = null;
+              }
+              return React.createElement("div", {
+                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.field)
+                        }, Curry._1(children, results), tmp);
+            }),
+          /* initialState */component$1[/* initialState */10],
+          /* retainedProps */component$1[/* retainedProps */11],
+          /* reducer */component$1[/* reducer */12],
+          /* subscriptions */component$1[/* subscriptions */13],
+          /* jsElementWrapped */component$1[/* jsElementWrapped */14]
+        ];
+}
+
+var Field = /* module */[
+  /* component */component$1,
+  /* make */make
+];
+
+function renderOption(form, optionsResults, i, value) {
+  var field = /* Option */Block.__(0, [i]);
+  return ReasonReact.element(/* None */0, /* None */0, make(form, field, (function (results) {
+                    var valid = isValid(results) && isValid(optionsResults);
+                    var tmp;
+                    if (optionsResults) {
+                      var match = optionsResults[0];
+                      tmp = match ? match[0] : "Poll option...";
+                    } else {
+                      tmp = "Poll option...";
+                    }
+                    var match$1 = form[/* state */0][/* options */3].length > 2;
+                    return React.createElement("div", {
+                                key: String(i),
+                                className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionField(valid))
+                              }, React.createElement("span", {
+                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionNum)
+                                  }, String(i + 1 | 0)), React.createElement("input", {
+                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionInput(valid)),
+                                    autoComplete: "off",
+                                    placeholder: tmp,
+                                    value: value,
+                                    onFocus: (function () {
+                                        var lastOption = form[/* state */0][/* options */3].length - 1 | 0;
+                                        if (i >= lastOption) {
+                                          return Curry._2(form[/* change */4], /* AddOption */3, /* NoValue */0);
+                                        } else {
+                                          return 0;
+                                        }
+                                      }),
+                                    onChange: (function ($$event) {
+                                        Curry._2(form[/* change */4], field, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                        if (optionsResults && optionsResults[0]) {
+                                          return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
+                                        } else {
+                                          return /* () */0;
+                                        }
+                                      })
+                                  }), match$1 ? React.createElement("a", {
+                                      className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionRemove),
+                                      onClick: (function () {
+                                          Curry._2(form[/* change */4], /* DelOption */Block.__(1, [i]), /* NoValue */0);
+                                          if (optionsResults && optionsResults[0]) {
+                                            return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
+                                          } else {
+                                            return /* () */0;
+                                          }
+                                        })
+                                    }, Icon$ReactTemplate.minusSquare) : "");
+                  })));
+}
+
+function make$1(context, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -312,7 +544,7 @@ function make(context, _) {
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function () {
               return ReasonReact.element(/* None */0, /* None */0, Curry._3(Container[/* make */8], /* record */[
-                              /* pollId */"",
+                              /* pollName */Eos$ReactTemplate.Name[/* random */4](/* () */0),
                               /* title */"",
                               /* description */"",
                               /* options : array */[
@@ -320,25 +552,23 @@ function make(context, _) {
                                 "",
                                 ""
                               ],
-                              /* whitelist */"",
-                              /* blacklist */"",
+                              /* whitelist : array */[],
+                              /* blacklist : array */[],
                               /* minChoices */1,
                               /* maxChoices */1,
-                              /* openTime */"",
-                              /* closeTime */""
+                              /* openTime */new Date(),
+                              /* closeTime */new Date(Date.now() + 60 * 60 * 24 * 1000)
                             ], (function (state, _) {
                                 console.log("Called with:", state);
-                                var match = $$String.trim(state[/* pollId */0]).length === 0;
-                                var pollId = match ? Eos$ReactTemplate.Name[/* random */4](/* () */0) : state[/* pollId */0];
-                                var match$1 = context[/* scatter */0];
-                                var match$2 = context[/* identity */1];
-                                if (match$1) {
-                                  if (match$2) {
-                                    var pollCreator = Caml_array.caml_array_get(match$2[0].accounts, 0).name;
-                                    Contract$ReactTemplate.fromScatter(match$1[0]).then((function (contract) {
+                                var match = context[/* scatter */0];
+                                var match$1 = context[/* identity */1];
+                                if (match) {
+                                  if (match$1) {
+                                    var pollCreator = Caml_array.caml_array_get(match$1[0].accounts, 0).name;
+                                    Contract$ReactTemplate.fromScatter(match[0]).then((function (contract) {
                                               return contract.create({
                                                           poll_creator: pollCreator,
-                                                          poll_id: pollId,
+                                                          poll_name: state[/* pollName */0],
                                                           title: state[/* title */1],
                                                           description: state[/* description */2],
                                                           options: state[/* options */3].filter((function (o) {
@@ -358,7 +588,7 @@ function make(context, _) {
                                             return Promise.resolve(setTimeout((function () {
                                                               ReasonReact.Router[/* push */0](Route$ReactTemplate.toString(/* Poll */Block.__(1, [
                                                                           pollCreator,
-                                                                          pollId
+                                                                          state[/* pollName */0]
                                                                         ])));
                                                               return /* () */0;
                                                             }), 1000));
@@ -375,18 +605,6 @@ function make(context, _) {
                               }), (function (form) {
                                 var partial_arg = form[/* submit */6];
                                 var partial_arg$1 = Formality__PublicHelpers.Dom[/* preventDefault */6];
-                                var match = Curry._1(form[/* results */2], /* Title */1);
-                                var tmp;
-                                if (match) {
-                                  var match$1 = match[0];
-                                  tmp = match$1 ? React.createElement("div", {
-                                          className: "failure"
-                                        }, match$1[0]) : React.createElement("div", {
-                                          className: "success"
-                                        }, "✓");
-                                } else {
-                                  tmp = null;
-                                }
                                 return React.createElement("form", {
                                             className: TypedGlamor.toString(PollFormStyles$ReactTemplate.container),
                                             onSubmit: (function (param) {
@@ -394,61 +612,115 @@ function make(context, _) {
                                               })
                                           }, React.createElement("div", {
                                                 className: TypedGlamor.toString(PollFormStyles$ReactTemplate.fields)
-                                              }, React.createElement("div", {
-                                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.titleField)
-                                                  }, React.createElement("input", {
-                                                        className: TypedGlamor.toString(PollFormStyles$ReactTemplate.titleInput),
-                                                        autoComplete: "off",
-                                                        autoFocus: true,
-                                                        disabled: form[/* submitting */3],
-                                                        placeholder: "Title of your poll...",
-                                                        value: form[/* state */0][/* title */1],
-                                                        onBlur: (function ($$event) {
-                                                            return Curry._2(form[/* blur */5], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                          }),
-                                                        onChange: (function ($$event) {
-                                                            return Curry._2(form[/* change */4], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                          })
-                                                      }), tmp), React.createElement("div", undefined, $$Array.mapi((function (i, value) {
-                                                          var match = form[/* state */0][/* options */3].length > 2;
-                                                          var match$1 = Curry._1(form[/* results */2], /* Option */Block.__(0, [i]));
+                                              }, ReasonReact.element(/* None */0, /* None */0, make(form, /* Title */1, (function (results) {
                                                           var tmp;
-                                                          if (match$1) {
-                                                            var match$2 = match$1[0];
-                                                            tmp = match$2 ? React.createElement("div", {
-                                                                    className: "failure"
-                                                                  }, match$2[0]) : React.createElement("div", {
-                                                                    className: "success"
-                                                                  }, "✓");
+                                                          if (results) {
+                                                            var match = results[0];
+                                                            tmp = match ? match[0] : "Title of your poll...";
                                                           } else {
-                                                            tmp = null;
+                                                            tmp = "Title of your poll...";
                                                           }
-                                                          return React.createElement("div", {
-                                                                      key: String(i),
-                                                                      className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionField)
-                                                                    }, React.createElement("span", {
-                                                                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionNum)
-                                                                        }, String(i + 1 | 0), "."), React.createElement("input", {
-                                                                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionInput),
+                                                          return React.createElement("div", undefined, React.createElement("input", {
+                                                                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.titleInput(isValid(results))),
                                                                           autoComplete: "off",
-                                                                          placeholder: "Poll option...",
-                                                                          value: value,
-                                                                          onFocus: (function () {
-                                                                              var lastOption = form[/* state */0][/* options */3].length - 1 | 0;
-                                                                              var match = i >= lastOption;
-                                                                              var field = match ? /* AddOption */3 : /* Options */4;
-                                                                              return Curry._2(form[/* change */4], field, /* NoValue */0);
+                                                                          autoFocus: true,
+                                                                          disabled: form[/* submitting */3],
+                                                                          placeholder: tmp,
+                                                                          value: form[/* state */0][/* title */1],
+                                                                          onBlur: (function ($$event) {
+                                                                              return Curry._2(form[/* blur */5], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
                                                                             }),
                                                                           onChange: (function ($$event) {
-                                                                              return Curry._2(form[/* change */4], /* Option */Block.__(0, [i]), /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                              return Curry._2(form[/* change */4], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
                                                                             })
-                                                                        }), match ? React.createElement("a", {
-                                                                            className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionRemove),
-                                                                            onClick: (function () {
-                                                                                return Curry._2(form[/* change */4], /* DelOption */Block.__(1, [i]), /* NoValue */0);
-                                                                              })
-                                                                          }, Icon$ReactTemplate.minusSquare) : "", tmp);
-                                                        }), form[/* state */0][/* options */3])), React.createElement("button", {
+                                                                        }));
+                                                        }))), ReasonReact.element(/* None */0, /* None */0, make(form, /* Options */4, (function (results) {
+                                                          return React.createElement("div", undefined, $$Array.mapi((function (param, param$1) {
+                                                                            return renderOption(form, results, param, param$1);
+                                                                          }), form[/* state */0][/* options */3]));
+                                                        }))), React.createElement("div", {
+                                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.advancedFields)
+                                                  }, React.createElement("div", undefined, React.createElement("label", {
+                                                            className: "label-lg",
+                                                            htmlFor: "signup--title"
+                                                          }, "Min choices"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            type: "number",
+                                                            value: String(form[/* state */0][/* minChoices */6]),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
+                                                              })
+                                                          })), React.createElement("div", undefined, React.createElement("label", {
+                                                            className: "label-lg",
+                                                            htmlFor: "signup--title"
+                                                          }, "Max choices"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            type: "number",
+                                                            value: String(form[/* state */0][/* maxChoices */7]),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
+                                                              })
+                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Open time"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            type: "datetime-local",
+                                                            value: form[/* state */0][/* openTime */8].toISOString().slice(0, -1),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                              })
+                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Close time"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            type: "datetime-local",
+                                                            value: form[/* state */0][/* closeTime */9].toISOString().slice(0, -1),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                              })
+                                                          })), React.createElement("div", {
+                                                        className: "form-row"
+                                                      }, React.createElement("label", {
+                                                            className: "label-lg",
+                                                            htmlFor: "signup--title"
+                                                          }, "Poll Name"), React.createElement("input", {
+                                                            id: "signup--title",
+                                                            disabled: form[/* submitting */3],
+                                                            type: "text",
+                                                            value: form[/* state */0][/* pollName */0],
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                              })
+                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Whitelist"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            value: form[/* state */0][/* whitelist */4].join(", "),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                              })
+                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Blacklist"), React.createElement("input", {
+                                                            disabled: form[/* submitting */3],
+                                                            value: form[/* state */0][/* blacklist */5].join(", "),
+                                                            onBlur: (function ($$event) {
+                                                                return Curry._2(form[/* blur */5], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                              }),
+                                                            onChange: (function ($$event) {
+                                                                return Curry._2(form[/* change */4], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                              })
+                                                          }))), React.createElement("button", {
                                                     className: TypedGlamor.toString(PollFormStyles$ReactTemplate.submitButton),
                                                     type: "submit"
                                                   }, "Create Poll")));
@@ -465,8 +737,12 @@ function make(context, _) {
 var Cn = 0;
 
 exports.Cn = Cn;
+exports.clamp = clamp;
 exports.Form = Form;
 exports.Container = Container;
 exports.component = component;
-exports.make = make;
+exports.isValid = isValid;
+exports.Field = Field;
+exports.renderOption = renderOption;
+exports.make = make$1;
 /* Validators Not a pure module */

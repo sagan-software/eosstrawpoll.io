@@ -39,7 +39,7 @@ var cog = React.createElement("svg", {
           d: "M9 4.58V4c0-1.1.9-2 2-2h2a2 2 0 0 1 2 2v.58a8 8 0 0 1 1.92 1.11l.5-.29a2 2 0 0 1 2.74.73l1 1.74a2 2 0 0 1-.73 2.73l-.5.29a8.06 8.06 0 0 1 0 2.22l.5.3a2 2 0 0 1 .73 2.72l-1 1.74a2 2 0 0 1-2.73.73l-.5-.3A8 8 0 0 1 15 19.43V20a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-.58a8 8 0 0 1-1.92-1.11l-.5.29a2 2 0 0 1-2.74-.73l-1-1.74a2 2 0 0 1 .73-2.73l.5-.29a8.06 8.06 0 0 1 0-2.22l-.5-.3a2 2 0 0 1-.73-2.72l1-1.74a2 2 0 0 1 2.73-.73l.5.3A8 8 0 0 1 9 4.57zM7.88 7.64l-.54.51-1.77-1.02-1 1.74 1.76 1.01-.17.73a6.02 6.02 0 0 0 0 2.78l.17.73-1.76 1.01 1 1.74 1.77-1.02.54.51a6 6 0 0 0 2.4 1.4l.72.2V20h2v-2.04l.71-.2a6 6 0 0 0 2.41-1.4l.54-.51 1.77 1.02 1-1.74-1.76-1.01.17-.73a6.02 6.02 0 0 0 0-2.78l-.17-.73 1.76-1.01-1-1.74-1.77 1.02-.54-.51a6 6 0 0 0-2.4-1.4l-.72-.2V4h-2v2.04l-.71.2a6 6 0 0 0-2.41 1.4zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"
         }));
 
-var exclamation = React.createElement("svg", {
+React.createElement("svg", {
       height: "24",
       width: "24",
       viewBox: "0 0 24 24",
@@ -89,13 +89,32 @@ var logout = React.createElement("svg", {
           points: "63.93 37.25 73.31 46.5 32.54 46.5 32.54 54.5 73.31 54.5 63.93 63.75 69.54 69.45 88.76 50.5 69.54 31.55 63.93 37.25"
         }));
 
+var checkCircle = React.createElement("svg", {
+      height: "24",
+      width: "24",
+      viewBox: "0 0 24 24",
+      xmlns: "http://www.w3.org/2000/svg"
+    }, React.createElement("path", {
+          d: "M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-2.3-8.7l1.3 1.29 3.3-3.3a1 1 0 0 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-2-2a1 1 0 0 1 1.4-1.42z"
+        }));
+
+var exclamation = React.createElement("svg", {
+      height: "24",
+      width: "24",
+      viewBox: "0 0 24 24",
+      xmlns: "http://www.w3.org/2000/svg"
+    }, React.createElement("path", {
+          d: "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 9a1 1 0 0 1-1-1V8a1 1 0 0 1 2 0v4a1 1 0 0 1-1 1zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+        }));
+
 exports.minusSquare = minusSquare;
 exports.plusSquare = plusSquare;
 exports.thumbUp = thumbUp;
 exports.cog = cog;
-exports.exclamation = exclamation;
 exports.emotionHappy = emotionHappy;
 exports.emotionSad = emotionSad;
 exports.eos = eos;
 exports.logout = logout;
+exports.checkCircle = checkCircle;
+exports.exclamation = exclamation;
 /* minusSquare Not a pure module */

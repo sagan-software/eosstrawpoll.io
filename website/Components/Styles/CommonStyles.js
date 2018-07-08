@@ -73,13 +73,25 @@ var pagePrimaryBox = TypedGlamor.css(/* None */0, /* :: */[
           TypedGlamor.padding(TypedGlamor.rem(4)),
           /* :: */[
             TypedGlamor.border3(TypedGlamor.rem(0.1), TypedGlamor.solid, TypedGlamor.hex("e6e6e6")),
-            /* [] */0
+            /* :: */[
+              TypedGlamor.unsafe("boxShadow", "0 5px 15px -2px rgba(0, 0, 0, 0.25)"),
+              /* [] */0
+            ]
           ]
         ]
       ]
     ]);
 
-var pageSecondaryBox = TypedGlamor.css(/* None */0, /* [] */0);
+var pageSecondaryBox = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.backgroundColor(TypedGlamor.white),
+      /* :: */[
+        TypedGlamor.borderRadius(Theme$ReactTemplate.borderRadius),
+        /* :: */[
+          TypedGlamor.border3(TypedGlamor.rem(0.1), TypedGlamor.solid, TypedGlamor.hex("e6e6e6")),
+          /* [] */0
+        ]
+      ]
+    ]);
 
 var _global = GlobalStyles$ReactTemplate._global;
 

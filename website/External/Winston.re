@@ -37,9 +37,17 @@ let console = (~format) => Transports.Console.make({"format": format});
 type t;
 
 [@bs.module "winston"]
-external make_ : {. "transports": array(Transports.t)} => t = "createLogger";
+external make_ :
+  {
+    .
+    "level": string,
+    "transports": array(Transports.t),
+  } =>
+  t =
+  "createLogger";
 
-let make = transports => make_({"transports": transports});
+let make = (~level, ~transports) =>
+  make_({"level": level, "transports": transports});
 
 [@bs.send] external debug : (t, string, 'data) => unit = "";
 

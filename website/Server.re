@@ -11,14 +11,17 @@ module GraphQlServer = Server_GraphQlServer;
 module WebServer = Server_WebServer;
 
 let logger =
-  Winston.make([|
-    Winston.console(
-      ~format=
-        Winston.Format.(
-          combine([|timestamp(), ms(), metadata(), cli(), simple()|])
-        ),
-    ),
-  |]);
+  Winston.make(
+    ~level="debug",
+    ~transports=[|
+      Winston.console(
+        ~format=
+          Winston.Format.(
+            combine([|timestamp(), ms(), metadata(), cli(), simple()|])
+          ),
+      ),
+    |],
+  );
 
 logger |. Winston.info("Starting server...", ());
 
@@ -34,18 +37,23 @@ let promiseToResult = promise =>
 Env.mongoUri
 |> Mongo.Client.make
 |> promiseToResult
-|> Js.Promise.then_(mongo => {
+|> Js.Promise.then_(mongo =>
      switch (mongo) {
      | Belt.Result.Ok(mongo) =>
        logger |. Winston.info("Connected to MongoDB", Env.mongoUri);
        let schema = GraphQlSchema.make(~mongo);
        let apolloClient = GraphQlServer.makeApolloClient(~schema);
-       DataProcessor.start(~mongo, ~logger) |> ignore;
-       WebServer.start(~apolloClient, ~schema, ~logger) |> ignore;
-       DataGenerator.start(~mongo, ~logger) |> ignore;
+       mongo
+       |. Database.Polls.collection
+       |. Mongo.Collection.createIndex({"id": (-1)})
+       |> Js.Promise.then_(_result => {
+            DataProcessor.start(~mongo, ~logger) |> ignore;
+            WebServer.start(~apolloClient, ~schema, ~logger) |> ignore;
+            DataGenerator.start(~mongo, ~logger) |> ignore;
+            Js.Promise.resolve();
+          });
      | Belt.Result.Error(err) =>
        logger |. Winston.error("Error connecting to MongoDB", err);
-       Node.Process.exit(1);
-     };
-     Js.Promise.resolve();
-   });
+       Node.Process.exit(1) |> Js.Promise.resolve;
+     }
+   );

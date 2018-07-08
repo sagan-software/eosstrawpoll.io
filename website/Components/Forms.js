@@ -55,19 +55,24 @@ function stringLength(str) {
 function atLeast(num, value, _) {
   if (typeof value === "number") {
     return Pervasives.failwith("atLeast validator received bad input");
-  } else if (value.tag) {
-    var match = value[0] <= num;
-    if (match) {
-      return /* Valid */0;
-    } else {
-      return /* Invalid */["Must be " + (String(num) + " or more.")];
-    }
   } else {
-    var match$1 = $$String.trim(value[0]).length >= num;
-    if (match$1) {
-      return /* Valid */0;
-    } else {
-      return /* Invalid */["Must be " + (String(num) + " characters or more.")];
+    switch (value.tag | 0) {
+      case 0 : 
+          var match = $$String.trim(value[0]).length >= num;
+          if (match) {
+            return /* Valid */0;
+          } else {
+            return /* Invalid */["Must be " + (String(num) + " characters or more.")];
+          }
+      case 3 : 
+          var match$1 = value[0] <= num;
+          if (match$1) {
+            return /* Valid */0;
+          } else {
+            return /* Invalid */["Must be " + (String(num) + " or more.")];
+          }
+      default:
+        return Pervasives.failwith("atLeast validator received bad input");
     }
   }
 }
@@ -75,19 +80,24 @@ function atLeast(num, value, _) {
 function atMost(num, value, _) {
   if (typeof value === "number") {
     return Pervasives.failwith("atMost validator received bad input");
-  } else if (value.tag) {
-    var match = value[0] >= num;
-    if (match) {
-      return /* Valid */0;
-    } else {
-      return /* Invalid */["Must be " + (String(num) + " or less.")];
-    }
   } else {
-    var match$1 = $$String.trim(value[0]).length <= num;
-    if (match$1) {
-      return /* Valid */0;
-    } else {
-      return /* Invalid */["Must be " + (String(num) + " characters or less.")];
+    switch (value.tag | 0) {
+      case 0 : 
+          var match = $$String.trim(value[0]).length <= num;
+          if (match) {
+            return /* Valid */0;
+          } else {
+            return /* Invalid */["Must be " + (String(num) + " characters or less.")];
+          }
+      case 3 : 
+          var match$1 = value[0] >= num;
+          if (match$1) {
+            return /* Valid */0;
+          } else {
+            return /* Invalid */["Must be " + (String(num) + " or less.")];
+          }
+      default:
+        return Pervasives.failwith("atMost validator received bad input");
     }
   }
 }

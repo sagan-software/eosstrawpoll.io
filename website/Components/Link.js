@@ -6,12 +6,12 @@ var Route$ReactTemplate = require("./Route.js");
 
 var component = ReasonReact.statelessComponent("Link");
 
-function handleClick(href, $$event) {
+function handleClick(route, $$event) {
   if ($$event.defaultPrevented) {
     return 0;
   } else {
     $$event.preventDefault();
-    return ReasonReact.Router[/* push */0](href);
+    return Route$ReactTemplate.redirectTo(route);
   }
 }
 
@@ -28,12 +28,11 @@ function make(route, $staropt$star, children) {
           /* willUpdate */component[/* willUpdate */7],
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function () {
-              var partial_arg = Route$ReactTemplate.toString(route);
               return ReasonReact.createDomElement("a", {
                           href: Route$ReactTemplate.toString(route),
                           className: className,
                           onClick: (function (param) {
-                              return handleClick(partial_arg, param);
+                              return handleClick(route, param);
                             })
                         }, children);
             }),

@@ -1,5 +1,39 @@
 #include "eosstrawpoll.hpp"
 
+constexpr uint8_t MIN_ID_LENGTH = 1;
+constexpr uint8_t MAX_ID_LENGTH = 12;
+constexpr uint16_t MAX_TITLE_LENGTH = 100;
+constexpr uint32_t MAX_DESCRIPTION_LENGTH = 2000;
+constexpr uint16_t MAX_OPTIONS_SIZE = 100;
+constexpr uint16_t MAX_OPTION_LENGTH = 280;
+constexpr uint16_t MAX_ACCOUNT_LIST_SIZE = 500;
+constexpr uint16_t MIN_POLL_AGE_SECONDS = 60;
+constexpr uint16_t MAX_METADATA_LENGTH = 300;
+constexpr uint16_t MAX_COMMENT_LENGTH = 1000;
+
+// @abi table polls i64
+struct poll_t
+{
+    uuid poll_name;
+    uint16_t num_options;
+    uint16_t min_choices;
+    uint16_t max_choices;
+    vector<account_name> whitelist;
+    vector<account_name> blacklist;
+    timestamp open_time;
+    timestamp close_time;
+
+    uuid primary_key() const { return poll_name; }
+
+    bool has_opened() const { return open_time == 0 || open_time <= now(); }
+
+    bool is_closed() const { return close_time > 0 && close_time <= now(); }
+
+    EOSLIB_SERIALIZE(poll_t, (poll_name)(num_options)(min_choices)(max_choices)(whitelist)(blacklist)(open_time)(close_time))
+};
+
+typedef eosio::multi_index<N(polls), poll_t> polls_index;
+
 template <typename T>
 bool has_duplicates(const vector<T> &items)
 {
@@ -23,7 +57,7 @@ void validate_metadata(const string &metadata)
 // @abi action
 void eosstrawpoll::create(
     const account_name poll_creator,
-    const uuid poll_id,
+    const uuid poll_name,
     const string &title,
     const string &description,
     const vector<string> &options,
@@ -40,10 +74,10 @@ void eosstrawpoll::create(
     validate_metadata(metadata);
 
     {
-        const string poll_id_str = eosio::name{poll_id}.to_string();
-        const auto poll_id_length = poll_id_str.length();
-        eosio_assert(poll_id_length >= MIN_ID_LENGTH, "poll_id must be at least 1 character long");
-        eosio_assert(poll_id_length <= MAX_ID_LENGTH, "poll_id must be 12 characters or less");
+        const string poll_name_str = eosio::name{poll_name}.to_string();
+        const auto poll_name_length = poll_name_str.length();
+        eosio_assert(poll_name_length >= MIN_ID_LENGTH, "poll_name must be at least 1 character long");
+        eosio_assert(poll_name_length <= MAX_ID_LENGTH, "poll_name must be 12 characters or less");
     }
 
     const uint16_t num_options = options.size();
@@ -74,11 +108,11 @@ void eosstrawpoll::create(
     polls_index polls(_self, poll_creator);
 
     // check if poll exists
-    auto existing_poll = polls.find(poll_id);
+    auto existing_poll = polls.find(poll_name);
     eosio_assert(existing_poll == polls.end(), "poll already exists with this id");
 
     auto poll = polls.emplace(poll_creator, [&](auto &p) {
-        p.id = poll_id;
+        p.poll_name = poll_name;
         p.num_options = num_options;
         p.min_choices = min_choices;
         p.max_choices = max_choices;
@@ -91,13 +125,13 @@ void eosstrawpoll::create(
     eosio::print(
         "success: action=create",
         ", poll_creator=", eosio::name{poll_creator},
-        ", poll_id=", eosio::name{poll_id});
+        ", poll_name=", eosio::name{poll_name});
 }
 
 // @abi action
 void eosstrawpoll::close(
     const account_name poll_creator,
-    const uuid poll_id,
+    const uuid poll_name,
     const string &metadata)
 {
     require_auth(poll_creator);
@@ -106,7 +140,7 @@ void eosstrawpoll::close(
 
     // check if poll exists
     polls_index polls(_self, poll_creator);
-    auto poll = polls.find(poll_id);
+    auto poll = polls.find(poll_name);
     eosio_assert(poll != polls.end(), "poll doesn't exist");
 
     polls.erase(poll);
@@ -114,13 +148,13 @@ void eosstrawpoll::close(
     eosio::print(
         "success: action=close",
         ", poll_creator=", eosio::name{poll_creator},
-        ", poll_id=", eosio::name{poll_id});
+        ", poll_name=", eosio::name{poll_name});
 }
 
 // @abi action
 void eosstrawpoll::vote(
     const account_name poll_creator,
-    const uuid poll_id,
+    const uuid poll_name,
     const account_name voter,
     const vector<uint16_t> &choices,
     const string &metadata)
@@ -131,7 +165,7 @@ void eosstrawpoll::vote(
 
     // check if poll exists
     polls_index polls(_self, poll_creator);
-    auto poll = polls.find(poll_id);
+    auto poll = polls.find(poll_name);
     eosio_assert(poll != polls.end(), "poll doesn't exist");
 
     // check if poll has opened yet
@@ -170,14 +204,14 @@ void eosstrawpoll::vote(
     eosio::print(
         "success: action=vote",
         ", poll_creator=", eosio::name{poll_creator},
-        ", poll_id=", eosio::name{poll_id},
+        ", poll_name=", eosio::name{poll_name},
         ", voter=", eosio::name{voter});
 }
 
 // // @abi action
 void eosstrawpoll::comment(
     const account_name poll_creator,
-    const uuid poll_id,
+    const uuid poll_name,
     const account_name commenter,
     const string &content,
     const string &metadata)
@@ -189,20 +223,20 @@ void eosstrawpoll::comment(
 
     // check if poll exists
     polls_index polls(_self, poll_creator);
-    auto poll = polls.find(poll_id);
+    auto poll = polls.find(poll_name);
     eosio_assert(poll != polls.end(), "poll doesn't exist");
 
     eosio::print(
         "success: action=comment",
         ", poll_creator=", eosio::name{poll_creator},
-        ", poll_id=", eosio::name{poll_id},
+        ", poll_name=", eosio::name{poll_name},
         ", commenter=", eosio::name{commenter});
 }
 
 // @abi action
 void eosstrawpoll::react(
     const account_name poll_creator,
-    const uuid poll_id,
+    const uuid poll_name,
     const account_name reacter,
     const reaction_name reaction,
     const string &metadata)
@@ -212,12 +246,12 @@ void eosstrawpoll::react(
 
     // check if poll exists
     polls_index polls(_self, poll_creator);
-    auto poll = polls.find(poll_id);
+    auto poll = polls.find(poll_name);
     eosio_assert(poll != polls.end(), "poll doesn't exist");
     eosio::print(
         "success: action=react",
         ", poll_creator=", eosio::name{poll_creator},
-        ", poll_id=", eosio::name{poll_id},
+        ", poll_name=", eosio::name{poll_name},
         ", reacter=", eosio::name{reacter},
         ", reaction=", eosio::name{reaction});
 }

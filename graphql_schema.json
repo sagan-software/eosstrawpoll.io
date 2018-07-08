@@ -222,7 +222,7 @@
               "deprecationReason": null
             },
             {
-              "name": "pollId",
+              "name": "pollName",
               "description": "",
               "args": [],
               "type": {
@@ -368,6 +368,38 @@
                       "ofType": null
                     }
                   }
+                }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "minChoices",
+              "description": "",
+              "args": [],
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "maxChoices",
+              "description": "",
+              "args": [],
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
                 }
               },
               "isDeprecated": false,
@@ -629,7 +661,7 @@
               "deprecationReason": null
             },
             {
-              "name": "pollCreator",
+              "name": "pollName",
               "description": "",
               "args": [],
               "type": {
@@ -645,7 +677,7 @@
               "deprecationReason": null
             },
             {
-              "name": "pollVersion",
+              "name": "pollCreator",
               "description": "",
               "args": [],
               "type": {
@@ -653,7 +685,7 @@
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
-                  "name": "Int",
+                  "name": "String",
                   "ofType": null
                 }
               },
@@ -840,7 +872,7 @@
               "deprecationReason": null
             },
             {
-              "name": "pollId",
+              "name": "pollName",
               "description": "",
               "args": [],
               "type": {
@@ -865,22 +897,6 @@
                 "ofType": {
                   "kind": "SCALAR",
                   "name": "String",
-                  "ofType": null
-                }
-              },
-              "isDeprecated": false,
-              "deprecationReason": null
-            },
-            {
-              "name": "pollVersion",
-              "description": "",
-              "args": [],
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "SCALAR",
-                  "name": "Int",
                   "ofType": null
                 }
               },

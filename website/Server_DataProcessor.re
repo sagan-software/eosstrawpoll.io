@@ -14,12 +14,12 @@ let onCreateAction = (~mongo, ~logger, ~trxId, ~block, data) => {
   let id =
     data##poll_creator
     ++ "_"
-    ++ data##poll_id
+    ++ data##poll_name
     ++ "_"
     ++ string_of_int(block##block_num);
   let poll = {
     "id": id,
-    "pollId": data##poll_id,
+    "pollName": data##poll_name,
     "pollCreator": data##poll_creator,
     "title": data##title,
     "description": data##description,
@@ -50,7 +50,7 @@ let onCreateAction = (~mongo, ~logger, ~trxId, ~block, data) => {
 
 /* let onCloseAction = (mongo, block, data) =>
    mongo
-   |> Polls.find({"creator": data##creator, "id": data##poll_id})
+   |> Polls.find({"creator": data##creator, "id": data##poll_name})
    |. Mongo.Cursor.next
    |> Js.Promise.then_(pollOpt =>
         switch (pollOpt) {
@@ -65,7 +65,10 @@ let onCreateAction = (~mongo, ~logger, ~trxId, ~block, data) => {
       );  */
 let onVoteAction = (~mongo, ~logger, ~trxId, ~block, data) =>
   mongo
-  |> Polls.find({"pollId": data##poll_id, "pollCreator": data##poll_creator})
+  |> Polls.find({
+       "pollName": data##poll_name,
+       "pollCreator": data##poll_creator,
+     })
   |. Mongo.Cursor.sort("blockTime", -1)
   |. Mongo.Cursor.next
   |> Js.Promise.then_(poll =>
@@ -74,8 +77,8 @@ let onVoteAction = (~mongo, ~logger, ~trxId, ~block, data) =>
          let id = poll##id ++ "_" ++ data##voter;
          let vote = {
            "id": id,
-           "pollRef": poll##id,
-           "pollId": data##poll_id,
+           "pollId": poll##id,
+           "pollName": data##poll_name,
            "pollCreator": data##poll_creator,
            "voter": data##voter,
            "choices": data##choices,
@@ -112,7 +115,10 @@ let onVoteAction = (~mongo, ~logger, ~trxId, ~block, data) =>
          logger
          |. Winston.warn(
               "couldn't find poll for vote",
-              {"pollId": data##poll_id, "pollCreator": data##poll_creator},
+              {
+                "pollName": data##poll_name,
+                "pollCreator": data##poll_creator,
+              },
             )
          |. Js.Promise.resolve
        }
@@ -122,14 +128,14 @@ let onCommentAction = (~mongo, ~logger, ~trxId, ~block, data) => {
   let id =
     data##poll_creator
     ++ "_"
-    ++ data##poll_id
+    ++ data##poll_name
     ++ "_"
     ++ data##commenter
     ++ "_"
     ++ string_of_int(block##block_num);
   let comment = {
     "id": id,
-    "pollId": data##poll_id,
+    "pollName": data##poll_name,
     "pollCreator": data##poll_creator,
     "commenter": data##commenter,
     "content": data##content,

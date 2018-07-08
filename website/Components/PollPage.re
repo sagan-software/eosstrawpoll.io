@@ -1,3 +1,49 @@
+module PollData = [%graphql
+  {|
+query pollData($creator: String!, $id: String!) {
+  poll(creator:$creator,id:$id) {
+    id
+    pollName
+    pollCreator
+    title
+    description
+    options
+    whitelist
+    blacklist
+    minChoices
+    maxChoices
+    openTime
+    closeTime
+    blockId
+    blockNum
+    blockTime
+    trxId
+    metadata
+    votes {
+      id
+      voter
+      voterStaked
+      choices
+      blockNum
+      blockTime
+      trxId
+      metadata
+    }
+    comments {
+      id
+      commenter
+      content
+      blockTime
+      trxId
+      metadata
+    }
+  }
+}
+|}
+];
+
+module PollDataQuery = ReasonApollo.CreateQuery(PollData);
+
 type state = {choices: Belt.Set.Int.t};
 
 type action =
@@ -17,9 +63,12 @@ let reducer = (action, state) =>
 
 let component = ReasonReact.reducerComponent("PollPage");
 
-let renderOption = ({ReasonReact.state, send}, i, option) => {
-  Js.log3("choices", state.choices, i);
-  let isSelected = Belt.Set.Int.has(state.choices, i);
+let renderOption = ({ReasonReact.state, send}, vote, i: int, option) => {
+  let isSelected =
+    Belt.Set.Int.has(state.choices, i)
+    || vote
+    |> Js.Option.map((. vote) => Js.Array.includes(i, vote##choices))
+    |> Js.Option.getWithDefault(false);
   let onClick = _e => send(ToggleChoice(i));
   <li key=(string_of_int(i)) onClick>
     (ReasonReact.string(option))
@@ -41,7 +90,7 @@ let castVote =
          |. Contract.vote(
               {
                 "poll_creator": poll##pollCreator,
-                "poll_id": poll##pollId,
+                "poll_name": poll##pollName,
                 "voter": "alice",
                 "choices": Belt.Set.Int.toArray(self.state.choices),
                 "metadata": Env.metadata,
@@ -51,6 +100,9 @@ let castVote =
        )
     |> Js.Promise.then_(result => {
          Js.log2("Created", result);
+         Route.redirectTo(
+           Route.PollResults(poll##pollCreator, poll##pollName),
+         );
          Js.Promise.resolve();
        })
     |> Js.Promise.catch(error => {
@@ -61,55 +113,21 @@ let castVote =
   | None => Js.log("No scatter")
   };
 
-module PollData = [%graphql
-  {|
-  query pollData($creator: String!, $id: String!) {
-    poll(creator:$creator,id:$id) {
-      id
-      pollId
-      pollCreator
-      title
-      description
-      options
-      whitelist
-      blacklist
-      openTime
-      closeTime
-      blockId
-      blockNum
-      blockTime
-      trxId
-      metadata
-      votes {
-        id
-        voter
-        choices
-        blockNum
-        blockTime
-        trxId
-        metadata
-      }
-      comments {
-        id
-        commenter
-        content
-        blockTime
-        trxId
-        metadata
-      }
-    }
-  }
-|}
-];
+let getVote = (context, poll) =>
+  context
+  |. Context.accountName
+  |> Js.Option.andThen((. accountName) =>
+       poll##votes
+       |> Js.Array.filter(v => v##voter == accountName)
+       |. Belt.Array.get(0)
+     );
 
-module PollDataQuery = ReasonApollo.CreateQuery(PollData);
-
-let make = (~context: Context.t, ~accountName, ~pollId, _children) => {
+let make = (~context: Context.t, ~accountName, ~pollName, _children) => {
   ...component,
   reducer,
   initialState: () => {choices: Belt.Set.Int.empty},
   render: self => {
-    let pollData = PollData.make(~creator=accountName, ~id=pollId, ());
+    let pollData = PollData.make(~creator=accountName, ~id=pollName, ());
     <PollDataQuery variables=pollData##variables>
       ...(
            ({result}) =>
@@ -119,6 +137,9 @@ let make = (~context: Context.t, ~accountName, ~pollId, _children) => {
              | Data(response) =>
                switch (response##poll) {
                | Some(poll) =>
+                 let vote = getVote(context, poll);
+                 let minChoices = poll##minChoices;
+                 let maxChoices = poll##maxChoices;
                  <div className=(AppStyles.main |> TypedGlamor.toString)>
                    <h1
                      className=(
@@ -130,28 +151,47 @@ let make = (~context: Context.t, ~accountName, ~pollId, _children) => {
                      className=(
                        CommonStyles.pagePrimaryBox |> TypedGlamor.toString
                      )>
-                     <ol>
+                     <p>
+                       (
+                         (
+                           minChoices == maxChoices ?
+                             {j|Select $minChoices choices|j} :
+                             {j|Select $minChoices to $maxChoices choices|j}
+                         )
+                         |> ReasonReact.string
+                       )
+                     </p>
+                     <ul>
                        (
                          poll##options
-                         |> Array.mapi(renderOption(self))
+                         |> Array.mapi(renderOption(self, vote))
                          |> ReasonReact.array
                        )
-                     </ol>
+                     </ul>
                      <div>
                        <button
+                         className=(
+                           CommonStyles.button |> TypedGlamor.toString
+                         )
                          disabled=(context.scatter == None)
                          onClick=(castVote(self, context, poll))>
-                         (ReasonReact.string("Vote"))
+                         (
+                           (vote == None ? "Vote" : "Change Vote")
+                           |> ReasonReact.string
+                         )
                        </button>
                        <Link
                          route=(
-                           Route.PollResults(poll##pollCreator, poll##pollId)
+                           Route.PollResults(
+                             poll##pollCreator,
+                             poll##pollName,
+                           )
                          )>
                          (ReasonReact.string("Results"))
                        </Link>
                      </div>
                    </div>
-                 </div>
+                 </div>;
                | None => ReasonReact.string("Couldn't find poll")
                }
              }

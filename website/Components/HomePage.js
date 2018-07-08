@@ -20,7 +20,7 @@ var component = ReasonReact.statelessComponent("HomePage-ReactTemplate");
 
 var Graphql_error = Caml_exceptions.create("HomePage-ReactTemplate.GetPolls.Graphql_error");
 
-var ppx_printed_query = "query polls  {\npopularPolls: polls(sortBy: POPULARITY)  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \nnumVotes  \n}\nnewPolls: polls  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\nclosingSoon: polls(sortBy: CLOSING)  {\nid  \npollId  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\n}";
+var ppx_printed_query = "query polls  {\npopularPolls: polls(sortBy: POPULARITY)  {\nid  \npollName  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \nnumVotes  \n}\nnewPolls: polls  {\nid  \npollName  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\nclosingSoon: polls(sortBy: CLOSING)  {\nid  \npollName  \npollCreator  \ntitle  \nwhitelist  \nblacklist  \nopenTime  \ncloseTime  \nblockTime  \n}\n}";
 
 function parse(value) {
   var match = Js_json.decodeObject(value);
@@ -53,7 +53,7 @@ function parse(value) {
                           "Field id on type Poll is missing"
                         ];
                   }
-                  var match$3 = value$1["pollId"];
+                  var match$3 = value$1["pollName"];
                   var tmp$1;
                   if (match$3 !== undefined) {
                     var match$4 = Js_json.decodeString(match$3);
@@ -68,7 +68,7 @@ function parse(value) {
                   } else {
                     throw [
                           Graphql_error,
-                          "Field pollId on type Poll is missing"
+                          "Field pollName on type Poll is missing"
                         ];
                   }
                   var match$5 = value$1["pollCreator"];
@@ -237,7 +237,7 @@ function parse(value) {
                   }
                   return {
                           id: tmp,
-                          pollId: tmp$1,
+                          pollName: tmp$1,
                           pollCreator: tmp$2,
                           title: tmp$3,
                           whitelist: tmp$4,
@@ -293,7 +293,7 @@ function parse(value) {
                           "Field id on type Poll is missing"
                         ];
                   }
-                  var match$3 = value$1["pollId"];
+                  var match$3 = value$1["pollName"];
                   var tmp$1;
                   if (match$3 !== undefined) {
                     var match$4 = Js_json.decodeString(match$3);
@@ -308,7 +308,7 @@ function parse(value) {
                   } else {
                     throw [
                           Graphql_error,
-                          "Field pollId on type Poll is missing"
+                          "Field pollName on type Poll is missing"
                         ];
                   }
                   var match$5 = value$1["pollCreator"];
@@ -459,7 +459,7 @@ function parse(value) {
                   }
                   return {
                           id: tmp,
-                          pollId: tmp$1,
+                          pollName: tmp$1,
                           pollCreator: tmp$2,
                           title: tmp$3,
                           whitelist: tmp$4,
@@ -514,7 +514,7 @@ function parse(value) {
                           "Field id on type Poll is missing"
                         ];
                   }
-                  var match$3 = value$1["pollId"];
+                  var match$3 = value$1["pollName"];
                   var tmp$1;
                   if (match$3 !== undefined) {
                     var match$4 = Js_json.decodeString(match$3);
@@ -529,7 +529,7 @@ function parse(value) {
                   } else {
                     throw [
                           Graphql_error,
-                          "Field pollId on type Poll is missing"
+                          "Field pollName on type Poll is missing"
                         ];
                   }
                   var match$5 = value$1["pollCreator"];
@@ -680,7 +680,7 @@ function parse(value) {
                   }
                   return {
                           id: tmp,
-                          pollId: tmp$1,
+                          pollName: tmp$1,
                           pollCreator: tmp$2,
                           title: tmp$3,
                           whitelist: tmp$4,
@@ -820,7 +820,7 @@ function make$1(context, _) {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
                                                                                 }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
                                                                                             p.pollCreator,
-                                                                                            p.pollId
+                                                                                            p.pollName
                                                                                           ]), /* None */0, /* array */[p.title]))), React.createElement("p", {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollInfo)
                                                                                 }, String(p.numVotes) + " votes"));
@@ -837,7 +837,7 @@ function make$1(context, _) {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
                                                                                 }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
                                                                                             p.pollCreator,
-                                                                                            p.pollId
+                                                                                            p.pollName
                                                                                           ]), /* None */0, /* array */[p.title]))), React.createElement("p", {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollInfo)
                                                                                 }, "Created ", ReasonReact.element(/* None */0, /* None */0, DateFormat$ReactTemplate.make(date, /* array */[])), " by ", ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, [p.pollCreator]), /* Some */[TypedGlamor.toString(HomePageStyles$ReactTemplate.pollCreator)], /* array */[p.pollCreator]))));
@@ -855,7 +855,7 @@ function make$1(context, _) {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollTitle)
                                                                                 }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Poll */Block.__(1, [
                                                                                             p.pollCreator,
-                                                                                            p.pollId
+                                                                                            p.pollName
                                                                                           ]), /* None */0, /* array */[p.title]))), React.createElement("p", {
                                                                                   className: TypedGlamor.toString(HomePageStyles$ReactTemplate.pollInfo)
                                                                                 }, "Closes ", ReasonReact.element(/* None */0, /* None */0, DateFormat$ReactTemplate.make(date, /* array */[]))));

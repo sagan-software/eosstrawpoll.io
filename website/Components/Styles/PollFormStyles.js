@@ -28,7 +28,29 @@ var fields = TypedGlamor.css(/* None */0, /* :: */[
       ]
     ]);
 
-var field = TypedGlamor.css(/* None */0, /* [] */0);
+var field = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.position(TypedGlamor.relative),
+      /* [] */0
+    ]);
+
+var invalid = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.backgroundColor(TypedGlamor.red),
+      /* :: */[
+        TypedGlamor.color(TypedGlamor.white),
+        /* :: */[
+          TypedGlamor.position(TypedGlamor.absolute),
+          /* :: */[
+            TypedGlamor.display(TypedGlamor.none),
+            /* [] */0
+          ]
+        ]
+      ]
+    ]);
+
+var valid = TypedGlamor.css(/* None */0, /* :: */[
+      TypedGlamor.display(TypedGlamor.none),
+      /* [] */0
+    ]);
 
 var label = TypedGlamor.css(/* None */0, /* [] */0);
 
@@ -38,60 +60,76 @@ var errors = TypedGlamor.css(/* None */0, /* [] */0);
 
 var titleField = TypedGlamor.css(/* None */0, /* [] */0);
 
-var titleInput = TypedGlamor.css(/* None */0, /* :: */[
-      TypedGlamor.width(TypedGlamor.pct(100)),
-      /* :: */[
-        TypedGlamor.fontSize(TypedGlamor.rem(2.4)),
-        /* :: */[
-          TypedGlamor.fontWeight(TypedGlamor._700),
-          /* :: */[
-            TypedGlamor.marginBottom(TypedGlamor.rem(1)),
-            /* :: */[
-              TypedGlamor.border3(TypedGlamor.rem(0.3), TypedGlamor.solid, TypedGlamor.hex("ccc")),
+function titleInput(isValid) {
+  return TypedGlamor.css(/* None */0, /* :: */[
+              TypedGlamor.width(TypedGlamor.pct(100)),
               /* :: */[
-                TypedGlamor.borderRadius(Theme$ReactTemplate.borderRadius),
+                TypedGlamor.fontSize(TypedGlamor.rem(2.4)),
                 /* :: */[
-                  TypedGlamor.padding2(TypedGlamor.rem(1.5), TypedGlamor.rem(2)),
+                  TypedGlamor.fontWeight(TypedGlamor._700),
                   /* :: */[
-                    TypedGlamor.unsafe("backgroundImage", "none !important"),
-                    /* [] */0
-                  ]
-                ]
-              ]
-            ]
-          ]
-        ]
-      ]
-    ]);
-
-var optionField = TypedGlamor.css(/* None */0, /* :: */[
-      TypedGlamor.display(TypedGlamor.flex),
-      /* :: */[
-        TypedGlamor.fontSize(TypedGlamor.rem(1.6)),
-        /* :: */[
-          TypedGlamor.height(TypedGlamor.rem(4)),
-          /* :: */[
-            TypedGlamor.alignItems(TypedGlamor.center),
-            /* :: */[
-              TypedGlamor.marginBottom(TypedGlamor.rem(1)),
-              /* :: */[
-                TypedGlamor.borderStyle(TypedGlamor.solid),
-                /* :: */[
-                  TypedGlamor.borderColor(TypedGlamor.hex("ccc")),
-                  /* :: */[
-                    TypedGlamor.borderWidth(TypedGlamor.zero),
+                    TypedGlamor.marginBottom(TypedGlamor.rem(1)),
                     /* :: */[
-                      TypedGlamor.borderBottomWidth(TypedGlamor.rem(0.2)),
-                      /* [] */0
+                      TypedGlamor.borderStyle(TypedGlamor.solid),
+                      /* :: */[
+                        TypedGlamor.borderWidth(TypedGlamor.rem(0.3)),
+                        /* :: */[
+                          TypedGlamor.borderColor(isValid ? TypedGlamor.hex("ccc") : TypedGlamor.hex("d60000")),
+                          /* :: */[
+                            TypedGlamor.borderRadius(Theme$ReactTemplate.borderRadius),
+                            /* :: */[
+                              TypedGlamor.padding2(TypedGlamor.rem(1.5), TypedGlamor.rem(2)),
+                              /* :: */[
+                                TypedGlamor.unsafe("backgroundImage", "none !important"),
+                                /* :: */[
+                                  TypedGlamor.select("&::placeholder", /* :: */[
+                                        TypedGlamor.color(isValid ? TypedGlamor.hex("ccc") : TypedGlamor.hex("d60000")),
+                                        /* [] */0
+                                      ]),
+                                  /* :: */[
+                                    TypedGlamor.select("&:focus", /* :: */[
+                                          TypedGlamor.select("&::placeholder", /* :: */[
+                                                TypedGlamor.color(TypedGlamor.hex("ccc")),
+                                                /* [] */0
+                                              ]),
+                                          /* [] */0
+                                        ]),
+                                    /* [] */0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
                     ]
                   ]
                 ]
               ]
-            ]
-          ]
-        ]
-      ]
-    ]);
+            ]);
+}
+
+function optionField(isValid) {
+  return TypedGlamor.css(/* None */0, /* :: */[
+              TypedGlamor.display(TypedGlamor.flex),
+              /* :: */[
+                TypedGlamor.fontSize(TypedGlamor.rem(1.6)),
+                /* :: */[
+                  TypedGlamor.height(TypedGlamor.rem(4)),
+                  /* :: */[
+                    TypedGlamor.alignItems(TypedGlamor.center),
+                    /* :: */[
+                      TypedGlamor.marginBottom(TypedGlamor.rem(1)),
+                      /* :: */[
+                        TypedGlamor.color(TypedGlamor.hex(isValid ? "333" : "d60000")),
+                        /* [] */0
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]);
+}
 
 var optionNum = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.fontWeight(TypedGlamor.bold),
@@ -110,31 +148,51 @@ var optionNum = TypedGlamor.css(/* None */0, /* :: */[
       ]
     ]);
 
-var optionInput = TypedGlamor.css(/* None */0, /* :: */[
-      TypedGlamor.width(TypedGlamor.pct(100)),
-      /* :: */[
-        TypedGlamor.height(TypedGlamor.pct(100)),
-        /* :: */[
-          TypedGlamor.borderWidth(TypedGlamor.zero),
-          /* :: */[
-            TypedGlamor.margin(TypedGlamor.zero),
-            /* :: */[
-              TypedGlamor.flex_(TypedGlamor.$$int(1)),
+function optionInput(isValid) {
+  return TypedGlamor.css(/* None */0, /* :: */[
+              TypedGlamor.width(TypedGlamor.pct(100)),
               /* :: */[
-                TypedGlamor.padding2(TypedGlamor.zero, TypedGlamor.rem(1)),
+                TypedGlamor.height(TypedGlamor.pct(100)),
                 /* :: */[
-                  TypedGlamor.borderWidth(TypedGlamor.zero),
+                  TypedGlamor.flex_(TypedGlamor.$$int(1)),
                   /* :: */[
-                    TypedGlamor.fontSize(TypedGlamor.rem(1.6)),
-                    /* [] */0
+                    TypedGlamor.margin2(TypedGlamor.zero, TypedGlamor.rem(1)),
+                    /* :: */[
+                      TypedGlamor.fontSize(TypedGlamor.rem(1.6)),
+                      /* :: */[
+                        TypedGlamor.borderStyle(TypedGlamor.solid),
+                        /* :: */[
+                          TypedGlamor.borderColor(isValid ? TypedGlamor.hex("ccc") : TypedGlamor.hex("d60000")),
+                          /* :: */[
+                            TypedGlamor.borderWidth(TypedGlamor.zero),
+                            /* :: */[
+                              TypedGlamor.borderBottomWidth(TypedGlamor.rem(0.3)),
+                              /* :: */[
+                                TypedGlamor.select("&::placeholder", /* :: */[
+                                      TypedGlamor.color(isValid ? TypedGlamor.hex("ccc") : TypedGlamor.hex("d60000")),
+                                      /* [] */0
+                                    ]),
+                                /* :: */[
+                                  TypedGlamor.select("&:focus", /* :: */[
+                                        TypedGlamor.select("&::placeholder", /* :: */[
+                                              TypedGlamor.color(TypedGlamor.hex("ccc")),
+                                              /* [] */0
+                                            ]),
+                                        /* [] */0
+                                      ]),
+                                  /* [] */0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
                   ]
                 ]
               ]
-            ]
-          ]
-        ]
-      ]
-    ]);
+            ]);
+}
 
 var optionRemove = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.fontWeight(TypedGlamor.bold),
@@ -176,9 +234,13 @@ var submitButton = TypedGlamor.css(/* Some */[CommonStyles$ReactTemplate.button]
       ]
     ]);
 
+var advancedFields = TypedGlamor.css(/* None */0, /* [] */0);
+
 exports.container = container;
 exports.fields = fields;
 exports.field = field;
+exports.invalid = invalid;
+exports.valid = valid;
 exports.label = label;
 exports.input = input;
 exports.errors = errors;
@@ -189,4 +251,5 @@ exports.optionNum = optionNum;
 exports.optionInput = optionInput;
 exports.optionRemove = optionRemove;
 exports.submitButton = submitButton;
+exports.advancedFields = advancedFields;
 /* container Not a pure module */

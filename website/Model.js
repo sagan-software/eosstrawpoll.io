@@ -2,10 +2,12 @@
 'use strict';
 
 var Block = require("bs-platform/lib/js/block.js");
+var Caml_obj = require("bs-platform/lib/js/caml_obj.js");
+var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 
 var empty = {
   id: "",
-  pollId: "",
+  pollName: "",
   pollCreator: "",
   title: "",
   description: "",
@@ -23,12 +25,50 @@ var empty = {
   metadata: ""
 };
 
-var Poll = /* module */[/* empty */empty];
+function isBeforeCloseTime(t) {
+  return Date.now() / 1000 < t.closeTime;
+}
+
+function isAfterOpenTime(t) {
+  return Date.now() / 1000 > t.openTime;
+}
+
+function isOpen(t) {
+  if (isBeforeCloseTime(t)) {
+    return isAfterOpenTime(t);
+  } else {
+    return false;
+  }
+}
+
+function isWhitelisted(t, account) {
+  return t.whitelist.includes(account);
+}
+
+function isBlacklisted(t, account) {
+  return t.blacklist.includes(account);
+}
+
+function getVote(t, account) {
+  return Belt_Array.get(t.votes.filter((function (v) {
+                    return Caml_obj.caml_equal(v.voter, account);
+                  })), 0);
+}
+
+var Poll = /* module */[
+  /* empty */empty,
+  /* isBeforeCloseTime */isBeforeCloseTime,
+  /* isAfterOpenTime */isAfterOpenTime,
+  /* isOpen */isOpen,
+  /* isWhitelisted */isWhitelisted,
+  /* isBlacklisted */isBlacklisted,
+  /* getVote */getVote
+];
 
 var empty$1 = {
   id: "",
-  pollRef: "",
   pollId: "",
+  pollName: "",
   pollCreator: "",
   voter: "",
   choices: /* array */[],
@@ -43,7 +83,7 @@ var Vote = /* module */[/* empty */empty$1];
 
 var empty$2 = {
   id: "",
-  pollId: "",
+  pollName: "",
   pollCreator: "",
   commenter: "",
   content: "",

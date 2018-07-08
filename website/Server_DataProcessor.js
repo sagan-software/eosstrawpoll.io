@@ -12,10 +12,10 @@ function blockByTrxId(mongo, trxId) {
 }
 
 function onCreateAction(mongo, logger, trxId, block, data) {
-  var id = data.poll_creator + ("_" + (data.poll_id + ("_" + String(block.block_num))));
+  var id = data.poll_creator + ("_" + (data.poll_name + ("_" + String(block.block_num))));
   var poll = {
     id: id,
-    pollId: data.poll_id,
+    pollName: data.poll_name,
     pollCreator: data.poll_creator,
     title: data.title,
     description: data.description,
@@ -46,20 +46,20 @@ function onCreateAction(mongo, logger, trxId, block, data) {
 
 function onVoteAction(mongo, logger, trxId, block, data) {
   return Curry._2(Server_Database$ReactTemplate.Polls[/* find */3], {
-                    pollId: data.poll_id,
+                    pollName: data.poll_name,
                     pollCreator: data.poll_creator
                   }, mongo).sort("blockTime", -1).next().then((function (poll) {
                 if (poll == null) {
                   return Promise.resolve((logger.warn("couldn't find poll for vote", {
-                                    pollId: data.poll_id,
+                                    pollName: data.poll_name,
                                     pollCreator: data.poll_creator
                                   }), /* () */0));
                 } else {
                   var id = poll.id + ("_" + data.voter);
                   var vote = {
                     id: id,
-                    pollRef: poll.id,
-                    pollId: data.poll_id,
+                    pollId: poll.id,
+                    pollName: data.poll_name,
                     pollCreator: data.poll_creator,
                     voter: data.voter,
                     choices: data.choices,
@@ -91,10 +91,10 @@ function onVoteAction(mongo, logger, trxId, block, data) {
 }
 
 function onCommentAction(mongo, logger, trxId, block, data) {
-  var id = data.poll_creator + ("_" + (data.poll_id + ("_" + (data.commenter + ("_" + String(block.block_num))))));
+  var id = data.poll_creator + ("_" + (data.poll_name + ("_" + (data.commenter + ("_" + String(block.block_num))))));
   var comment = {
     id: id,
-    pollId: data.poll_id,
+    pollName: data.poll_name,
     pollCreator: data.poll_creator,
     commenter: data.commenter,
     content: data.content,

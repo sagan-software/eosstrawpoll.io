@@ -8,8 +8,8 @@ let typeDefs = {|
   type Vote {
     id: String!
     pollId: String!
+    pollName: String!
     pollCreator: String!
-    pollVersion: Int!
     poll: Poll!
     voter: String!
     voterStaked: Int!
@@ -23,9 +23,8 @@ let typeDefs = {|
 
   type Comment {
     id: String!
-    pollId: String!
+    pollName: String!
     pollCreator: String!
-    pollVersion: Int!
     pollTitle: String!
     poll: Poll!
     commenter: String!
@@ -39,7 +38,7 @@ let typeDefs = {|
 
   type Poll {
     id: String!
-    pollId: String!
+    pollName: String!
     pollCreator: String!
     version: Int!
     title: String!
@@ -47,6 +46,8 @@ let typeDefs = {|
     options: [String!]!
     whitelist: [String!]!
     blacklist: [String!]!
+    minChoices: Int!
+    maxChoices: Int!
     openTime: Int!
     closeTime: Int!
     blockId: String!
@@ -123,8 +124,10 @@ let findMany = (_args, query, collection) =>
 let findOne = (query, collection) =>
   collection |. Mongo.Collection.find(query) |. Mongo.Cursor.next;
 
-let findPoll = (~creator, ~id, mongo) =>
-  mongo |> Polls.collection |> findOne({"pollCreator": creator, "pollId": id});
+let findPoll = (~creator, ~name, mongo) =>
+  mongo
+  |> Polls.collection
+  |> findOne({"pollCreator": creator, "pollName": name});
 
 let pubsub = GraphQl.PubSub.make();
 
@@ -150,7 +153,7 @@ let popularityAggregations = () => {
       lookup({
         "from": "votes",
         "localField": "id",
-        "foreignField": "pollRef",
+        "foreignField": "pollId",
         "as": "votes",
       }),
       addFields({
@@ -203,39 +206,36 @@ let makeResolvers = mongo => {
     "votes": mongo |> Votes.collection |> findAllResolver,
     "comments": mongo |> Comments.collection |> findAllResolver,
     "poll": (_obj, args) =>
-      mongo |> findPoll(~creator=args##creator, ~id=args##id),
+      mongo |> findPoll(~creator=args##creator, ~name=args##id),
     "account": (_obj, args) => {"name": args##name},
   },
   "Poll": {
     "votes": (poll, args) =>
-      mongo |> Votes.collection |> findMany(args, {"pollRef": poll##id}),
+      mongo |> Votes.collection |> findMany(args, {"pollId": poll##id}),
     "numVotes": poll =>
       mongo
       |. Votes.collection
-      |. Mongo.Collection.find({
-           "pollCreator": poll##pollCreator,
-           "pollId": poll##pollId,
-         })
+      |. Mongo.Collection.find({"pollId": poll##id})
       |. Mongo.Cursor.count,
     "comments": (poll, args) =>
       mongo
       |> Comments.collection
       |> findMany(
            args,
-           {"pollCreator": poll##pollCreator, "pollId": poll##pollId},
+           {"pollCreator": poll##pollCreator, "pollName": poll##pollName},
          ),
     "numComments": poll =>
       mongo
       |. Comments.collection
       |. Mongo.Collection.find({
            "pollCreator": poll##pollCreator,
-           "pollId": poll##pollId,
+           "pollName": poll##pollName,
          })
       |. Mongo.Cursor.count,
   },
   "Vote": {
     "poll": vote =>
-      mongo |> findPoll(~creator=vote##pollCreator, ~id=vote##pollId),
+      mongo |> findPoll(~creator=vote##pollCreator, ~name=vote##pollName),
     "voterStaked": vote =>
       eos
       |. Eos.getTableRows(
@@ -258,7 +258,8 @@ let makeResolvers = mongo => {
   },
   "Comment": {
     "poll": comment =>
-      mongo |> findPoll(~creator=comment##pollCreator, ~id=comment##pollId),
+      mongo
+      |> findPoll(~creator=comment##pollCreator, ~name=comment##pollName),
   },
   "Account": {
     "holdings": () => "",
@@ -282,7 +283,7 @@ let makeResolvers = mongo => {
       pubsub
       |> Votes.iterator
       |> subWithFilter((vote, args) =>
-           vote##pollCreator == args##creator && vote##pollId == args##id
+           vote##pollCreator == args##creator && vote##pollName == args##id
          ),
     "votesFromAccount":
       pubsub
@@ -293,7 +294,8 @@ let makeResolvers = mongo => {
       pubsub
       |> Comments.iterator
       |> subWithFilter((comment, args) =>
-           comment##pollCreator == args##creator && comment##pollId == args##id
+           comment##pollCreator == args##creator
+           && comment##pollName == args##id
          ),
     "commentsFromAccount":
       pubsub

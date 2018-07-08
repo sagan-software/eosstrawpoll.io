@@ -44,19 +44,20 @@ function chooseAccount() {
 }
 
 function generatePoll(contract, logger) {
+  logger.debug("generating poll...", /* () */0);
   var title = choose(pollTitles, "");
   var options = Belt_Array.map(Belt_Array.range(1, Caml_primitive.caml_int_max(Random.$$int(15), 2)), (function (i) {
           return "Choice #" + (String(i) + "");
         }));
   var numOptions = options.length;
   var minChoices = 1 + Random.$$int(numOptions) | 0;
-  var maxChoices = Caml_primitive.caml_int_max(Random.$$int(numOptions + 1 | 0), minChoices);
+  var maxChoices = minChoices + Random.$$int((numOptions - minChoices | 0) + 1 | 0) | 0;
   var openTime = ((Date.now() / 1000 | 0) + 10 | 0) + Random.$$int(120) | 0;
-  var closeTime = (openTime + 60 | 0) + Random.$$int(3600) | 0;
+  var closeTime = (openTime + 60 | 0) + Random.$$int(86400) | 0;
   var pollCreator = choose(accounts, "alice");
   var poll = {
     poll_creator: pollCreator,
-    poll_id: Eos$ReactTemplate.Name[/* random */4](/* () */0),
+    poll_name: Eos$ReactTemplate.Name[/* random */4](/* () */0),
     title: title,
     description: "",
     options: options,
@@ -99,6 +100,9 @@ function generateVote(contract, mongo, logger) {
   return getRandomPoll(mongo).then((function (poll) {
                 if (poll) {
                   var poll$1 = poll[0];
+                  logger.debug("generating vote...", {
+                        pollId: poll$1.id
+                      });
                   var voter = choose(accounts, "alice");
                   var choices = /* array */[];
                   var match = poll$1.minChoices === 0;
@@ -112,7 +116,7 @@ function generateVote(contract, mongo, logger) {
                   };
                   var vote = {
                     poll_creator: poll$1.pollCreator,
-                    poll_id: poll$1.pollId,
+                    poll_name: poll$1.pollName,
                     voter: voter,
                     choices: choices,
                     metadata: process.env.APP_LABEL
@@ -137,9 +141,12 @@ function generateComment(contract, mongo, logger) {
   return getRandomPoll(mongo).then((function (poll) {
                 if (poll) {
                   var poll$1 = poll[0];
+                  logger.debug("generating comment...", {
+                        pollId: poll$1.id
+                      });
                   var comment = {
                     poll_creator: poll$1.pollCreator,
-                    poll_id: poll$1.pollId,
+                    poll_name: poll$1.pollName,
                     commenter: "bob",
                     content: "this is a comment",
                     metadata: process.env.APP_LABEL
@@ -160,45 +167,69 @@ function generateComment(contract, mongo, logger) {
               }));
 }
 
-function startGenerating(maxSeconds, fn) {
+function startGenerating(minSeconds, maxSeconds, fn) {
   var generate = function () {
     return setTimeout((function () {
                   Curry._1(fn, /* () */0);
                   generate(/* () */0);
                   return /* () */0;
-                }), Caml_int32.imul(Random.$$int(maxSeconds), 1000));
+                }), minSeconds + Caml_int32.imul(Random.$$int(maxSeconds), 1000) | 0);
   };
   generate(/* () */0);
   return /* () */0;
 }
 
 function startGeneratingPolls(contract, logger) {
-  return startGenerating(60, (function () {
+  return startGenerating(90, 120, (function () {
                 generatePoll(contract, logger);
                 return /* () */0;
               }));
 }
 
 function startGeneratingVotes(contract, mongo, logger) {
-  return startGenerating(30, (function () {
+  return startGenerating(1, 10, (function () {
                 generateVote(contract, mongo, logger);
                 return /* () */0;
               }));
 }
 
 function startGeneratingComments(contract, mongo, logger) {
-  return startGenerating(90, (function () {
+  return startGenerating(15, 120, (function () {
                 generateComment(contract, mongo, logger);
                 return /* () */0;
               }));
 }
 
+function seed(contract, mongo, logger) {
+  return Promise.all(/* array */[generatePoll(contract, logger)]).then((function () {
+                logger.info("done creating initial polls", /* () */0);
+                var votes = Belt_Array.range(0, 1).map((function () {
+                        return generateVote(contract, mongo, logger);
+                      }));
+                var comments = Belt_Array.range(0, 1).map((function () {
+                        return generateComment(contract, mongo, logger);
+                      }));
+                return Promise.all(comments.concat(votes));
+              }));
+}
+
 function start(mongo, logger) {
   return Contract$ReactTemplate.fromEos(Eosjs({
-                    httpEndpoint: process.env.EOS_URL,
-                    verbose: false,
-                    keyProvider: /* array */[process.env.DEV_PRIVKEY]
-                  })).then((function (contract) {
+                      httpEndpoint: process.env.EOS_URL,
+                      verbose: false,
+                      keyProvider: /* array */[process.env.DEV_PRIVKEY]
+                    })).then((function (contract) {
+                  logger.info("seeding...", /* () */0);
+                  return seed(contract, mongo, logger).then((function () {
+                                return new Promise((function (resolve, _) {
+                                              setTimeout((function () {
+                                                      return resolve(contract);
+                                                    }), 5000);
+                                              return /* () */0;
+                                            }));
+                              }));
+                })).then((function (contract) {
+                logger.info("starting to generate fake data", /* () */0);
                 startGeneratingPolls(contract, logger);
                 startGeneratingVotes(contract, mongo, logger);
                 startGeneratingComments(contract, mongo, logger);
@@ -221,5 +252,6 @@ exports.startGenerating = startGenerating;
 exports.startGeneratingPolls = startGeneratingPolls;
 exports.startGeneratingVotes = startGeneratingVotes;
 exports.startGeneratingComments = startGeneratingComments;
+exports.seed = seed;
 exports.start = start;
 /* accounts Not a pure module */

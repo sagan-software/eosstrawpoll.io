@@ -5,3 +5,10 @@ type t = {
 };
 
 let initial = {scatter: None, identity: None, language: Intl.English};
+
+let accountName = t =>
+  t.identity
+  |> Js.Option.andThen((. identity) =>
+       identity |. Scatter.Identity.accounts |. Belt.Array.get(0)
+     )
+  |. Belt.Option.map(Scatter.Account.name);

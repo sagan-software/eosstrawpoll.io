@@ -1,9 +1,9 @@
 let component = ReasonReact.statelessComponent("Link");
 
-let handleClick = (href, event) =>
+let handleClick = (route, event) =>
   if (! ReactEventRe.Mouse.defaultPrevented(event)) {
     ReactEventRe.Mouse.preventDefault(event);
-    ReasonReact.Router.push(href);
+    Route.redirectTo(route);
   };
 
 let make = (~route, ~className="", children) => {
@@ -14,7 +14,7 @@ let make = (~route, ~className="", children) => {
       ~props={
         "href": Route.toString(route),
         "className": className,
-        "onClick": handleClick(Route.toString(route)),
+        "onClick": handleClick(route),
       },
       children,
     ),

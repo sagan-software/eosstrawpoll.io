@@ -1,5 +1,7 @@
 type value =
   | String(string)
+  | StringArray(array(string))
+  | Date(Js.Date.t)
   | Int(int)
   | NoValue;
 

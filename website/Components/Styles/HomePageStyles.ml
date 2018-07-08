@@ -15,7 +15,6 @@ let content = css [
 let form = css [
     flex_ auto;
     marginBottom (rem 2.);
-    unsafe "boxShadow" "0 5px 15px -2px rgba(0, 0, 0, 0.25)";
 ]
 
 let pollLists = css [

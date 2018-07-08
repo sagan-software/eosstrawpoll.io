@@ -23,10 +23,7 @@ var form = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.flex_(TypedGlamor.auto),
       /* :: */[
         TypedGlamor.marginBottom(TypedGlamor.rem(2)),
-        /* :: */[
-          TypedGlamor.unsafe("boxShadow", "0 5px 15px -2px rgba(0, 0, 0, 0.25)"),
-          /* [] */0
-        ]
+        /* [] */0
       ]
     ]);
 

@@ -4,7 +4,6 @@
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
-var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var ApolloProvider = require("reason-apollo/src/ApolloProvider.bs.js");
@@ -100,9 +99,9 @@ function make(apolloClient, $staropt$star, _) {
               var tmp;
               if (match) {
                 var scatter = match[0];
-                var match$1 = context[/* identity */1];
+                var match$1 = Context$ReactTemplate.accountName(context);
                 if (match$1) {
-                  var name = Caml_array.caml_array_get(match$1[0].accounts, 0).name;
+                  var name = match$1[0];
                   tmp = React.createElement("nav", {
                         className: TypedGlamor.toString(AppStyles$ReactTemplate.userNav)
                       }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, [name]), /* None */0, /* array */[

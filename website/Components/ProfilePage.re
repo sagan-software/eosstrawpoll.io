@@ -6,7 +6,7 @@ module AccountData = [%graphql
     account(name:$name) {
       polls {
         id
-        pollId
+        pollName
         pollCreator
         title
         openTime
@@ -21,7 +21,7 @@ module AccountData = [%graphql
       }
       comments {
         id
-        pollId
+        pollName
         pollCreator
         content
         blockTime
@@ -70,7 +70,7 @@ let make = (~context: Context.t, ~accountName, _children) => {
                      |> Array.map(p =>
                           <div key=p##id>
                             <Link
-                              route=(Route.Poll(p##pollCreator, p##pollId))>
+                              route=(Route.Poll(p##pollCreator, p##pollName))>
                               (ReasonReact.string(p##title))
                             </Link>
                           </div>

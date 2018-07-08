@@ -9,7 +9,7 @@ module GetPolls = [%graphql
   query polls {
     popularPolls: polls(sortBy: POPULARITY) {
       id
-      pollId
+      pollName
       pollCreator
       title
       whitelist
@@ -21,7 +21,7 @@ module GetPolls = [%graphql
     }
     newPolls: polls {
       id
-      pollId
+      pollName
       pollCreator
       title
       whitelist
@@ -32,7 +32,7 @@ module GetPolls = [%graphql
     }
     closingSoon: polls(sortBy: CLOSING) {
       id
-      pollId
+      pollName
       pollCreator
       title
       whitelist
@@ -92,7 +92,7 @@ let make = (~context: Context.t, _children) => {
                                   )>
                                   <Link
                                     route=(
-                                      Route.Poll(p##pollCreator, p##pollId)
+                                      Route.Poll(p##pollCreator, p##pollName)
                                     )>
                                     (ReasonReact.string(p##title))
                                   </Link>
@@ -131,7 +131,7 @@ let make = (~context: Context.t, _children) => {
                                   )>
                                   <Link
                                     route=(
-                                      Route.Poll(p##pollCreator, p##pollId)
+                                      Route.Poll(p##pollCreator, p##pollName)
                                     )>
                                     (ReasonReact.string(p##title))
                                   </Link>
@@ -178,7 +178,7 @@ let make = (~context: Context.t, _children) => {
                                   )>
                                   <Link
                                     route=(
-                                      Route.Poll(p##pollCreator, p##pollId)
+                                      Route.Poll(p##pollCreator, p##pollName)
                                     )>
                                     (ReasonReact.string(p##title))
                                   </Link>

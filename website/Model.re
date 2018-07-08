@@ -4,7 +4,7 @@ module Poll = {
   type t = {
     .
     "id": string,
-    "pollId": string,
+    "pollName": string,
     "pollCreator": string,
     "title": string,
     "description": string,
@@ -23,7 +23,7 @@ module Poll = {
   };
   let empty: t = {
     "id": "",
-    "pollId": "",
+    "pollName": "",
     "pollCreator": "",
     "title": "",
     "description": "",
@@ -40,14 +40,34 @@ module Poll = {
     "trxId": "",
     "metadata": "",
   };
+  let isBeforeCloseTime = t => Js.Date.now() /. 1000. < t##closeTime;
+  let isAfterOpenTime = t => Js.Date.now() /. 1000. > t##openTime;
+  let isOpen = t => isBeforeCloseTime(t) && isAfterOpenTime(t);
+  let isWhitelisted = (t, account) =>
+    t##whitelist |> Js.Array.includes(account);
+  let isBlacklisted = (t, account) =>
+    t##blacklist |> Js.Array.includes(account);
+  let getVote = (t, account) =>
+    t##votes |> Js.Array.filter(v => v##voter == account) |. Belt.Array.get(0);
+  type results =
+    array(
+      array(
+        {
+          .
+          "voter": string,
+          "rank": int,
+          "staked": int,
+        },
+      ),
+    );
 };
 
 module Vote = {
   type t = {
     .
     "id": string,
-    "pollRef": string,
     "pollId": string,
+    "pollName": string,
     "pollCreator": string,
     "voter": string,
     "choices": array(int),
@@ -59,8 +79,8 @@ module Vote = {
   };
   let empty: t = {
     "id": "",
-    "pollRef": "",
     "pollId": "",
+    "pollName": "",
     "pollCreator": "",
     "voter": "",
     "choices": [||],
@@ -76,7 +96,7 @@ module Comment = {
   type t = {
     .
     "id": string,
-    "pollId": string,
+    "pollName": string,
     "pollCreator": string,
     "commenter": string,
     "content": string,
@@ -88,7 +108,7 @@ module Comment = {
   };
   let empty: t = {
     "id": "",
-    "pollId": "",
+    "pollName": "",
     "pollCreator": "",
     "commenter": "",
     "content": "",
@@ -167,7 +187,7 @@ module EosAction = {
   type create = {
     .
     "poll_creator": string,
-    "poll_id": string,
+    "poll_name": string,
     "title": string,
     "description": string,
     "options": array(string),
@@ -183,14 +203,14 @@ module EosAction = {
   type close = {
     .
     "poll_creator": string,
-    "poll_id": int,
+    "poll_name": int,
     "metadata": string,
   };
   external asClose : Js.Json.t => close = "%identity";
   type vote = {
     .
     "poll_creator": string,
-    "poll_id": string,
+    "poll_name": string,
     "voter": string,
     "choices": array(int),
     "metadata": string,
@@ -199,7 +219,7 @@ module EosAction = {
   type comment = {
     .
     "poll_creator": string,
-    "poll_id": string,
+    "poll_name": string,
     "commenter": string,
     "content": string,
     "metadata": string,

@@ -4,6 +4,7 @@
 var Block = require("bs-platform/lib/js/block.js");
 var Js_list = require("bs-platform/lib/js/js_list.js");
 var Belt_List = require("bs-platform/lib/js/belt_List.js");
+var ReasonReact = require("reason-react/src/ReasonReact.js");
 
 function fromList(parts) {
   if (parts) {
@@ -18,12 +19,12 @@ function fromList(parts) {
       var match = parts[1];
       if (match) {
         var match$1 = match[1];
-        var pollId = match[0];
+        var pollName = match[0];
         if (match$1) {
           if (match$1[0] === "results" && !match$1[1]) {
             return /* PollResults */Block.__(2, [
                       accountName,
-                      pollId
+                      pollName
                     ]);
           } else {
             return /* Home */0;
@@ -31,7 +32,7 @@ function fromList(parts) {
         } else {
           return /* Poll */Block.__(1, [
                     accountName,
-                    pollId
+                    pollName
                   ]);
         }
       } else {
@@ -78,9 +79,14 @@ function toAbsolute(route) {
   return process.env.SITE_URL + toString(route);
 }
 
+function redirectTo(route) {
+  return ReasonReact.Router[/* push */0](toString(route));
+}
+
 exports.fromList = fromList;
 exports.fromUrl = fromUrl;
 exports.fromString = fromString;
 exports.toString = toString;
 exports.toAbsolute = toAbsolute;
-/* No side effect */
+exports.redirectTo = redirectTo;
+/* ReasonReact Not a pure module */

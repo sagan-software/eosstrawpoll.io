@@ -10,8 +10,8 @@ let fromList = parts =>
   | [] => Home
   | ["about"] => About
   | [accountName] => Profile(accountName)
-  | [accountName, pollId] => Poll(accountName, pollId)
-  | [accountName, pollId, "results"] => PollResults(accountName, pollId)
+  | [accountName, pollName] => Poll(accountName, pollName)
+  | [accountName, pollName, "results"] => PollResults(accountName, pollName)
   | _ => Home
   };
 
@@ -29,9 +29,11 @@ let toString = route =>
   | Home => "/"
   | About => "/about"
   | Profile(accountName) => "/" ++ accountName
-  | Poll(accountName, pollId) => "/" ++ accountName ++ "/" ++ pollId
-  | PollResults(accountName, pollId) =>
-    "/" ++ accountName ++ "/" ++ pollId ++ "/results"
+  | Poll(accountName, pollName) => "/" ++ accountName ++ "/" ++ pollName
+  | PollResults(accountName, pollName) =>
+    "/" ++ accountName ++ "/" ++ pollName ++ "/results"
   };
 
 let toAbsolute = route => Env.siteUrl ++ toString(route);
+
+let redirectTo = route => route |. toString |. ReasonReact.Router.push;

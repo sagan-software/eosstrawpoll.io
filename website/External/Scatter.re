@@ -87,14 +87,17 @@ module LocationField = {
 
 module Instance = {
   type t;
+
   [@bs.send]
   external suggestNetwork : (t, Network.t) => Js.Promise.t(bool) = "";
+
   [@bs.send]
   external eos :
     (t, Network.t, Eos.Config.t => Eos.t, Eos.Config.t, string) => Eos.t =
     "";
+
   [@bs.send]
-  external getIdentity :
+  external getIdentity_ :
     (
       t,
       {
@@ -105,10 +108,44 @@ module Instance = {
       }
     ) =>
     Js.Promise.t(Identity.t) =
-    "";
+    "getIdentity";
+
+  let dispatchEvent = eventName =>
+    document
+    |> Document.documentElement
+    |> Element.asEventTarget
+    |> EventTarget.dispatchEvent(Event.make(eventName))
+    |> ignore;
+
+  let getIdentity = (t, fields) =>
+    t
+    |. getIdentity_(fields)
+    |> Js.Promise.then_(identity => {
+         dispatchEvent("scatterLogin");
+         Js.Promise.resolve(identity);
+       });
+
+  [@bs.send]
+  external forgetIdentity_ : t => Js.Promise.t(bool) = "forgetIdentity";
+
+  let forgetIdentity = t =>
+    t
+    |. forgetIdentity_
+    |> Js.Promise.then_(loggedOut => {
+         dispatchEvent("scatterLogout");
+         Js.Promise.resolve(loggedOut);
+       });
+
   [@bs.get] [@bs.return nullable]
   external identity : t => option(Identity.t) = "";
-  [@bs.send] external forgetIdentity : t => Js.Promise.t(bool) = "";
+
+  let accountName = t =>
+    t
+    |> identity
+    |> Js.Option.andThen((. identity) =>
+         identity |. Identity.accounts |. Belt.Array.get(0)
+       )
+    |. Belt.Option.map(Account.name);
 };
 
 type t = Instance.t;
@@ -132,8 +169,22 @@ let identity = Instance.identity;
 
 let forgetIdentity = Instance.forgetIdentity;
 
+let accountName = Instance.accountName;
+
 [@bs.val] [@bs.scope "window"] [@bs.return nullable]
 external instance : option(t) = "scatter";
 
 let onLoad = callback =>
   Document.addEventListener("scatterLoaded", callback, document);
+
+let onLogin = callback =>
+  document
+  |> Document.documentElement
+  |> Element.asEventTarget
+  |> EventTarget.addEventListener("scatterLogin", callback);
+
+let onLogout = callback =>
+  document
+  |> Document.documentElement
+  |> Element.asEventTarget
+  |> EventTarget.addEventListener("scatterLogout", callback);

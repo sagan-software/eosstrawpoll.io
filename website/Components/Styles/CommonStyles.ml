@@ -1,8 +1,5 @@
 open TypedGlamor
 
-(* This needs be referred to in somthing that's actually used to be included in the css bundle *)
-include GlobalStyles 
-
 let widthContainer = css [
   margin2 ~v:zero ~h:auto;
   maxWidth (rem 85.);

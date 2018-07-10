@@ -23,14 +23,16 @@
   "suffix": ".js",
   "namespace": true,
   "bs-dependencies": [
-    "reason-react",
-    "bs-webapi",
     "@glennsl/bs-json",
-    "bs-typed-glamor",
-    "re-formality",
+    "@jsiebern/bs-material-ui",
     "bs-express",
-    "reason-apollo"
+    "bs-material-ui-icons",
+    "bs-typed-glamor",
+    "bs-webapi",
+    "re-formality",
+    "reason-apollo",
+    "reason-react"
   ],
-  "ppx-flags": ["graphql_ppx/ppx"],
+  "ppx-flags": ["graphql_ppx/ppx", "./ppx_withstyles.native"],
   "refmt": 3
 }

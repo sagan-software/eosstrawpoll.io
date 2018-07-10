@@ -14,16 +14,24 @@ var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var Formality__Form = require("re-formality/src/Formality__Form.bs.js");
+var MaterialUIIcons = require("bs-material-ui-icons/src/MaterialUIIcons.js");
+var MaterialUi_Grid = require("@jsiebern/bs-material-ui/src/MaterialUi_Grid.bs.js");
+var MaterialUi_Step = require("@jsiebern/bs-material-ui/src/MaterialUi_Step.bs.js");
+var MaterialUi_Paper = require("@jsiebern/bs-material-ui/src/MaterialUi_Paper.bs.js");
 var Eos$ReactTemplate = require("../External/Eos.js");
-var Icon$ReactTemplate = require("./Icon.js");
+var MaterialUi_Button = require("@jsiebern/bs-material-ui/src/MaterialUi_Button.bs.js");
+var MaterialUi_Stepper = require("@jsiebern/bs-material-ui/src/MaterialUi_Stepper.bs.js");
+var MaterialUi_SvgIcon = require("@jsiebern/bs-material-ui/src/MaterialUi_SvgIcon.bs.js");
 var Forms$ReactTemplate = require("./Forms.js");
 var Route$ReactTemplate = require("./Route.js");
+var MaterialUi_StepLabel = require("@jsiebern/bs-material-ui/src/MaterialUi_StepLabel.bs.js");
+var MaterialUi_TextField = require("@jsiebern/bs-material-ui/src/MaterialUi_TextField.bs.js");
 var Formality__Validation = require("re-formality/src/Formality__Validation.bs.js");
+var MaterialUi_IconButton = require("@jsiebern/bs-material-ui/src/MaterialUi_IconButton.bs.js");
 var Contract$ReactTemplate = require("../Contract.js");
+var MaterialUi_StepContent = require("@jsiebern/bs-material-ui/src/MaterialUi_StepContent.bs.js");
 var Formality__PublicHelpers = require("re-formality/src/Formality__PublicHelpers.bs.js");
-var PollFormStyles$ReactTemplate = require("./Styles/PollFormStyles.js");
 
 function clamp(min, max, v) {
   return Math.min(max, Math.max(min, v));
@@ -369,10 +377,9 @@ var validators = Curry._3(Validators[/* add */3], /* Options */4, /* record */[
                     return /* Option */Block.__(0, [i]);
                   })))],
       /* validate */(function (value, _) {
-          if (typeof value === "number") {
-            console.log("WTF?????", value);
+          if (typeof value === "number" || value.tag !== 1) {
             return Pervasives.failwith("options validator received bad input");
-          } else if (value.tag === 1) {
+          } else {
             var numOptions = value[0].filter((function (v) {
                     return v.trim() !== "";
                   })).length;
@@ -381,9 +388,6 @@ var validators = Curry._3(Validators[/* add */3], /* Options */4, /* record */[
             } else {
               return /* Valid */0;
             }
-          } else {
-            console.log("WTF?????", value);
-            return Pervasives.failwith("options validator received bad input");
           }
         })
     ], Belt_Array.reduce(Belt_Array.range(0, 100), baseValidators, (function (result, i) {
@@ -436,102 +440,48 @@ function isValid(result) {
   }
 }
 
-var component$1 = ReasonReact.statelessComponent("PollForm-ReactTemplate");
-
-function make(form, field, children) {
-  return /* record */[
-          /* debugName */component$1[/* debugName */0],
-          /* reactClassInternal */component$1[/* reactClassInternal */1],
-          /* handedOffState */component$1[/* handedOffState */2],
-          /* willReceiveProps */component$1[/* willReceiveProps */3],
-          /* didMount */component$1[/* didMount */4],
-          /* didUpdate */component$1[/* didUpdate */5],
-          /* willUnmount */component$1[/* willUnmount */6],
-          /* willUpdate */component$1[/* willUpdate */7],
-          /* shouldUpdate */component$1[/* shouldUpdate */8],
-          /* render */(function () {
-              var results = Curry._1(form[/* results */2], field);
-              var tmp;
-              if (results) {
-                var match = results[0];
-                tmp = match ? React.createElement("div", {
-                        className: TypedGlamor.toString(PollFormStyles$ReactTemplate.invalid)
-                      }, Icon$ReactTemplate.exclamation, match[0]) : React.createElement("div", {
-                        className: TypedGlamor.toString(PollFormStyles$ReactTemplate.valid)
-                      }, Icon$ReactTemplate.checkCircle);
-              } else {
-                tmp = null;
-              }
-              return React.createElement("div", {
-                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.field)
-                        }, Curry._1(children, results), tmp);
-            }),
-          /* initialState */component$1[/* initialState */10],
-          /* retainedProps */component$1[/* retainedProps */11],
-          /* reducer */component$1[/* reducer */12],
-          /* subscriptions */component$1[/* subscriptions */13],
-          /* jsElementWrapped */component$1[/* jsElementWrapped */14]
-        ];
-}
-
-var Field = /* module */[
-  /* component */component$1,
-  /* make */make
-];
-
 function renderOption(form, optionsResults, i, value) {
   var field = /* Option */Block.__(0, [i]);
-  return ReasonReact.element(/* None */0, /* None */0, make(form, field, (function (results) {
-                    var valid = isValid(results) && isValid(optionsResults);
-                    var tmp;
-                    if (optionsResults) {
-                      var match = optionsResults[0];
-                      tmp = match ? match[0] : "Poll option...";
-                    } else {
-                      tmp = "Poll option...";
-                    }
-                    var match$1 = form[/* state */0][/* options */3].length > 2;
-                    return React.createElement("div", {
-                                key: String(i),
-                                className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionField(valid))
-                              }, React.createElement("span", {
-                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionNum)
-                                  }, String(i + 1 | 0)), React.createElement("input", {
-                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionInput(valid)),
-                                    autoComplete: "off",
-                                    placeholder: tmp,
-                                    value: value,
-                                    onFocus: (function () {
-                                        var lastOption = form[/* state */0][/* options */3].length - 1 | 0;
-                                        if (i >= lastOption) {
-                                          return Curry._2(form[/* change */4], /* AddOption */3, /* NoValue */0);
-                                        } else {
-                                          return 0;
-                                        }
-                                      }),
-                                    onChange: (function ($$event) {
-                                        Curry._2(form[/* change */4], field, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                        if (optionsResults && optionsResults[0]) {
-                                          return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
-                                        } else {
-                                          return /* () */0;
-                                        }
-                                      })
-                                  }), match$1 ? React.createElement("a", {
-                                      className: TypedGlamor.toString(PollFormStyles$ReactTemplate.optionRemove),
-                                      onClick: (function () {
-                                          Curry._2(form[/* change */4], /* DelOption */Block.__(1, [i]), /* NoValue */0);
-                                          if (optionsResults && optionsResults[0]) {
-                                            return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
-                                          } else {
-                                            return /* () */0;
-                                          }
-                                        })
-                                    }, Icon$ReactTemplate.minusSquare) : "");
-                  })));
+  var results = Curry._1(form[/* results */2], field);
+  var valid = isValid(results) && isValid(optionsResults);
+  var canDelete = form[/* state */0][/* options */3].length > 2;
+  var tmp;
+  if (optionsResults) {
+    var match = optionsResults[0];
+    tmp = match ? match[0] : "Poll Option";
+  } else {
+    tmp = "Poll Option";
+  }
+  return React.createElement("div", {
+              key: String(i)
+            }, ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[!valid], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[tmp], /* Some */[/* Normal */-453122489], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                          Curry._2(form[/* change */4], field, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                          if (optionsResults && optionsResults[0]) {
+                            return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
+                          } else {
+                            return /* () */0;
+                          }
+                        })], /* Some */[(function () {
+                          var lastOption = form[/* state */0][/* options */3].length - 1 | 0;
+                          if (i >= lastOption) {
+                            return Curry._2(form[/* change */4], /* AddOption */3, /* NoValue */0);
+                          } else {
+                            return 0;
+                          }
+                        })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* `String */[
+                        -976970511,
+                        value
+                      ]], /* None */0, /* array */[])), ReasonReact.element(/* None */0, /* None */0, MaterialUi_IconButton.make(/* None */0, /* None */0, /* Some */[!canDelete], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[(function () {
+                          Curry._2(form[/* change */4], /* DelOption */Block.__(1, [i]), /* NoValue */0);
+                          if (optionsResults && optionsResults[0]) {
+                            return Curry._2(form[/* change */4], /* Options */4, /* StringArray */Block.__(1, [form[/* state */0][/* options */3]]));
+                          } else {
+                            return /* () */0;
+                          }
+                        })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_SvgIcon.make(/* None */0, /* Some */[canDelete ? /* Error */106380200 : /* Disabled */-709493348], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUIIcons.Delete[/* make */0](/* array */[]))]))])));
 }
 
-function make$1(context, _) {
+function make(context, _) {
   return /* record */[
           /* debugName */component[/* debugName */0],
           /* reactClassInternal */component[/* reactClassInternal */1],
@@ -605,125 +555,120 @@ function make$1(context, _) {
                               }), (function (form) {
                                 var partial_arg = form[/* submit */6];
                                 var partial_arg$1 = Formality__PublicHelpers.Dom[/* preventDefault */6];
+                                var match = Curry._1(form[/* results */2], /* Title */1);
+                                var tmp;
+                                if (match) {
+                                  var match$1 = match[0];
+                                  tmp = match$1 ? match$1[0] : "Title";
+                                } else {
+                                  tmp = "Title";
+                                }
+                                var partial_arg$2 = Curry._1(form[/* results */2], /* Options */4);
                                 return React.createElement("form", {
-                                            className: TypedGlamor.toString(PollFormStyles$ReactTemplate.container),
+                                            autoComplete: "off",
+                                            noValidate: true,
                                             onSubmit: (function (param) {
                                                 return partial_arg$1(partial_arg, param);
                                               })
-                                          }, React.createElement("div", {
-                                                className: TypedGlamor.toString(PollFormStyles$ReactTemplate.fields)
-                                              }, ReasonReact.element(/* None */0, /* None */0, make(form, /* Title */1, (function (results) {
-                                                          var tmp;
-                                                          if (results) {
-                                                            var match = results[0];
-                                                            tmp = match ? match[0] : "Title of your poll...";
-                                                          } else {
-                                                            tmp = "Title of your poll...";
-                                                          }
-                                                          return React.createElement("div", undefined, React.createElement("input", {
-                                                                          className: TypedGlamor.toString(PollFormStyles$ReactTemplate.titleInput(isValid(results))),
-                                                                          autoComplete: "off",
-                                                                          autoFocus: true,
-                                                                          disabled: form[/* submitting */3],
-                                                                          placeholder: tmp,
-                                                                          value: form[/* state */0][/* title */1],
-                                                                          onBlur: (function ($$event) {
-                                                                              return Curry._2(form[/* blur */5], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                                            }),
-                                                                          onChange: (function ($$event) {
-                                                                              return Curry._2(form[/* change */4], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                                            })
-                                                                        }));
-                                                        }))), ReasonReact.element(/* None */0, /* None */0, make(form, /* Options */4, (function (results) {
-                                                          return React.createElement("div", undefined, $$Array.mapi((function (param, param$1) {
-                                                                            return renderOption(form, results, param, param$1);
-                                                                          }), form[/* state */0][/* options */3]));
-                                                        }))), React.createElement("div", {
-                                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.advancedFields)
-                                                  }, React.createElement("div", undefined, React.createElement("label", {
-                                                            className: "label-lg",
-                                                            htmlFor: "signup--title"
-                                                          }, "Min choices"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            type: "number",
-                                                            value: String(form[/* state */0][/* minChoices */6]),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
-                                                              })
-                                                          })), React.createElement("div", undefined, React.createElement("label", {
-                                                            className: "label-lg",
-                                                            htmlFor: "signup--title"
-                                                          }, "Max choices"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            type: "number",
-                                                            value: String(form[/* state */0][/* maxChoices */7]),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
-                                                              })
-                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Open time"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            type: "datetime-local",
-                                                            value: form[/* state */0][/* openTime */8].toISOString().slice(0, -1),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                              })
-                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Close time"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            type: "datetime-local",
-                                                            value: form[/* state */0][/* closeTime */9].toISOString().slice(0, -1),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                              })
-                                                          })), React.createElement("div", {
-                                                        className: "form-row"
-                                                      }, React.createElement("label", {
-                                                            className: "label-lg",
-                                                            htmlFor: "signup--title"
-                                                          }, "Poll Name"), React.createElement("input", {
-                                                            id: "signup--title",
-                                                            disabled: form[/* submitting */3],
-                                                            type: "text",
-                                                            value: form[/* state */0][/* pollName */0],
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                              })
-                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Whitelist"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            value: form[/* state */0][/* whitelist */4].join(", "),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                              })
-                                                          })), React.createElement("div", undefined, React.createElement("label", undefined, "Blacklist"), React.createElement("input", {
-                                                            disabled: form[/* submitting */3],
-                                                            value: form[/* state */0][/* blacklist */5].join(", "),
-                                                            onBlur: (function ($$event) {
-                                                                return Curry._2(form[/* blur */5], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
-                                                              }),
-                                                            onChange: (function ($$event) {
-                                                                return Curry._2(form[/* change */4], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
-                                                              })
-                                                          }))), React.createElement("button", {
-                                                    className: TypedGlamor.toString(PollFormStyles$ReactTemplate.submitButton),
-                                                    type: "submit"
-                                                  }, "Create Poll")));
+                                          }, ReasonReact.element(/* None */0, /* None */0, MaterialUi_Paper.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                    ReasonReact.element(/* None */0, /* None */0, MaterialUi_Stepper.make(/* Some */[/* `Int */[
+                                                                3654863,
+                                                                0
+                                                              ]], /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* Vertical */-1010337642], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                              ReasonReact.element(/* Some */["required"], /* None */0, MaterialUi_Step.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                        ReasonReact.element(/* None */0, /* None */0, MaterialUi_StepLabel.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Required Fields"])),
+                                                                        ReasonReact.element(/* None */0, /* None */0, MaterialUi_StepContent.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                                  React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[tmp], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* blur */5], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* change */4], /* Title */1, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                  })], /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* `String */[
+                                                                                                  -976970511,
+                                                                                                  form[/* state */0][/* title */1]
+                                                                                                ]], /* None */0, /* array */[]))),
+                                                                                  React.createElement("div", undefined, $$Array.mapi((function (param, param$1) {
+                                                                                              return renderOption(form, partial_arg$2, param, param$1);
+                                                                                            }), form[/* state */0][/* options */3]))
+                                                                                ]))
+                                                                      ])),
+                                                              ReasonReact.element(/* Some */["optional"], /* None */0, MaterialUi_Step.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                        ReasonReact.element(/* None */0, /* None */0, MaterialUi_StepLabel.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Optional Fields"])),
+                                                                        ReasonReact.element(/* None */0, /* None */0, MaterialUi_StepContent.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                                  ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                                            ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Min choices"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* blur */5], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
+                                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* change */4], /* MinChoices */7, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
+                                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["number"], /* Some */[/* `Int */[
+                                                                                                                  3654863,
+                                                                                                                  form[/* state */0][/* minChoices */6]
+                                                                                                                ]], /* None */0, /* array */[]))])),
+                                                                                            ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Max choices"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* blur */5], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event))]));
+                                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* change */4], /* MaxChoices */8, /* Int */Block.__(3, [Caml_format.caml_int_of_string(Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event))]));
+                                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["number"], /* Some */[/* `Int */[
+                                                                                                                  3654863,
+                                                                                                                  form[/* state */0][/* maxChoices */7]
+                                                                                                                ]], /* None */0, /* array */[]))]))
+                                                                                          ])),
+                                                                                  ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                                                                            ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Open time"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* blur */5], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* change */4], /* OpenTime */9, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["datetime-local"], /* Some */[/* `String */[
+                                                                                                                  -976970511,
+                                                                                                                  form[/* state */0][/* openTime */8].toISOString().slice(0, -1)
+                                                                                                                ]], /* None */0, /* array */[]))])),
+                                                                                            ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Close time"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* blur */5], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                                    return Curry._2(form[/* change */4], /* CloseTime */10, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["datetime-local"], /* Some */[/* `String */[
+                                                                                                                  -976970511,
+                                                                                                                  form[/* state */0][/* closeTime */9].toISOString().slice(0, -1)
+                                                                                                                ]], /* None */0, /* array */[]))]))
+                                                                                          ])),
+                                                                                  React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Poll Name"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* blur */5], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* change */4], /* PollName */0, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* `String */[
+                                                                                                  -976970511,
+                                                                                                  form[/* state */0][/* pollName */0]
+                                                                                                ]], /* None */0, /* array */[]))),
+                                                                                  React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Whitelist"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* blur */5], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* change */4], /* Whitelist */5, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* `Array */[
+                                                                                                  951901561,
+                                                                                                  form[/* state */0][/* whitelist */4].map((function (a) {
+                                                                                                          return /* `String */[
+                                                                                                                  -976970511,
+                                                                                                                  a
+                                                                                                                ];
+                                                                                                        }))
+                                                                                                ]], /* None */0, /* array */[]))),
+                                                                                  React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, MaterialUi_TextField.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[form[/* submitting */3]], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["Blacklist"], /* None */0, /* None */0, /* None */0, /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* blur */5], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnBlur */3]($$event)]));
+                                                                                                  })], /* Some */[(function ($$event) {
+                                                                                                    return Curry._2(form[/* change */4], /* Blacklist */6, /* String */Block.__(0, [Formality__PublicHelpers.Dom[/* toValueOnChange */2]($$event)]));
+                                                                                                  })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* `Array */[
+                                                                                                  951901561,
+                                                                                                  form[/* state */0][/* blacklist */5].map((function (a) {
+                                                                                                          return /* `String */[
+                                                                                                                  -976970511,
+                                                                                                                  a
+                                                                                                                ];
+                                                                                                        }))
+                                                                                                ]], /* None */0, /* array */[])))
+                                                                                ]))
+                                                                      ]))
+                                                            ])),
+                                                    ReasonReact.element(/* None */0, /* None */0, MaterialUi_Button.make(/* None */0, /* Some */[/* Primary */-791844958], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* Large */48800667], /* Some */["submit"], /* Some */[/* Contained */-515484397], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Create Poll"]))
+                                                  ])));
                               })));
             }),
           /* initialState */component[/* initialState */10],
@@ -734,15 +679,11 @@ function make$1(context, _) {
         ];
 }
 
-var Cn = 0;
-
-exports.Cn = Cn;
 exports.clamp = clamp;
 exports.Form = Form;
 exports.Container = Container;
 exports.component = component;
 exports.isValid = isValid;
-exports.Field = Field;
 exports.renderOption = renderOption;
-exports.make = make$1;
+exports.make = make;
 /* Validators Not a pure module */

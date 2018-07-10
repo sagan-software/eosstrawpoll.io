@@ -29,10 +29,8 @@ function renderTemplate(content, helmet, apolloClient) {
   var styles = Server.renderStatic((function () {
           return content;
         }));
-  var css = styles.css;
   var html = styles.html;
-  var ids = JSON.stringify(styles.ids);
-  return "<!DOCTYPE html>\n  <html " + (String(htmlAttributes) + (">\n    <head>\n      <meta charset=\"utf-8\">\n      <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">\n      " + (String(title) + ("\n      " + (String(meta) + ("\n      " + (String(style) + ("\n      <script>\n        window.__APOLLO_STATE__ = " + (String(apolloState) + (";\n        window._glam = " + (String(ids) + (";\n      </script>\n      <style type=\"text/css\" data-glamor>\n        " + (String(css) + ("\n      </style>\n    </head>\n  <body " + (String(bodyAttributes) + (">\n    <div id=\"app\">" + (String(html) + ("</div>\n    <script src=\"" + (String(staticUrl) + ("/client.js\"></script>\n    " + (String(script) + "\n  </body>\n  </html>\n")))))))))))))))))))));
+  return "<!DOCTYPE html>\n  <html " + (String(htmlAttributes) + (">\n    <head>\n      <meta charset=\"utf-8\">\n      <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">\n      " + (String(title) + ("\n      " + (String(meta) + ("\n      " + (String(style) + ("\n      <script>\n        window.__APOLLO_STATE__ = " + (String(apolloState) + (";\n      </script>\n    </head>\n  <body " + (String(bodyAttributes) + (">\n    <div id=\"app\">" + (String(html) + ("</div>\n    <script src=\"" + (String(staticUrl) + ("/client.js\"></script>\n    " + (String(script) + "\n  </body>\n  </html>\n")))))))))))))))));
 }
 
 function renderHtml(apolloClient, _, req, res) {

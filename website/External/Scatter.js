@@ -2,6 +2,9 @@
 'use strict';
 
 var $$Array = require("bs-platform/lib/js/array.js");
+var Js_option = require("bs-platform/lib/js/js_option.js");
+var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
+var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
 var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 
 function toString(t) {
@@ -77,7 +80,39 @@ function toString$3(t) {
 
 var LocationField = /* module */[/* toString */toString$3];
 
-var Instance = /* module */[];
+function dispatchEvent(eventName) {
+  document.documentElement.dispatchEvent(new Event(eventName));
+  return /* () */0;
+}
+
+function getIdentity(t, fields) {
+  return t.getIdentity(fields).then((function (identity) {
+                dispatchEvent("scatterLogin");
+                return Promise.resolve(identity);
+              }));
+}
+
+function forgetIdentity(t) {
+  return t.forgetIdentity().then((function (loggedOut) {
+                dispatchEvent("scatterLogout");
+                return Promise.resolve(loggedOut);
+              }));
+}
+
+function accountName(t) {
+  return Belt_Option.map(Js_option.andThen((function (identity) {
+                    return Belt_Array.get(identity.accounts, 0);
+                  }), Js_primitive.null_undefined_to_opt(t.identity)), (function (prim) {
+                return prim.name;
+              }));
+}
+
+var Instance = /* module */[
+  /* dispatchEvent */dispatchEvent,
+  /* getIdentity */getIdentity,
+  /* forgetIdentity */forgetIdentity,
+  /* accountName */accountName
+];
 
 function suggestNetwork(prim, prim$1) {
   return prim.suggestNetwork(prim$1);
@@ -87,11 +122,11 @@ function eos(prim, prim$1, prim$2, prim$3, prim$4) {
   return prim.eos(prim$1, prim$2, prim$3, prim$4);
 }
 
-function getIdentity(instance, $staropt$star, $staropt$star$1, $staropt$star$2, _) {
+function getIdentity$1(instance, $staropt$star, $staropt$star$1, $staropt$star$2, _) {
   var accounts = $staropt$star ? $staropt$star[0] : /* array */[];
   var personal = $staropt$star$1 ? $staropt$star$1[0] : /* array */[];
   var $$location = $staropt$star$2 ? $staropt$star$2[0] : /* array */[];
-  return instance.getIdentity({
+  return getIdentity(instance, {
               accounts: accounts,
               personal: $$Array.map(toString$2, personal),
               location: $$Array.map(toString$3, $$location)
@@ -102,12 +137,18 @@ function identity(prim) {
   return Js_primitive.null_undefined_to_opt(prim.identity);
 }
 
-function forgetIdentity(prim) {
-  return prim.forgetIdentity();
-}
-
 function onLoad(callback) {
   document.addEventListener("scatterLoaded", callback);
+  return /* () */0;
+}
+
+function onLogin(callback) {
+  document.documentElement.addEventListener("scatterLogin", callback);
+  return /* () */0;
+}
+
+function onLogout(callback) {
+  document.documentElement.addEventListener("scatterLogout", callback);
   return /* () */0;
 }
 
@@ -121,8 +162,11 @@ exports.LocationField = LocationField;
 exports.Instance = Instance;
 exports.suggestNetwork = suggestNetwork;
 exports.eos = eos;
-exports.getIdentity = getIdentity;
+exports.getIdentity = getIdentity$1;
 exports.identity = identity;
 exports.forgetIdentity = forgetIdentity;
+exports.accountName = accountName;
 exports.onLoad = onLoad;
+exports.onLogin = onLogin;
+exports.onLogout = onLogout;
 /* No side effect */

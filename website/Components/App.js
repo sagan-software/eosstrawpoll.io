@@ -4,20 +4,27 @@
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var React = require("react");
+var Js_option = require("bs-platform/lib/js/js_option.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
+var Js_primitive = require("bs-platform/lib/js/js_primitive.js");
 var ApolloProvider = require("reason-apollo/src/ApolloProvider.bs.js");
+var MaterialUi_Chip = require("@jsiebern/bs-material-ui/src/MaterialUi_Chip.bs.js");
+var MaterialUi_Grid = require("@jsiebern/bs-material-ui/src/MaterialUi_Grid.bs.js");
 var Env$ReactTemplate = require("../Env.js");
-var Icon$ReactTemplate = require("./Icon.js");
+var MaterialUi_AppBar = require("@jsiebern/bs-material-ui/src/MaterialUi_AppBar.bs.js");
+var MaterialUi_Avatar = require("@jsiebern/bs-material-ui/src/MaterialUi_Avatar.bs.js");
+var MaterialUi_Button = require("@jsiebern/bs-material-ui/src/MaterialUi_Button.bs.js");
 var Link$ReactTemplate = require("./Link.js");
+var MaterialUi_Toolbar = require("@jsiebern/bs-material-ui/src/MaterialUi_Toolbar.bs.js");
 var Route$ReactTemplate = require("./Route.js");
 var Helmet$ReactTemplate = require("../External/Helmet.js");
 var Context$ReactTemplate = require("./Context.js");
+var MaterialUi_Typography = require("@jsiebern/bs-material-ui/src/MaterialUi_Typography.bs.js");
 var Scatter$ReactTemplate = require("../External/Scatter.js");
 var HomePage$ReactTemplate = require("./HomePage.js");
+var MaterialUi_CssBaseline = require("@jsiebern/bs-material-ui/src/MaterialUi_CssBaseline.bs.js");
 var PollPage$ReactTemplate = require("./PollPage.js");
 var AboutPage$ReactTemplate = require("./AboutPage.js");
-var AppStyles$ReactTemplate = require("./Styles/AppStyles.js");
 var ProfilePage$ReactTemplate = require("./ProfilePage.js");
 var PollResultsPage$ReactTemplate = require("./PollResultsPage.js");
 
@@ -55,22 +62,102 @@ function reducer(action, state) {
 
 var component = ReasonReact.reducerComponent("App-ReactTemplate");
 
-function clickedLogin(self, scatter, _) {
-  Scatter$ReactTemplate.getIdentity(scatter, /* Some */[/* array */[Env$ReactTemplate.scatterNetwork]], /* None */0, /* None */0, /* () */0).then((function (identity) {
-          console.log(identity);
-          Curry._1(self[/* send */3], /* ChangeIdentity */Block.__(1, [/* Some */[identity]]));
-          return Promise.resolve(/* () */0);
-        }));
+function fromScatter(scatter) {
+  if (scatter) {
+    var scatter$1 = scatter[0];
+    var match = Scatter$ReactTemplate.accountName(scatter$1);
+    if (match) {
+      return /* LoggedIn */Block.__(1, [
+                scatter$1,
+                match[0]
+              ]);
+    } else {
+      return /* LoggedOut */Block.__(0, [scatter$1]);
+    }
+  } else {
+    return /* NoScatter */0;
+  }
+}
+
+var AccountState = /* module */[/* fromScatter */fromScatter];
+
+function login(scatter, _) {
+  Scatter$ReactTemplate.getIdentity(scatter, /* Some */[/* array */[Env$ReactTemplate.scatterNetwork]], /* None */0, /* None */0, /* () */0);
   return /* () */0;
 }
 
-function clickedLogout(self, scatter, _) {
-  Scatter$ReactTemplate.forgetIdentity(scatter).then((function () {
-          Curry._1(self[/* send */3], /* ChangeIdentity */Block.__(1, [/* None */0]));
-          return Promise.resolve(/* () */0);
-        }));
+function logout(scatter, _) {
+  Scatter$ReactTemplate.forgetIdentity(scatter);
   return /* () */0;
 }
+
+function render(accountState) {
+  var tmp;
+  if (typeof accountState === "number") {
+    tmp = ReasonReact.element(/* None */0, /* None */0, MaterialUi_Button.make(/* None */0, /* Some */[/* Inherit */-72987685], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["https://get-scatter.com/"], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Get Scatter"]));
+  } else if (accountState.tag) {
+    var accountName = accountState[1];
+    var scatter = accountState[0];
+    var route = /* Profile */Block.__(0, [accountName]);
+    tmp = ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* Some */[/* Center */980392437], /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V16 */2], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+              ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Chip.make(/* Some */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Avatar.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */["https://api.adorable.io/avatars/20/" + (String(accountName) + "@eosstrawpoll")], /* None */0, /* None */0, /* None */0, /* array */[]))], /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[accountName], /* Some */[(function () {
+                                      return Route$ReactTemplate.redirectTo(route);
+                                    })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[]))])),
+              ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Button.make(/* None */0, /* Some */[/* Inherit */-72987685], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[(function () {
+                                      Scatter$ReactTemplate.forgetIdentity(scatter);
+                                      return /* () */0;
+                                    })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Logout"]))]))
+            ]));
+  } else {
+    var scatter$1 = accountState[0];
+    tmp = ReasonReact.element(/* None */0, /* None */0, MaterialUi_Button.make(/* None */0, /* Some */[/* Inherit */-72987685], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[(function (param) {
+                  return login(scatter$1, param);
+                })], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Login with Scatter"]));
+  }
+  return ReasonReact.element(/* None */0, /* None */0, MaterialUi_AppBar.make(/* None */0, /* None */0, /* Some */[/* Static */982536398], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Toolbar.make(/* None */0, /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* Some */[/* Center */980392437], /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* Some */[/* Space_Between */959915471], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+                                      ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V2 */19228], /* None */0, /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, MaterialUi_Typography.make(/* None */0, /* None */0, /* Some */[/* Primary */-791844958], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* Title */594052472], /* None */0, /* None */0, /* array */[ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Home */0, /* None */0, /* array */["EOS Straw Poll"]))]))])),
+                                      ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* Auto */726666127], /* None */0, /* None */0, /* None */0, /* array */[tmp]))
+                                    ]))]))]));
+}
+
+var AppHeader = /* module */[
+  /* login */login,
+  /* logout */logout,
+  /* render */render
+];
+
+var render$1 = ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */[
+          ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V3 */19229], /* None */0, /* None */0, /* None */0, /* array */[
+                    React.createElement("h3", undefined, "Like EOS Straw Poll?"),
+                    React.createElement("p", undefined, "Please consider donating to help cover server costs and fund development. Thank you!"),
+                    React.createElement("form", undefined, React.createElement("input", {
+                              placeholder: "1 EOS",
+                              type: "number"
+                            }), ReasonReact.element(/* None */0, /* None */0, MaterialUi_Button.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* array */["Donate "])))
+                  ])),
+          ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V3 */19229], /* None */0, /* None */0, /* None */0, /* array */[
+                    React.createElement("h3", undefined, "Top Donators"),
+                    React.createElement("ol", undefined, React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")))
+                  ])),
+          ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V3 */19229], /* None */0, /* None */0, /* None */0, /* array */[
+                    React.createElement("h3", undefined, "Recent Donations"),
+                    React.createElement("ol", undefined, React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")))
+                  ])),
+          ReasonReact.element(/* None */0, /* None */0, MaterialUi_Grid.make(/* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[true], /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* None */0, /* Some */[/* V3 */19229], /* None */0, /* None */0, /* None */0, /* array */[
+                    React.createElement("h3", undefined, "Links"),
+                    React.createElement("ol", undefined, React.createElement("li", undefined, React.createElement("a", {
+                                  href: "https://twitter.com/" + process.env.TWITTER_NAME
+                                }, "Twitter")), React.createElement("li", undefined, React.createElement("a", {
+                                  href: "https://github.com/" + process.env.TWITTER_NAME
+                                }, "Github")), React.createElement("li", undefined, React.createElement("a", {
+                                  href: "#steemit"
+                                }, "Steemit")), React.createElement("li", undefined, React.createElement("a", {
+                                  href: "#roadmap"
+                                }, "Roadmap")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* About */1, /* None */0, /* array */["About"]))))
+                  ]))
+        ]));
+
+var AppFooter = /* module */[/* render */render$1];
 
 function make(apolloClient, $staropt$star, _) {
   var route = $staropt$star ? $staropt$star[0] : /* Home */0;
@@ -80,13 +167,19 @@ function make(apolloClient, $staropt$star, _) {
           /* handedOffState */component[/* handedOffState */2],
           /* willReceiveProps */component[/* willReceiveProps */3],
           /* didMount */(function (self) {
-              return Scatter$ReactTemplate.onLoad((function () {
-                            var match = window.scatter;
-                            if (match == null) {
-                              return /* () */0;
-                            } else {
-                              return Curry._1(self[/* send */3], /* ScatterLoaded */Block.__(2, [match]));
-                            }
+              Scatter$ReactTemplate.onLoad((function () {
+                      var match = window.scatter;
+                      if (match == null) {
+                        return /* () */0;
+                      } else {
+                        return Curry._1(self[/* send */3], /* ScatterLoaded */Block.__(2, [match]));
+                      }
+                    }));
+              Scatter$ReactTemplate.onLogout((function () {
+                      return Curry._1(self[/* send */3], /* ChangeIdentity */Block.__(1, [/* None */0]));
+                    }));
+              return Scatter$ReactTemplate.onLogin((function () {
+                            return Curry._1(self[/* send */3], /* ChangeIdentity */Block.__(1, [Js_option.andThen(Scatter$ReactTemplate.identity, Js_primitive.null_undefined_to_opt(window.scatter))]));
                           }));
             }),
           /* didUpdate */component[/* didUpdate */5],
@@ -95,120 +188,67 @@ function make(apolloClient, $staropt$star, _) {
           /* shouldUpdate */component[/* shouldUpdate */8],
           /* render */(function (self) {
               var context = self[/* state */1][/* context */0];
-              var match = context[/* scatter */0];
+              var match = self[/* state */1][/* route */1];
               var tmp;
-              if (match) {
-                var scatter = match[0];
-                var match$1 = Context$ReactTemplate.accountName(context);
-                if (match$1) {
-                  var name = match$1[0];
-                  tmp = React.createElement("nav", {
-                        className: TypedGlamor.toString(AppStyles$ReactTemplate.userNav)
-                      }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, [name]), /* None */0, /* array */[
-                                React.createElement("img", {
-                                      className: TypedGlamor.toString(AppStyles$ReactTemplate.userAvatar),
-                                      src: "https://api.adorable.io/avatars/20/" + (String(name) + "@eosstrawpoll")
-                                    }),
-                                name
-                              ])), React.createElement("a", undefined, Icon$ReactTemplate.cog), React.createElement("a", {
-                            onClick: (function (param) {
-                                return clickedLogout(self, scatter, param);
-                              })
-                          }, Icon$ReactTemplate.logout));
-                } else {
-                  tmp = React.createElement("a", {
-                        className: TypedGlamor.toString(AppStyles$ReactTemplate.loginLink),
-                        onClick: (function (param) {
-                            return clickedLogin(self, scatter, param);
-                          })
-                      }, "Login with Scatter");
-                }
+              if (typeof match === "number") {
+                tmp = match === 0 ? ReasonReact.element(/* None */0, /* None */0, HomePage$ReactTemplate.make(context, /* array */[])) : ReasonReact.element(/* None */0, /* None */0, AboutPage$ReactTemplate.make(/* array */[]));
               } else {
-                tmp = React.createElement("a", {
-                      href: "https://get-scatter.com/"
-                    }, "Get Scatter");
-              }
-              var match$2 = self[/* state */1][/* route */1];
-              var tmp$1;
-              if (typeof match$2 === "number") {
-                tmp$1 = match$2 === 0 ? ReasonReact.element(/* None */0, /* None */0, HomePage$ReactTemplate.make(context, /* array */[])) : ReasonReact.element(/* None */0, /* None */0, AboutPage$ReactTemplate.make(/* array */[]));
-              } else {
-                switch (match$2.tag | 0) {
+                switch (match.tag | 0) {
                   case 0 : 
-                      tmp$1 = ReasonReact.element(/* None */0, /* None */0, ProfilePage$ReactTemplate.make(context, match$2[0], /* array */[]));
+                      tmp = ReasonReact.element(/* None */0, /* None */0, ProfilePage$ReactTemplate.make(context, match[0], /* array */[]));
                       break;
                   case 1 : 
-                      tmp$1 = ReasonReact.element(/* None */0, /* None */0, PollPage$ReactTemplate.make(context, match$2[0], match$2[1], /* array */[]));
+                      tmp = ReasonReact.element(/* None */0, /* None */0, PollPage$ReactTemplate.make(context, match[0], match[1], /* array */[]));
                       break;
                   case 2 : 
-                      tmp$1 = ReasonReact.element(/* None */0, /* None */0, PollResultsPage$ReactTemplate.make(context, match$2[0], match$2[1], /* array */[]));
+                      tmp = ReasonReact.element(/* None */0, /* None */0, PollResultsPage$ReactTemplate.make(context, match[0], match[1], /* array */[]));
                       break;
                   
                 }
               }
-              return ReasonReact.element(/* None */0, /* None */0, ApolloProvider.make(apolloClient, /* array */[React.createElement("div", {
-                                    className: TypedGlamor.toString(AppStyles$ReactTemplate.container)
-                                  }, ReasonReact.element(/* None */0, /* None */0, Helmet$ReactTemplate.make(/* array */[
-                                            React.createElement("html", {
-                                                  prefix: "og: http://ogp.me/ns#"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: "",
-                                                  name: "description"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: "width=device-width, initial-scale=1, shrink-to-fit=no",
-                                                  name: "viewport"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: "EOS Straw Poll",
-                                                  property: "og:site_name"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: "EOS Straw Poll",
-                                                  property: "og:title"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: "Straw polls on EOS!",
-                                                  property: "og:description"
-                                                }),
-                                            React.createElement("meta", {
-                                                  content: Route$ReactTemplate.toAbsolute(self[/* state */1][/* route */1]),
-                                                  property: "og:url"
-                                                }),
-                                            React.createElement("link", {
-                                                  href: "https://use.typekit.net/pix7uhg.css",
-                                                  rel: "stylesheet"
-                                                })
-                                          ])), React.createElement("header", {
-                                        className: TypedGlamor.toString(AppStyles$ReactTemplate.headerContainer)
-                                      }, React.createElement("div", {
-                                            className: TypedGlamor.toString(AppStyles$ReactTemplate.header)
-                                          }, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Home */0, /* Some */[TypedGlamor.toString(AppStyles$ReactTemplate.appLogo)], /* array */[
-                                                    Icon$ReactTemplate.eos(TypedGlamor.toString(AppStyles$ReactTemplate.appLogoIcon)),
-                                                    React.createElement("strong", undefined, "EOS Straw Poll")
-                                                  ])), tmp)), tmp$1, React.createElement("footer", {
-                                        className: TypedGlamor.toString(AppStyles$ReactTemplate.footerContainer)
-                                      }, React.createElement("div", {
-                                            className: TypedGlamor.toString(AppStyles$ReactTemplate.footer)
-                                          }, React.createElement("div", undefined, React.createElement("h3", undefined, "Like EOS Straw Poll?"), React.createElement("p", undefined, "Please consider donating to help cover server costs and fund development. Thank you!"), React.createElement("form", {
-                                                    className: TypedGlamor.toString(AppStyles$ReactTemplate.donateForm)
-                                                  }, React.createElement("input", {
-                                                        className: TypedGlamor.toString(AppStyles$ReactTemplate.donateInput),
-                                                        placeholder: "1 EOS",
-                                                        type: "number"
-                                                      }), React.createElement("button", {
-                                                        className: TypedGlamor.toString(AppStyles$ReactTemplate.donateButton),
-                                                        type: "submit"
-                                                      }, "Donate "))), React.createElement("div", undefined, React.createElement("h3", undefined, "Top Donators"), React.createElement("ol", undefined, React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "20.1 EOS")))), React.createElement("div", undefined, React.createElement("h3", undefined, "Recent Donations"), React.createElement("ol", undefined, React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* Profile */Block.__(0, ["saganonroids"]), /* None */0, /* array */["saganonroids"])), React.createElement("code", undefined, "1 EOS")))), React.createElement("div", undefined, React.createElement("h3", undefined, "Links"), React.createElement("ol", undefined, React.createElement("li", undefined, React.createElement("a", {
-                                                            href: "https://twitter.com/" + process.env.TWITTER_NAME
-                                                          }, "Twitter")), React.createElement("li", undefined, React.createElement("a", {
-                                                            href: "https://github.com/" + process.env.TWITTER_NAME
-                                                          }, "Github")), React.createElement("li", undefined, React.createElement("a", {
-                                                            href: "#steemit"
-                                                          }, "Steemit")), React.createElement("li", undefined, React.createElement("a", {
-                                                            href: "#roadmap"
-                                                          }, "Roadmap")), React.createElement("li", undefined, ReasonReact.element(/* None */0, /* None */0, Link$ReactTemplate.make(/* About */1, /* None */0, /* array */["About"]))))))))]));
+              return ReasonReact.element(/* None */0, /* None */0, ApolloProvider.make(apolloClient, /* array */[
+                              ReasonReact.element(/* None */0, /* None */0, Helmet$ReactTemplate.make(/* array */[
+                                        React.createElement("html", {
+                                              prefix: "og: http://ogp.me/ns#"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: "",
+                                              name: "description"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: "width=device-width, initial-scale=1, shrink-to-fit=no",
+                                              name: "viewport"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: "EOS Straw Poll",
+                                              property: "og:site_name"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: "EOS Straw Poll",
+                                              property: "og:title"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: "Straw polls on EOS!",
+                                              property: "og:description"
+                                            }),
+                                        React.createElement("meta", {
+                                              content: Route$ReactTemplate.toAbsolute(self[/* state */1][/* route */1]),
+                                              property: "og:url"
+                                            }),
+                                        React.createElement("link", {
+                                              href: "https://fonts.googleapis.com/css?family=Roboto:300,400,500",
+                                              rel: "stylesheet"
+                                            }),
+                                        React.createElement("link", {
+                                              href: "https://fonts.googleapis.com/icon?family=Material+Icons",
+                                              rel: "stylesheet"
+                                            })
+                                      ])),
+                              ReasonReact.element(/* None */0, /* None */0, MaterialUi_CssBaseline.make(/* array */[])),
+                              render(fromScatter(context[/* scatter */0])),
+                              tmp,
+                              render$1
+                            ]));
             }),
           /* initialState */(function () {
               return /* record */[
@@ -235,12 +275,10 @@ function make(apolloClient, $staropt$star, _) {
         ];
 }
 
-var Cn = 0;
-
-exports.Cn = Cn;
 exports.reducer = reducer;
 exports.component = component;
-exports.clickedLogin = clickedLogin;
-exports.clickedLogout = clickedLogout;
+exports.AccountState = AccountState;
+exports.AppHeader = AppHeader;
+exports.AppFooter = AppFooter;
 exports.make = make;
 /* component Not a pure module */

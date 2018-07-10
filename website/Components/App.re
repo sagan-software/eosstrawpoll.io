@@ -1,6 +1,4 @@
-open Webapi.Dom;
-
-module Cn = AppStyles;
+open MaterialUi;
 
 type state = {
   context: Context.t,
@@ -36,22 +34,190 @@ let reducer = (action, state) =>
 
 let component = ReasonReact.reducerComponent(__MODULE__);
 
-let clickedLogin = ({ReasonReact.state} as self, scatter, _event) =>
-  Scatter.getIdentity(scatter, ~accounts=[|Env.scatterNetwork|], ())
-  |> Js.Promise.then_(identity => {
-       Js.log(identity);
-       self.send(ChangeIdentity(Some(identity)));
-       Js.Promise.resolve();
-     })
-  |> ignore;
+module AccountState = {
+  type t =
+    | NoScatter
+    | LoggedOut(Scatter.t)
+    | LoggedIn(Scatter.t, string);
 
-let clickedLogout = ({ReasonReact.state} as self, scatter, _event) =>
-  Scatter.forgetIdentity(scatter)
-  |> Js.Promise.then_(_result => {
-       self.send(ChangeIdentity(None));
-       Js.Promise.resolve();
-     })
-  |> ignore;
+  let fromScatter = scatter =>
+    switch (scatter) {
+    | Some(scatter) =>
+      switch (scatter |. Scatter.accountName) {
+      | Some(accountName) => LoggedIn(scatter, accountName)
+      | None => LoggedOut(scatter)
+      }
+    | None => NoScatter
+    };
+};
+
+module AppHeader = {
+  let login = (scatter, _event) =>
+    scatter
+    |. Scatter.getIdentity(~accounts=[|Env.scatterNetwork|], ())
+    |> ignore;
+
+  let logout = (scatter, _event) =>
+    scatter |. Scatter.forgetIdentity |> ignore;
+
+  let render = accountState =>
+    <AppBar position=`Static>
+      <Toolbar>
+        <Grid container=true justify=`Space_Between alignItems=`Center>
+          <Grid item=true xs=`V2>
+            <Typography variant=`Title color=`Primary>
+              <Link route=Route.Home>
+                ("EOS Straw Poll" |> ReasonReact.string)
+              </Link>
+            </Typography>
+          </Grid>
+          <Grid item=true xs=`Auto>
+            (
+              switch (accountState) {
+              | AccountState.NoScatter =>
+                <Button color=`Inherit href="https://get-scatter.com/">
+                  ("Get Scatter" |> ReasonReact.string)
+                </Button>
+              | AccountState.LoggedOut(scatter) =>
+                <Button color=`Inherit onClick=(login(scatter))>
+                  ("Login with Scatter" |> ReasonReact.string)
+                </Button>
+              | AccountState.LoggedIn(scatter, accountName) =>
+                let route = Route.Profile(accountName);
+                <Grid container=true alignItems=`Center spacing=Grid.V16>
+                  <Grid item=true>
+                    <Chip
+                      avatar={
+                        <Avatar
+                          src={j|https://api.adorable.io/avatars/20/$accountName@eosstrawpoll|j}
+                        />
+                      }
+                      label=(accountName |> ReasonReact.string)
+                      onClick=(_e => route |> Route.redirectTo)
+                    />
+                  </Grid>
+                  <Grid item=true>
+                    <Button color=`Inherit onClick=(logout(scatter))>
+                      ("Logout" |> ReasonReact.string)
+                    </Button>
+                  </Grid>
+                </Grid>;
+              }
+            )
+          </Grid>
+        </Grid>
+      </Toolbar>
+    </AppBar>;
+};
+
+module AppFooter = {
+  let render =
+    <Grid container=true>
+      <Grid item=true xs=`V3>
+        <h3> ("Like EOS Straw Poll?" |> ReasonReact.string) </h3>
+        <p>
+          (
+            "Please consider donating to help cover server costs and fund development. Thank you!"
+            |> ReasonReact.string
+          )
+        </p>
+        <form>
+          <input type_="number" placeholder="1 EOS" />
+          <Button> ("Donate " |> ReasonReact.string) </Button>
+        </form>
+      </Grid>
+      <Grid item=true xs=`V3>
+        <h3> ("Top Donators" |> ReasonReact.string) </h3>
+        <ol>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("20.1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("20.1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("20.1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("20.1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("20.1 EOS" |> ReasonReact.string) </code>
+          </li>
+        </ol>
+      </Grid>
+      <Grid item=true xs=`V3>
+        <h3> ("Recent Donations" |> ReasonReact.string) </h3>
+        <ol>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("1 EOS" |> ReasonReact.string) </code>
+          </li>
+          <li>
+            <Link route=(Route.Profile("saganonroids"))>
+              ("saganonroids" |> ReasonReact.string)
+            </Link>
+            <code> ("1 EOS" |> ReasonReact.string) </code>
+          </li>
+        </ol>
+      </Grid>
+      <Grid item=true xs=`V3>
+        <h3> ("Links" |> ReasonReact.string) </h3>
+        <ol>
+          <li>
+            <a href=("https://twitter.com/" ++ Env.twitterName)>
+              ("Twitter" |> ReasonReact.string)
+            </a>
+          </li>
+          <li>
+            <a href=("https://github.com/" ++ Env.twitterName)>
+              ("Github" |> ReasonReact.string)
+            </a>
+          </li>
+          <li> <a href="#steemit"> ("Steemit" |> ReasonReact.string) </a> </li>
+          <li> <a href="#roadmap"> ("Roadmap" |> ReasonReact.string) </a> </li>
+          <li>
+            <Link route=Route.About> (ReasonReact.string("About")) </Link>
+          </li>
+        </ol>
+      </Grid>
+    </Grid>;
+};
 
 let make = (~apolloClient, ~route=Route.Home, _children) => {
   ...component,
@@ -66,210 +232,61 @@ let make = (~apolloClient, ~route=Route.Home, _children) => {
       ReasonReact.Router.unwatchUrl,
     ),
   ],
-  didMount: self =>
+  didMount: self => {
     Scatter.onLoad(_event =>
       switch (Scatter.instance) {
       | Some(scatter) => self.send(ScatterLoaded(scatter))
       | None => ()
       }
-    ),
+    );
+    Scatter.onLogout(_event => self.send(ChangeIdentity(None)));
+    Scatter.onLogin(_event =>
+      Scatter.instance
+      |> Js.Option.andThen((. scatter) => scatter |. Scatter.identity)
+      |. ChangeIdentity
+      |> self.send
+    );
+  },
   render: self => {
     let context = self.state.context;
     <ReasonApollo.Provider client=apolloClient>
-      <div className=(Cn.container |> TypedGlamor.toString)>
-        <Helmet>
-          <html prefix="og: http://ogp.me/ns#" />
-          <meta name="description" content="" />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-          />
-          <meta property="og:site_name" content="EOS Straw Poll" />
-          <meta property="og:title" content="EOS Straw Poll" />
-          <meta property="og:description" content="Straw polls on EOS!" />
-          <meta
-            property="og:url"
-            content=(self.state.route |> Route.toAbsolute)
-          />
-          <link rel="stylesheet" href="https://use.typekit.net/pix7uhg.css" />
-        </Helmet>
-        <header className=(Cn.headerContainer |> TypedGlamor.toString)>
-          <div className=(Cn.header |> TypedGlamor.toString)>
-            <Link
-              className=(Cn.appLogo |> TypedGlamor.toString) route=Route.Home>
-              (Cn.appLogoIcon |> TypedGlamor.toString |> Icon.eos)
-              <strong> (ReasonReact.string("EOS Straw Poll")) </strong>
-            </Link>
-            (
-              switch (context.scatter) {
-              | Some(scatter) =>
-                /* User has scatter */
-                switch (context |. Context.accountName) {
-                | Some(name) =>
-                  /* User has scatter and is logged in */
-                  <nav className=(Cn.userNav |> TypedGlamor.toString)>
-                    <Link route=(Route.Profile(name))>
-                      <img
-                        className=(Cn.userAvatar |> TypedGlamor.toString)
-                        src={j|https://api.adorable.io/avatars/20/$name@eosstrawpoll|j}
-                      />
-                      (ReasonReact.string(name))
-                    </Link>
-                    <a> Icon.cog </a>
-                    <a onClick=(clickedLogout(self, scatter))>
-                      Icon.logout
-                    </a>
-                  </nav>
-                /* User has scatter but isn't logged in */
-                | None =>
-                  <a
-                    className=(Cn.loginLink |> TypedGlamor.toString)
-                    onClick=(clickedLogin(self, scatter))>
-                    (ReasonReact.string("Login with Scatter"))
-                  </a>
-                }
-              | None =>
-                /* User does not have scatter */
-                <a href="https://get-scatter.com/">
-                  (ReasonReact.string("Get Scatter"))
-                </a>
-              }
-            )
-          </div>
-        </header>
-        (
-          switch (self.state.route) {
-          | Route.Home => <HomePage context />
-          | Route.About => <AboutPage />
-          | Route.Profile(accountName) => <ProfilePage context accountName />
-          | Route.Poll(accountName, pollName) =>
-            <PollPage context accountName pollName />
-          | Route.PollResults(accountName, pollName) =>
-            <PollResultsPage context accountName pollName />
-          }
-        )
-        <footer className=(Cn.footerContainer |> TypedGlamor.toString)>
-          <div className=(Cn.footer |> TypedGlamor.toString)>
-            <div>
-              <h3> ("Like EOS Straw Poll?" |> ReasonReact.string) </h3>
-              <p>
-                (
-                  "Please consider donating to help cover server costs and fund development. Thank you!"
-                  |> ReasonReact.string
-                )
-              </p>
-              <form className=(Cn.donateForm |> TypedGlamor.toString)>
-                <input
-                  type_="number"
-                  placeholder="1 EOS"
-                  className=(Cn.donateInput |> TypedGlamor.toString)
-                />
-                <button
-                  type_="submit"
-                  className=(Cn.donateButton |> TypedGlamor.toString)>
-                  ("Donate " |> ReasonReact.string)
-                </button>
-              </form>
-            </div>
-            <div>
-              <h3> ("Top Donators" |> ReasonReact.string) </h3>
-              <ol>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("20.1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("20.1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("20.1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("20.1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("20.1 EOS" |> ReasonReact.string) </code>
-                </li>
-              </ol>
-            </div>
-            <div>
-              <h3> ("Recent Donations" |> ReasonReact.string) </h3>
-              <ol>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("1 EOS" |> ReasonReact.string) </code>
-                </li>
-                <li>
-                  <Link route=(Route.Profile("saganonroids"))>
-                    ("saganonroids" |> ReasonReact.string)
-                  </Link>
-                  <code> ("1 EOS" |> ReasonReact.string) </code>
-                </li>
-              </ol>
-            </div>
-            <div>
-              <h3> ("Links" |> ReasonReact.string) </h3>
-              <ol>
-                <li>
-                  <a href=("https://twitter.com/" ++ Env.twitterName)>
-                    ("Twitter" |> ReasonReact.string)
-                  </a>
-                </li>
-                <li>
-                  <a href=("https://github.com/" ++ Env.twitterName)>
-                    ("Github" |> ReasonReact.string)
-                  </a>
-                </li>
-                <li>
-                  <a href="#steemit"> ("Steemit" |> ReasonReact.string) </a>
-                </li>
-                <li>
-                  <a href="#roadmap"> ("Roadmap" |> ReasonReact.string) </a>
-                </li>
-                <li>
-                  <Link route=Route.About>
-                    (ReasonReact.string("About"))
-                  </Link>
-                </li>
-              </ol>
-            </div>
-          </div>
-        </footer>
-      </div>
+      <Helmet>
+        <html prefix="og: http://ogp.me/ns#" />
+        <meta name="description" content="" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+        <meta property="og:site_name" content="EOS Straw Poll" />
+        <meta property="og:title" content="EOS Straw Poll" />
+        <meta property="og:description" content="Straw polls on EOS!" />
+        <meta
+          property="og:url"
+          content=(self.state.route |> Route.toAbsolute)
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
+      </Helmet>
+      <CssBaseline />
+      (AppHeader.render(AccountState.fromScatter(context.scatter)))
+      (
+        switch (self.state.route) {
+        | Route.Home => <HomePage context />
+        | Route.About => <AboutPage />
+        | Route.Profile(accountName) => <ProfilePage context accountName />
+        | Route.Poll(accountName, pollName) =>
+          <PollPage context accountName pollName />
+        | Route.PollResults(accountName, pollName) =>
+          <PollResultsPage context accountName pollName />
+        }
+      )
+      AppFooter.render
     </ReasonApollo.Provider>;
   },
 };

@@ -4,8 +4,6 @@
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var Theme$ReactTemplate = require("./Theme.js");
 var CommonStyles$ReactTemplate = require("./CommonStyles.js");
-var GlobalStyles$ReactTemplate = require("./GlobalStyles.js");
-var HydrateGlamor$ReactTemplate = require("./HydrateGlamor.js");
 
 var sidebarWidth = TypedGlamor.pct(10);
 
@@ -278,9 +276,6 @@ var donateButton = TypedGlamor.css(/* Some */[CommonStyles$ReactTemplate.button]
 
 var donators = TypedGlamor.css(/* None */0, /* [] */0);
 
-var _global = GlobalStyles$ReactTemplate._global;
-
-exports._global = _global;
 exports.sidebarWidth = sidebarWidth;
 exports.container = container;
 exports.headerContainer = headerContainer;

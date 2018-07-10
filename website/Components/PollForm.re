@@ -1,4 +1,5 @@
-module Cn = PollFormStyles;
+open MaterialUi;
+open MaterialUIIcons;
 
 let clamp = (min, max, v) =>
   v |> Js.Math.max_int(min) |> Js.Math.min_int(max);
@@ -109,11 +110,9 @@ module Form = {
     | _ => failwith("Config.update function received bad input")
     };
   module Validators =
-    Formality.MakeValidators(
-      {
-        type t = field;
-      },
-    );
+    Formality.MakeValidators({
+      type t = field;
+    });
   type validators =
     Validators.t(Formality.validator(field, value, state, message));
   let baseValidators =
@@ -179,9 +178,7 @@ module Form = {
                  } else {
                    Formality.Valid;
                  };
-               | _ =>
-                 Js.log2("WTF?????", value);
-                 failwith("options validator received bad input");
+               | _ => failwith("options validator received bad input")
                },
            },
          )
@@ -201,105 +198,66 @@ let isValid = result =>
   | _ => false
   };
 
-module Field = {
-  let component = ReasonReact.statelessComponent(__MODULE__);
-  let make = (~form: Container.interface, ~field, children) => {
-    ...component,
-    render: _self => {
-      let results = field |> form.results;
-      <div className=(Cn.field |> TypedGlamor.toString)>
-        (children(results))
-        (
-          switch (results) {
-          | Some(Formality.Invalid(message)) =>
-            <div className=(Cn.invalid |> TypedGlamor.toString)>
-              Icon.exclamation
-              (message |> ReasonReact.string)
-            </div>
-          | Some(Formality.Valid) =>
-            <div className=(Cn.valid |> TypedGlamor.toString)>
-              Icon.checkCircle
-            </div>
-          | None => ReasonReact.null
-          }
-        )
-      </div>;
-    },
-  };
-};
-
 let renderOption = (form: Container.interface, optionsResults, i, value) => {
   let field = Form.Option(i);
-  <Field form field>
-    ...(
-         results => {
-           let valid = isValid(results) && isValid(optionsResults);
-           <div
-             key=(i |> string_of_int)
-             className=(valid |> Cn.optionField |> TypedGlamor.toString)>
-             <span className=(Cn.optionNum |> TypedGlamor.toString)>
-               (i + 1 |> string_of_int |> ReasonReact.string)
-             </span>
-             <input
-               className=(valid |> Cn.optionInput |> TypedGlamor.toString)
-               value
-               placeholder=(
-                 switch (optionsResults) {
-                 | Some(Formality.Invalid(message)) => message
-                 | _ => "Poll option..."
-                 }
-               )
-               autoComplete="off"
-               onChange=(
-                 event => {
-                   event
-                   |> Formality.Dom.toValueOnChange
-                   |. Form.String
-                   |> form.change(field);
-                   switch (optionsResults) {
-                   | Some(Formality.Invalid(_message)) =>
-                     form.change(
-                       Form.Options,
-                       StringArray(form.state.options),
-                     )
-                   | _ => ()
-                   };
-                 }
-               )
-               onFocus=(
-                 _event => {
-                   let lastOption = (form.state.options |> Array.length) - 1;
-                   if (i >= lastOption) {
-                     form.change(Form.AddOption, NoValue);
-                   };
-                 }
-               )
-             />
-             (
-               form.state.options |> Array.length > 2 ?
-                 <a
-                   className=(Cn.optionRemove |> TypedGlamor.toString)
-                   onClick=(
-                     _event => {
-                       form.change(DelOption(i), NoValue);
-                       switch (optionsResults) {
-                       | Some(Formality.Invalid(_message)) =>
-                         form.change(
-                           Form.Options,
-                           StringArray(form.state.options),
-                         )
-                       | _ => ()
-                       };
-                     }
-                   )>
-                   Icon.minusSquare
-                 </a> :
-                 ReasonReact.string("")
-             )
-           </div>;
-         }
-       )
-  </Field>;
+  let results = field |> form.results;
+  let valid = isValid(results) && isValid(optionsResults);
+  let canDelete = form.state.options |> Array.length > 2;
+  <div key=(i |> string_of_int)>
+
+      <TextField
+        error=(! valid)
+        value=(`String(value))
+        margin=`Normal
+        label=(
+          (
+            switch (optionsResults) {
+            | Some(Formality.Invalid(message)) => message
+            | _ => "Poll Option"
+            }
+          )
+          |> ReasonReact.string
+        )
+        onChange=(
+          event => {
+            event
+            |> Formality.Dom.toValueOnChange
+            |. Form.String
+            |> form.change(field);
+            switch (optionsResults) {
+            | Some(Formality.Invalid(_message)) =>
+              form.change(Form.Options, StringArray(form.state.options))
+            | _ => ()
+            };
+          }
+        )
+        onFocus=(
+          _event => {
+            let lastOption = (form.state.options |> Array.length) - 1;
+            if (i >= lastOption) {
+              form.change(Form.AddOption, NoValue);
+            };
+          }
+        )
+      />
+      <IconButton
+        disabled=(! canDelete)
+        onClick=(
+          _event => {
+            form.change(DelOption(i), NoValue);
+            switch (optionsResults) {
+            | Some(Formality.Invalid(_message)) =>
+              form.change(Form.Options, StringArray(form.state.options))
+            | _ => ()
+            };
+          }
+        )>
+        <SvgIcon color=(canDelete ? `Error : `Disabled)> <Delete /> </SvgIcon>
+      </IconButton>
+    </div>;
+    /* <Icon >
+         ("star" |> ReasonReact.string)
+       </Icon> */
 };
 
 let make = (~context: Context.t, _children) => {
@@ -376,295 +334,257 @@ let make = (~context: Context.t, _children) => {
       ...(
            form =>
              <form
-               className=(Cn.container |> TypedGlamor.toString)
+               noValidate=true
+               autoComplete="off"
                onSubmit=(form.submit |> Formality.Dom.preventDefault)>
-               <div className=(Cn.fields |> TypedGlamor.toString)>
-                 <Field form field=Form.Title>
-                   ...(
-                        results =>
-                          <div>
-                            <input
-                              className=(
-                                results
-                                |> isValid
-                                |> Cn.titleInput
-                                |> TypedGlamor.toString
+               <Paper>
+                 <Stepper activeStep=(`Int(0)) orientation=`Vertical>
+                   <Step key="required">
+                     <StepLabel>
+                       ("Required Fields" |> ReasonReact.string)
+                     </StepLabel>
+                     <StepContent>
+                       <div>
+                         <TextField
+                           required=true
+                           label=(
+                             (
+                               switch (Form.Title |> form.results) {
+                               | Some(Formality.Invalid(message)) => message
+                               | _ => "Title"
+                               }
+                             )
+                             |> ReasonReact.string
+                           )
+                           value=(`String(form.state.title))
+                           disabled=form.submitting
+                           onChange=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnChange
+                               |. Form.String
+                               |> form.change(Form.Title)
+                           )
+                           onBlur=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnBlur
+                               |. Form.String
+                               |> form.blur(Form.Title)
+                           )
+                         />
+                       </div>
+                       <div>
+                         (
+                           form.state.options
+                           |> Array.mapi(
+                                renderOption(
+                                  form,
+                                  Form.Options |> form.results,
+                                ),
                               )
-                              placeholder=(
-                                switch (results) {
-                                | Some(Formality.Invalid(message)) => message
-                                | _ => "Title of your poll..."
-                                }
-                              )
-                              value=form.state.title
-                              disabled=form.submitting
-                              autoComplete="off"
-                              autoFocus=true
-                              onChange=(
-                                event =>
-                                  event
-                                  |> Formality.Dom.toValueOnChange
-                                  |. Form.String
-                                  |> form.change(Form.Title)
-                              )
-                              onBlur=(
-                                event =>
-                                  event
-                                  |> Formality.Dom.toValueOnBlur
-                                  |. Form.String
-                                  |> form.blur(Form.Title)
-                              )
-                            />
-                          </div>
-                      )
-                 </Field>
-                 <Field form field=Form.Options>
-                   ...(
-                        results =>
-                          <div>
-                            (
-                              form.state.options
-                              |> Array.mapi(renderOption(form, results))
-                              |> ReasonReact.array
-                            )
-                          </div>
-                      )
-                 </Field>
-                 <div className=(Cn.advancedFields |> TypedGlamor.toString)>
-                   <div>
-                     <label htmlFor="signup--title" className="label-lg">
-                       ("Min choices" |> ReasonReact.string)
-                     </label>
-                     <input
-                       type_="number"
-                       value=(form.state.minChoices |> string_of_int)
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. int_of_string
-                           |. Form.Int
-                           |> form.change(Form.MinChoices)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. int_of_string
-                           |. Form.Int
-                           |> form.blur(Form.MinChoices)
-                       )
-                     />
-                   </div>
-                   <div>
-                     <label htmlFor="signup--title" className="label-lg">
-                       ("Max choices" |> ReasonReact.string)
-                     </label>
-                     <input
-                       type_="number"
-                       value=(form.state.maxChoices |> string_of_int)
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. int_of_string
-                           |. Form.Int
-                           |> form.change(Form.MaxChoices)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. int_of_string
-                           |. Form.Int
-                           |> form.blur(Form.MaxChoices)
-                       )
-                     />
-                   </div>
-                   <div>
-                     <label> ("Open time" |> ReasonReact.string) </label>
-                     <input
-                       type_="datetime-local"
-                       value=(
-                         form.state.openTime
-                         |> Js.Date.toISOString
-                         |> Js.String.slice(~from=0, ~to_=-1)
-                       )
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. Form.String
-                           |> form.change(Form.OpenTime)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. Form.String
-                           |> form.blur(Form.OpenTime)
-                       )
-                     />
-                   </div>
-                   <div>
-                     <label> ("Close time" |> ReasonReact.string) </label>
-                     <input
-                       type_="datetime-local"
-                       value=(
-                         form.state.closeTime
-                         |> Js.Date.toISOString
-                         |> Js.String.slice(~from=0, ~to_=-1)
-                       )
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. Form.String
-                           |> form.change(Form.CloseTime)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. Form.String
-                           |> form.blur(Form.CloseTime)
-                       )
-                     />
-                   </div>
-                   <div className="form-row">
-                     <label htmlFor="signup--title" className="label-lg">
-                       ("Poll Name" |> ReasonReact.string)
-                     </label>
-                     <input
-                       id="signup--title"
-                       type_="text"
-                       value=form.state.pollName
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. Form.String
-                           |> form.change(Form.PollName)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. Form.String
-                           |> form.blur(Form.PollName)
-                       )
-                     />
-                   </div>
-                   <div>
-                     <label> ("Whitelist" |> ReasonReact.string) </label>
-                     <input
-                       value=(form.state.whitelist |> Js.Array.joinWith(", "))
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. Form.String
-                           |> form.change(Form.Whitelist)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. Form.String
-                           |> form.blur(Form.Whitelist)
-                       )
-                     />
-                   </div>
-                   <div>
-                     <label> ("Blacklist" |> ReasonReact.string) </label>
-                     <input
-                       value=(form.state.blacklist |> Js.Array.joinWith(", "))
-                       disabled=form.submitting
-                       onChange=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnChange
-                           |. Form.String
-                           |> form.change(Form.Blacklist)
-                       )
-                       onBlur=(
-                         event =>
-                           event
-                           |> Formality.Dom.toValueOnBlur
-                           |. Form.String
-                           |> form.blur(Form.Blacklist)
-                       )
-                     />
-                   </div>
-                 </div>
-                 /* <a onClick=(_event => form.change(AddOption, NoValue))>
-                      ("Add option" |> ReasonReact.string)
-                    </a>
-                    <div className="form-row">
-                      <label htmlFor="signup--title" className="label-lg">
-                        ("Description" |> ReasonReact.string)
-                      </label>
-                      <input
-                        id="signup--title"
-                        type_="text"
-                        value=form.state.description
-                        disabled=form.submitting
-                        onChange=(
-                          event =>
-                            event
-                            |> Formality.Dom.toValueOnChange
-                            |. Form.String
-                            |> form.change(Form.Description)
-                        )
-                        onBlur=(
-                          event =>
-                            event
-                            |> Formality.Dom.toValueOnBlur
-                            |. Form.String
-                            |> form.blur(Form.Description)
-                        )
-                      />
-                      (
-                        switch (Form.Description |> form.results) {
-                        | Some(Invalid(message)) =>
-                          <div className="failure">
-                            Icon.exclamation (message |> ReasonReact.string)
-                          </div>
-                        | Some(Valid) =>
-                          <div className="success">
-                            Icon.checkCircle
-                          </div>
-                        | None => ReasonReact.null
-                        }
-                      )
-                    </div>
-
-                      (
-                        switch (Form.PollName |> form.results) {
-                        | Some(Invalid(message)) =>
-                          <div className="failure">
-                            Icon.exclamation (message |> ReasonReact.string)
-                          </div>
-                        | Some(Valid) =>
-                          <div className="success">
-                            Icon.checkCircle
-                          </div>
-                        | None => ReasonReact.null
-                        }
-                      )
-                    </div> */
-                 <button
+                           |> ReasonReact.array
+                         )
+                       </div>
+                     </StepContent>
+                   </Step>
+                   <Step key="optional">
+                     <StepLabel>
+                       ("Optional Fields" |> ReasonReact.string)
+                     </StepLabel>
+                     <StepContent>
+                       <Grid container=true>
+                         <Grid item=true>
+                           <TextField
+                             label=("Min choices" |> ReasonReact.string)
+                             type_="number"
+                             value=(`Int(form.state.minChoices))
+                             disabled=form.submitting
+                             onChange=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnChange
+                                 |. int_of_string
+                                 |. Form.Int
+                                 |> form.change(Form.MinChoices)
+                             )
+                             onBlur=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnBlur
+                                 |. int_of_string
+                                 |. Form.Int
+                                 |> form.blur(Form.MinChoices)
+                             )
+                           />
+                         </Grid>
+                         <Grid item=true>
+                           <TextField
+                             label=("Max choices" |> ReasonReact.string)
+                             type_="number"
+                             value=(`Int(form.state.maxChoices))
+                             disabled=form.submitting
+                             onChange=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnChange
+                                 |. int_of_string
+                                 |. Form.Int
+                                 |> form.change(Form.MaxChoices)
+                             )
+                             onBlur=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnBlur
+                                 |. int_of_string
+                                 |. Form.Int
+                                 |> form.blur(Form.MaxChoices)
+                             )
+                           />
+                         </Grid>
+                       </Grid>
+                       <Grid container=true>
+                         <Grid item=true>
+                           <TextField
+                             label=("Open time" |> ReasonReact.string)
+                             type_="datetime-local"
+                             value=(
+                                     `String(
+                                       form.state.openTime
+                                       |> Js.Date.toISOString
+                                       |> Js.String.slice(~from=0, ~to_=-1),
+                                     )
+                                   )
+                             disabled=form.submitting
+                             onChange=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnChange
+                                 |. Form.String
+                                 |> form.change(Form.OpenTime)
+                             )
+                             onBlur=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnBlur
+                                 |. Form.String
+                                 |> form.blur(Form.OpenTime)
+                             )
+                           />
+                         </Grid>
+                         <Grid item=true>
+                           <TextField
+                             label=("Close time" |> ReasonReact.string)
+                             type_="datetime-local"
+                             value=(
+                                     `String(
+                                       form.state.closeTime
+                                       |> Js.Date.toISOString
+                                       |> Js.String.slice(~from=0, ~to_=-1),
+                                     )
+                                   )
+                             disabled=form.submitting
+                             onChange=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnChange
+                                 |. Form.String
+                                 |> form.change(Form.CloseTime)
+                             )
+                             onBlur=(
+                               event =>
+                                 event
+                                 |> Formality.Dom.toValueOnBlur
+                                 |. Form.String
+                                 |> form.blur(Form.CloseTime)
+                             )
+                           />
+                         </Grid>
+                       </Grid>
+                       <div>
+                         <TextField
+                           label=("Poll Name" |> ReasonReact.string)
+                           value=(`String(form.state.pollName))
+                           disabled=form.submitting
+                           onChange=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnChange
+                               |. Form.String
+                               |> form.change(Form.PollName)
+                           )
+                           onBlur=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnBlur
+                               |. Form.String
+                               |> form.blur(Form.PollName)
+                           )
+                         />
+                       </div>
+                       <div>
+                         <TextField
+                           label=("Whitelist" |> ReasonReact.string)
+                           value=(
+                                   `Array(
+                                     form.state.whitelist
+                                     |> Js.Array.map(a => `String(a)),
+                                   )
+                                 )
+                           disabled=form.submitting
+                           onChange=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnChange
+                               |. Form.String
+                               |> form.change(Form.Whitelist)
+                           )
+                           onBlur=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnBlur
+                               |. Form.String
+                               |> form.blur(Form.Whitelist)
+                           )
+                         />
+                       </div>
+                       <div>
+                         <TextField
+                           label=("Blacklist" |> ReasonReact.string)
+                           value=(
+                                   `Array(
+                                     form.state.blacklist
+                                     |> Js.Array.map(a => `String(a)),
+                                   )
+                                 )
+                           disabled=form.submitting
+                           onChange=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnChange
+                               |. Form.String
+                               |> form.change(Form.Blacklist)
+                           )
+                           onBlur=(
+                             event =>
+                               event
+                               |> Formality.Dom.toValueOnBlur
+                               |. Form.String
+                               |> form.blur(Form.Blacklist)
+                           )
+                         />
+                       </div>
+                     </StepContent>
+                   </Step>
+                 </Stepper>
+                 <Button
                    type_="submit"
-                   className=(Cn.submitButton |> TypedGlamor.toString)>
+                   variant=`Contained
+                   size=`Large
+                   color=`Primary>
                    (ReasonReact.string("Create Poll"))
-                 </button>
-               </div>
+                 </Button>
+               </Paper>
              </form>
          )
     </Container>,

@@ -8,9 +8,7 @@ let renderTemplate = (~content, ~helmet, ~apolloClient) => {
   let staticUrl = Env.staticUrl;
   let apolloState = apolloClient |. ApolloServer.extract |> Js.Json.stringify;
   let styles = GlamorServer.renderStatic(() => content);
-  let css = styles##css;
   let html = styles##html;
-  let ids = styles##ids |> Js.Json.stringify;
   {j|<!DOCTYPE html>
   <html $htmlAttributes>
     <head>
@@ -21,11 +19,7 @@ let renderTemplate = (~content, ~helmet, ~apolloClient) => {
       $style
       <script>
         window.__APOLLO_STATE__ = $apolloState;
-        window._glam = $ids;
       </script>
-      <style type="text/css" data-glamor>
-        $css
-      </style>
     </head>
   <body $bodyAttributes>
     <div id="app">$html</div>

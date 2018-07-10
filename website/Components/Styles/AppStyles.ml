@@ -1,7 +1,5 @@
 open TypedGlamor
 
-include HydrateGlamor
-include GlobalStyles
 
 let sidebarWidth = pct 10.
 

@@ -3,7 +3,6 @@
 
 var TypedGlamor = require("bs-typed-glamor/src/TypedGlamor.bs.js");
 var Theme$ReactTemplate = require("./Theme.js");
-var GlobalStyles$ReactTemplate = require("./GlobalStyles.js");
 
 var widthContainer = TypedGlamor.css(/* None */0, /* :: */[
       TypedGlamor.margin2(TypedGlamor.zero, TypedGlamor.auto),
@@ -93,9 +92,6 @@ var pageSecondaryBox = TypedGlamor.css(/* None */0, /* :: */[
       ]
     ]);
 
-var _global = GlobalStyles$ReactTemplate._global;
-
-exports._global = _global;
 exports.widthContainer = widthContainer;
 exports.button = button;
 exports.pageHeader = pageHeader;
